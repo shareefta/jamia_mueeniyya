@@ -9,14 +9,12 @@ import CardActionArea from '@mui/material/CardActionArea';
 export default function SettingsMenuPage() {
   const navigate = useNavigate();
 
-  const menus = [
-    { title: 'Sales Channels', path: 'channels', gradient: 'linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)' },
-    { title: 'Off Campus', path: 'off-campus', gradient: 'linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%)' },
+  const menus = [    
+    { title: 'Campus', path: 'off-campus', gradient: 'linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%)' },
     { title: 'Users', path: 'users', gradient: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)' },
     { title: 'Categories', path: 'categories', gradient: 'linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)' },
-    { title: 'Stores', path: 'location', gradient: 'linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%)' },
+    { title: 'Opening Balances', path: 'opening-balances', gradient: 'linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)' },
     { title: 'Payment Modes', path: 'payment-modes', gradient: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)' },
-    { title: 'Purchased By', path: 'purchased-by', gradient: 'linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)' },
   ];
 
   return (

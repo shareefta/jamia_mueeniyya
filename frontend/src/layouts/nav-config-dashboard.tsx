@@ -19,24 +19,9 @@ export const navData: NavItem[] = [
     icon: icon('ic-analytics'),
   },
   {
-    title: 'Products',
-    path: '/products',
-    icon: icon('ic-product'),
-  },
-  {
-    title: 'Purchases',
-    path: '/purchase',
-    icon: icon('ic-cart'),
-  },
-  {
-    title: 'Sales',
-    path: '/sales',
-    icon: icon('ic-sales'),
-  },
-  {
-    title: 'Users',
-    path: '/user',
-    icon: icon('ic-user'),
+    title: 'Transactions',
+    path: '/transaction-list',
+    icon: icon('ic-transaction'),
   },
   {
     title: 'Settings',

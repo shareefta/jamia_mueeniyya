@@ -30,6 +30,8 @@ export const SalesPage = lazy(() => import('src/pages/sales'));
 export const SalesReportPage = lazy(() => import('src/sections/sales/sales-report'));
 export const SalesReturnReport = lazy(() => import('src/sections/sales/sales-return-report'));
 export const NewSalesReturnPage = lazy(() => import('src/sections/sales/new-sales-return'));
+export const TransactionsPage = lazy(() => import('src/pages/transactions'));
+export const TransactionListPage = lazy(() => import('src/pages/transaction-list'));
 
 export const SettingsView = lazy(() => import('src/pages/settings'));
 export const SettingsLayout = lazy(() => import('src/pages/settings/settings-layout'));
@@ -40,6 +42,7 @@ export const UsersPage = lazy(() => import('src/pages/settings/users'));
 export const PaymentModesPage = lazy(() => import('src/pages/settings/payment-modes'));
 export const CategoriesPage = lazy(() => import('src/pages/settings/categories'));
 export const PurchasedByPage = lazy(() => import('src/pages/settings/purchased-by'));
+export const OpeningBalancesPage = lazy(() => import('src/pages/settings/opening-balances'));
 
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
 
@@ -77,8 +80,8 @@ export const routesSection: RouteObject[] = [
     children: [
       { index: true, element: <DashboardPage /> },
       { path: 'user', element: <UserPage /> },
-      { path: 'products', element: <ProductsPage /> },
-      { path: 'purchase', element: <PurchasePage /> },
+      { path: 'transactions', element: <TransactionsPage /> },
+      { path: 'transaction-list', element: <TransactionListPage /> },
       { path: 'new-sales-return', element: <NewSalesReturnPage /> },
       {
         path: 'settings',
@@ -91,7 +94,7 @@ export const routesSection: RouteObject[] = [
           { path: 'categories', element: <CategoriesPage /> },
           { path: 'location', element: <LocationPage /> },
           { path: 'payment-modes', element: <PaymentModesPage /> },
-          { path: 'purchased-by', element: <PurchasedByPage /> },
+          { path: 'opening-balances', element: <OpeningBalancesPage /> },
         ],
       },
       {

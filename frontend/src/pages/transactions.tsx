@@ -1,4 +1,6 @@
+import { useSnackbar } from "notistack";
 import { useState, useEffect } from "react";
+
 import {
   Box,
   Button,
@@ -11,12 +13,11 @@ import {
   Typography,
   Stack,
 } from "@mui/material";
-import { useSnackbar } from "notistack";
 
-import { createTransaction } from "src/api/transactions";
 import { getCategories } from "src/api/categories";
-import { getPaymentModes } from "src/api/payment-modes";
 import { getOffCampuses } from "src/api/offCampus";
+import { getPaymentModes } from "src/api/payment-modes";
+import { createTransaction } from "src/api/transactions";
 
 export default function TransactionsPage() {
   const { enqueueSnackbar } = useSnackbar();
@@ -67,8 +68,12 @@ export default function TransactionsPage() {
       await createTransaction({
         ...formData,
         amount: Number(formData.amount),
+        category: Number(formData.category),
+        payment_mode: Number(formData.payment_mode),
+        campus: Number(formData.campus),
         transaction_type: transactionType,
       });
+
       enqueueSnackbar("Transaction added successfully!", { variant: "success" });
 
       if (!addMore) {

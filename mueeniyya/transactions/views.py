@@ -17,11 +17,26 @@ class PaymentModeViewSet(viewsets.ModelViewSet):
 class TransactionViewSet(viewsets.ModelViewSet):
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
+    permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['transaction_type', 'category', 'payment_mode', 'campus', 'user', 'date']
     search_fields = ['remarks']
     ordering_fields = ['date', 'amount']
 
+    def perform_create(self, serializer):
+        # set the logged-in user as creator
+        serializer.save(user=self.request.user)
+    
+    def create(self, request, *args, **kwargs):
+        print("Incoming data:", request.data)
+        return super().create(request, *args, **kwargs)
+
+
 class OpeningBalanceViewSet(viewsets.ModelViewSet):
-    queryset = OpeningBalance.objects.all()
+    queryset = OpeningBalance.objects.all().order_by('-date')
     serializer_class = OpeningBalanceSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+
