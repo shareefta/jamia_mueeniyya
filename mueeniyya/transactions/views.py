@@ -31,7 +31,6 @@ class TransactionViewSet(viewsets.ModelViewSet):
         print("Incoming data:", request.data)
         return super().create(request, *args, **kwargs)
 
-
 class OpeningBalanceViewSet(viewsets.ModelViewSet):
     queryset = OpeningBalance.objects.all().order_by('-date')
     serializer_class = OpeningBalanceSerializer

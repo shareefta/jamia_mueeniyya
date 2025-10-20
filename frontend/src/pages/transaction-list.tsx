@@ -3,6 +3,7 @@ import { useSnackbar } from "notistack";
 import minMax from "dayjs/plugin/minMax";
 import { useEffect, useState } from "react";
 import isBetween from "dayjs/plugin/isBetween";
+import customParseFormat from "dayjs/plugin/customParseFormat";
 
 import { Add, Edit, Delete } from "@mui/icons-material";
 import {
@@ -33,6 +34,7 @@ import {
 
 dayjs.extend(isBetween);
 dayjs.extend(minMax);
+dayjs.extend(customParseFormat);
 
 import { getUsers } from "src/api/users";
 import { getCategories } from "src/api/categories";
@@ -112,14 +114,13 @@ const TransactionList = () => {
     if (filters.dateRange === "Today") temp = temp.filter(t => t.date === today);
     else if (filters.dateRange === "Yesterday") temp = temp.filter(t => t.date === yesterday);
     else if (filters.dateRange === "This Month") temp = temp.filter(t => dayjs(t.date).isAfter(firstOfMonth));
-    else if (filters.dateRange === "Last Month")
-      temp = temp.filter(t => dayjs(t.date).isBetween(lastMonthStart, lastMonthEnd));
+    else if (filters.dateRange === "Last Month") temp = temp.filter(t => dayjs(t.date).isBetween(lastMonthStart, lastMonthEnd));
 
     if (filters.type !== "All") temp = temp.filter(t => t.transaction_type === filters.type);
     if (filters.category !== "All") temp = temp.filter(t => t.category === parseInt(filters.category));
     if (filters.paymentMode !== "All") temp = temp.filter(t => t.payment_mode === parseInt(filters.paymentMode));
     if (filters.campus !== "All") temp = temp.filter(t => t.campus === parseInt(filters.campus));
-    if (filters.user !== "All") temp = temp.filter(t => t.user === parseInt(filters.user));
+    if (filters.user !== "All") temp = temp.filter(t => t.user_id === parseInt(filters.user));    
 
     setFiltered(temp);
   }, [filters, transactions]);
@@ -127,13 +128,13 @@ const TransactionList = () => {
   // --- Utility to calculate opening balance dynamically ---
   const getOpeningBalance = (
     allTxns: any[],
-    openingBalances: any[],
-    filters: any
+    appliedOpeningBalances: any[],
+    appliedFilters: any
   ) => {
-    if (!filters.includeOB) return 0;
+    if (!appliedFilters.includeOB) return 0;
 
     // Determine start date of filtered transactions
-    const filteredTxns = filtered.length ? filtered : allTxns;
+    const filteredTxns = appliedFilters.length ? filtered : allTxns;
     if (!filteredTxns.length) return 0;
 
     // Start date is the oldest transaction in filtered list
@@ -146,9 +147,9 @@ const TransactionList = () => {
 
     let balance = 0;
 
-    if (filters.campus === "All") {
+    if (appliedFilters.campus === "All") {
       // Add all opening balances
-      balance = openingBalances.reduce((acc, ob) => acc + Number(ob.amount || 0), 0);
+      balance = appliedOpeningBalances.reduce((acc, ob) => acc + Number(ob.amount || 0), 0);
 
       // Add previous transactions
       balance += prevTxns.reduce((acc, txn) => {
@@ -158,7 +159,7 @@ const TransactionList = () => {
       }, 0);
     } else {
       // Campus-specific opening balance
-      const ob = openingBalances.find(o => Number(o.campus) === Number(filters.campus));
+      const ob = appliedOpeningBalances.find(o => Number(o.campus) === Number(filters.campus));
       balance = ob ? Number(ob.amount) : 0;
 
       // Previous transactions for this campus
@@ -176,8 +177,8 @@ const TransactionList = () => {
   // --- Refactored computeBalance to include opening balance ---
   const computeBalanceOptimized = (
     list: any[],
-    filters: any,
-    openingBalances: any[],
+    appliedFilters: any,
+    appliedOpeningBalances: any[],
     allTxns: any[]
   ) => {
     if (!list?.length) return [];
@@ -190,7 +191,7 @@ const TransactionList = () => {
     });
 
     // Get starting balance dynamically
-    let balance = getOpeningBalance(allTxns, openingBalances, filters);
+    let balance = getOpeningBalance(allTxns, appliedOpeningBalances, appliedFilters);
 
     // Compute running balance
     const withBalance = sorted.map(txn => {
@@ -270,7 +271,7 @@ const TransactionList = () => {
     <Box p={4}>
       {/* Header */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h5" fontWeight="bold">Transactions</Typography>
+        <Typography variant="h4" fontWeight="bold">Transactions</Typography>
         <Box>
           <Button variant="contained" color="success" onClick={() => handleClickOpen("IN")} startIcon={<Add />} sx={{ mr: 1 }}>
             Cash In
@@ -313,6 +314,26 @@ const TransactionList = () => {
                 </FormControl>
               </Grid>
             ))}
+            {/* Clear Button */}
+            <Grid size={{ xs: 12, sm: 3, md: 1 }}>
+              <Button
+                variant="outlined"
+                color="secondary"
+                fullWidth
+                sx={{ mt: 1 }}
+                onClick={() => setFilters(prev => ({
+                  ...prev, // keep other fields like includeOB
+                  dateRange: "All",
+                  type: "All",
+                  category: "All",
+                  paymentMode: "All",
+                  campus: "All",
+                  user: "All"
+                }))}              >
+                Clear
+              </Button>
+            </Grid>
+            {/* Include Opening Balance */}
             <Grid size={{ xs: 12, sm: 3, md: 2 }}>
               <FormControl fullWidth size="small">
                 <Box display="flex" alignItems="center" sx={{ mt: 1 }}>
@@ -327,7 +348,7 @@ const TransactionList = () => {
                   </Button>
                 </Box>
               </FormControl>
-            </Grid>
+            </Grid>            
           </Grid>          
         </CardContent>
       </Card>
@@ -386,38 +407,109 @@ const TransactionList = () => {
       </Grid>
 
       {/* Table */}
-      <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 3 }}>
-        <Table>
+      <TableContainer
+        component={Paper}
+        sx={{
+          borderRadius: 2,
+          boxShadow: 3,
+          maxHeight: 600, // Scrollable if many rows
+          border: "1px solid #ddd",
+        }}
+      >
+        <Table stickyHeader sx={{ minWidth: 650, borderCollapse: "collapse" }}>
+          {/* Table Head */}
           <TableHead>
-            <TableRow sx={{ backgroundColor: "#f3f3f3" }}>
-              {["Sl. No.", "Date & Time", "Remark", "Payment Mode", "Created By", "Campus", "Amount", "Balance", "Action"].map((h) => (
-                <TableCell key={h} align={["Amount", "Balance"].includes(h) ? "right" : "center"}>{h}</TableCell>
+            <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+              {[
+                { label: "Sl. No.", width: "5%" },
+                { label: "Date & Time", width: "15%" },
+                { label: "Details", width: "40%" },
+                { label: "Payment Mode", width: "10%" },
+                { label: "Amount", width: "10%" },
+                { label: "Balance", width: "10%" },
+                { label: "Action", width: "10%" },
+              ].map((h) => (
+                <TableCell
+                  key={h.label}
+                  align={["Amount", "Balance"].includes(h.label) ? "right" : "center"}
+                  sx={{
+                    fontWeight: "bold",
+                    borderBottom: "2px solid #ccc",
+                    width: h.width,
+                  }}
+                >
+                  {h.label}
+                </TableCell>
               ))}
             </TableRow>
           </TableHead>
+
+          {/* Table Body */}
           <TableBody>
             {computedTxns.length > 0 ? (
               computedTxns.map((txn, idx) => (
-                <TableRow key={txn.id} hover>
+                <TableRow
+                  key={txn.id}
+                  hover
+                  sx={{
+                    backgroundColor: "#ffffff", // all rows white
+                    transition: "0.2s",
+                    "&:hover": {
+                      backgroundColor: "#e3f2fd", // light hover effect
+                    },
+                  }}
+                >
                   <TableCell align="center">{idx + 1}</TableCell>
-                  <TableCell align="center">{dayjs(txn.date).format("DD-MM-YYYY")} {txn.time}</TableCell>
-                  <TableCell align="center">{txn.remarks}</TableCell>
-                  <TableCell align="center">{txn.payment_mode_name}</TableCell>
-                  <TableCell align="center">{txn.user_name}</TableCell>
-                  <TableCell align="center">{txn.campus_name}</TableCell>
-                  <TableCell align="right" sx={{ color: txn.transaction_type === "IN" ? "green" : "red", fontWeight: "bold" }}>
-                    {txn.amount}
-                  </TableCell>
-                  <TableCell align="right">{txn.running_balance.toFixed(2)}</TableCell>
+
+                  {/* Date & Time */}
                   <TableCell align="center">
-                    <IconButton color="primary"><Edit fontSize="small" /></IconButton>
-                    <IconButton color="error"><Delete fontSize="small" /></IconButton>
+                    <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+                      {dayjs(txn.date).format("DD-MM-YYYY")}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: "bold", color: "text.secondary" }}
+                    >
+                      {txn.time ? dayjs(`1970-01-01T${txn.time}`).format("hh:mm A") : "-"}
+                    </Typography>
+                  </TableCell>
+
+                  {/* Details */}
+                  <TableCell align="left">{txn.remarks || "-"}</TableCell>
+
+                  {/* Payment Mode */}
+                  <TableCell align="center">{txn.payment_mode_name}</TableCell>
+
+                  {/* Amount */}
+                  <TableCell
+                    align="right"
+                    sx={{
+                      color: txn.transaction_type === "IN" ? "green" : "red",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    ₹ {Number(txn.amount).toLocaleString()}
+                  </TableCell>
+
+                  {/* Balance */}
+                  <TableCell align="right">₹ {txn.running_balance.toFixed(2)}</TableCell>
+
+                  {/* Actions */}
+                  <TableCell align="center">
+                    <IconButton color="primary">
+                      <Edit fontSize="small" />
+                    </IconButton>
+                    <IconButton color="error">
+                      <Delete fontSize="small" />
+                    </IconButton>
                   </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={9} align="center" sx={{ py: 4 }}>No transactions found.</TableCell>
+                <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                  No transactions found.
+                </TableCell>
               </TableRow>
             )}
           </TableBody>

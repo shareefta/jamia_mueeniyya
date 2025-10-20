@@ -14,6 +14,7 @@ class PaymentModeSerializer(serializers.ModelSerializer):
 class TransactionSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
     user_name = serializers.CharField(source='user.name', read_only=True)
+    user_id = serializers.IntegerField(source='user.id', read_only=True)
     category_name = serializers.CharField(source='category.name', read_only=True)
     payment_mode_name = serializers.CharField(source='payment_mode.name', read_only=True)
     campus_name = serializers.CharField(source='campus.name', read_only=True)
@@ -22,7 +23,7 @@ class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         fields = [
-            'id', 'user', 'user_name',
+            'id', 'user', 'user_name', 'user_id',
             'transaction_type', 'transaction_label',
             'category', 'category_name',
             'payment_mode', 'payment_mode_name',
