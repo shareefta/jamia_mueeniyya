@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import { useSnackbar } from "notistack";
+import minMax from "dayjs/plugin/minMax";
 import { useEffect, useState } from "react";
 import isBetween from "dayjs/plugin/isBetween";
 
@@ -30,12 +31,14 @@ import {
   IconButton,
 } from "@mui/material";
 
-dayjs.extend(isBetween); // ⚡ must extend the plugin
+dayjs.extend(isBetween);
+dayjs.extend(minMax);
 
 import { getUsers } from "src/api/users";
 import { getCategories } from "src/api/categories";
 import { getOffCampuses } from "src/api/offCampus";
 import { getPaymentModes } from "src/api/payment-modes";
+import { getOpeningBalances } from "src/api/opening-balances";
 
 import { createTransaction, getTransactions } from "../api/transactions";
 
@@ -60,6 +63,7 @@ const TransactionList = () => {
   const [paymentModes, setPaymentModes] = useState<any[]>([]);
   const [campuses, setCampuses] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [openingBalances, setOpeningBalances] = useState<any[]>([]);
 
   const [formData, setFormData] = useState({
     date: "",
@@ -74,19 +78,25 @@ const TransactionList = () => {
   // Fetch data
   useEffect(() => {
     (async () => {
-      const [txns, cats, modes, camps, usrs] = await Promise.all([
-        getTransactions(),
-        getCategories(),
-        getPaymentModes(),
-        getOffCampuses(),
-        getUsers(),
-      ]);
-      setTransactions(txns);
-      setFiltered(txns);
-      setCategories(cats);
-      setPaymentModes(modes);
-      setCampuses(camps);
-      setUsers(usrs);
+      try {
+        const [txns, cats, modes, camps, usrs, obs] = await Promise.all([
+          getTransactions(),
+          getCategories(),
+          getPaymentModes(),
+          getOffCampuses(),
+          getUsers(),
+          getOpeningBalances(),
+        ]);
+        setTransactions(txns);
+        setFiltered(txns);
+        setCategories(cats);
+        setPaymentModes(modes);
+        setCampuses(camps);
+        setUsers(usrs);
+        setOpeningBalances(obs);
+      } catch (err) {
+        enqueueSnackbar("Failed to fetch data", { variant: "error" });
+      }
     })();
   }, []);
 
@@ -109,26 +119,109 @@ const TransactionList = () => {
     if (filters.category !== "All") temp = temp.filter(t => t.category === parseInt(filters.category));
     if (filters.paymentMode !== "All") temp = temp.filter(t => t.payment_mode === parseInt(filters.paymentMode));
     if (filters.campus !== "All") temp = temp.filter(t => t.campus === parseInt(filters.campus));
-    if (filters.user !== "All") temp = temp.filter(t => t.created_by === parseInt(filters.user));
+    if (filters.user !== "All") temp = temp.filter(t => t.user === parseInt(filters.user));
 
     setFiltered(temp);
   }, [filters, transactions]);
 
-  const computeBalance = (list: any[]) => {
+  // --- Utility to calculate opening balance dynamically ---
+  const getOpeningBalance = (
+    allTxns: any[],
+    openingBalances: any[],
+    filters: any
+  ) => {
+    if (!filters.includeOB) return 0;
+
+    // Determine start date of filtered transactions
+    const filteredTxns = filtered.length ? filtered : allTxns;
+    if (!filteredTxns.length) return 0;
+
+    // Start date is the oldest transaction in filtered list
+    const startDate = dayjs(filteredTxns[filteredTxns.length - 1].date);
+
+    // Filter transactions before start date
+    const prevTxns = allTxns.filter(txn =>
+      dayjs(`${txn.date} ${txn.time}`).isBefore(startDate)
+    );
+
     let balance = 0;
-    return list.map(txn => {
+
+    if (filters.campus === "All") {
+      // Add all opening balances
+      balance = openingBalances.reduce((acc, ob) => acc + Number(ob.amount || 0), 0);
+
+      // Add previous transactions
+      balance += prevTxns.reduce((acc, txn) => {
+        if (txn.transaction_type === "IN") return acc + Number(txn.amount);
+        if (txn.transaction_type === "OUT") return acc - Number(txn.amount);
+        return acc;
+      }, 0);
+    } else {
+      // Campus-specific opening balance
+      const ob = openingBalances.find(o => Number(o.campus) === Number(filters.campus));
+      balance = ob ? Number(ob.amount) : 0;
+
+      // Previous transactions for this campus
+      const campusTxns = prevTxns.filter(txn => Number(txn.campus) === Number(filters.campus));
+      balance += campusTxns.reduce((acc, txn) => {
+        if (txn.transaction_type === "IN") return acc + Number(txn.amount);
+        if (txn.transaction_type === "OUT") return acc - Number(txn.amount);
+        return acc;
+      }, 0);
+    }
+
+    return balance;
+  };
+
+  // --- Refactored computeBalance to include opening balance ---
+  const computeBalanceOptimized = (
+    list: any[],
+    filters: any,
+    openingBalances: any[],
+    allTxns: any[]
+  ) => {
+    if (!list?.length) return [];
+
+    // Sort transactions ascending
+    const sorted = [...list].sort((a, b) => {
+      const aTime = dayjs(`${a.date} ${a.time}`);
+      const bTime = dayjs(`${b.date} ${b.time}`);
+      return aTime.isAfter(bTime) ? 1 : -1;
+    });
+
+    // Get starting balance dynamically
+    let balance = getOpeningBalance(allTxns, openingBalances, filters);
+
+    // Compute running balance
+    const withBalance = sorted.map(txn => {
       if (txn.transaction_type === "IN") balance += Number(txn.amount);
-      else balance -= Number(txn.amount);
+      else if (txn.transaction_type === "OUT") balance -= Number(txn.amount);
       return { ...txn, running_balance: balance };
     });
+
+    // Return latest first for display
+    return withBalance.reverse();
   };
 
   const handleFilterChange = (key: string, value: any) => {
     setFilters({ ...filters, [key]: value });
   };
 
-  const computedTxns = computeBalance(filtered);
+ // --- Usage ---
+  const computedTxns = computeBalanceOptimized(filtered, filters, openingBalances, transactions);
 
+  // Opening Balance card value
+  const displayedOB = getOpeningBalance(transactions, openingBalances, filters);
+
+  // Totals
+  const totalIn = computedTxns.filter(txn => txn.transaction_type === "IN")
+    .reduce((acc, t) => acc + Number(t.amount), 0);
+  const totalOut = computedTxns.filter(txn => txn.transaction_type === "OUT")
+    .reduce((acc, t) => acc + Number(t.amount), 0);
+
+  const netBalance = displayedOB + totalIn - totalOut;
+
+  // --- Handlers for Dialog ---
   const handleClickOpen = (type: "IN" | "OUT") => {
       setTransactionType(type);
       setOpen(true);
@@ -193,14 +286,14 @@ const TransactionList = () => {
         <CardContent>
           <Grid container spacing={2}>
             {[
-              { label: "Date", key: "dateRange", options: ["All", "Today", "Yesterday", "This Month", "Last Month"] },
-              { label: "Type", key: "type", options: ["All", "IN", "OUT"] },
+              { label: "Date", key: "dateRange", options: ["Today", "Yesterday", "This Month", "Last Month"] },
+              { label: "Type", key: "type", options: ["IN", "OUT"] },
               { label: "Category", key: "category", options: categories.map(c => ({ id: c.id, name: c.name })) },
               { label: "Payment Mode", key: "paymentMode", options: paymentModes.map(p => ({ id: p.id, name: p.name })) },
               { label: "Campus", key: "campus", options: campuses.map(c => ({ id: c.id, name: c.name })) },
-              { label: "User", key: "user", options: users.map(u => ({ id: u.id, name: u.username })) },
+              { label: "User", key: "user", options: users.map(u => ({ id: u.id, name: u.name })) },
             ].map(filter => (
-              <Grid size={{ xs: 12, sm: 6, md: 2 }} key={filter.key}>
+              <Grid size={{ xs: 12, sm: 6, md: 1.5 }} key={filter.key}>
                 <FormControl fullWidth size="small">
                   <InputLabel>{filter.label}</InputLabel>
                   <Select
@@ -220,9 +313,77 @@ const TransactionList = () => {
                 </FormControl>
               </Grid>
             ))}
-          </Grid>
+            <Grid size={{ xs: 12, sm: 3, md: 2 }}>
+              <FormControl fullWidth size="small">
+                <Box display="flex" alignItems="center" sx={{ mt: 1 }}>
+                  <Typography variant="body2">Include OB</Typography>
+                  <Button
+                    variant={filters.includeOB ? "outlined" : "contained"}
+                    color={filters.includeOB ? "inherit" : "success"}
+                    size="small"
+                    onClick={() => handleFilterChange("includeOB", !filters.includeOB)}
+                  >
+                    {filters.includeOB ? "No" : "Yes"}
+                  </Button>
+                </Box>
+              </FormControl>
+            </Grid>
+          </Grid>          
         </CardContent>
       </Card>
+
+      {/* Summary Cards */}
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        {filters.includeOB && (
+          <Grid size={{ xs: 12, sm: 3 }}>
+            <Card sx={{ bgcolor: "#fff8e1", boxShadow: 3, borderLeft: "6px solid #fbc02d" }}>
+              <CardContent>
+                <Typography variant="subtitle2" color="textSecondary">Opening Balance</Typography>
+                <Typography variant="h6" fontWeight="bold" color="warning.main">
+                  ₹ {displayedOB.toLocaleString()}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        )}
+
+        <Grid size={{ xs: 12, sm: 3 }}>
+          <Card sx={{ bgcolor: "#e8f5e9", boxShadow: 3, borderLeft: "6px solid #2e7d32" }}>
+            <CardContent>
+              <Typography variant="subtitle2" color="textSecondary">Total In</Typography>
+              <Typography variant="h6" fontWeight="bold" color="success.main">
+                ₹ {totalIn.toLocaleString()}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 3 }}>
+          <Card sx={{ bgcolor: "#ffebee", boxShadow: 3, borderLeft: "6px solid #c62828" }}>
+            <CardContent>
+              <Typography variant="subtitle2" color="textSecondary">Total Out</Typography>
+              <Typography variant="h6" fontWeight="bold" color="error.main">
+                ₹ {totalOut.toLocaleString()}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 3 }}>
+          <Card sx={{ bgcolor: "#e3f2fd", boxShadow: 3, borderLeft: "6px solid #1565c0" }}>
+            <CardContent>
+              <Typography variant="subtitle2" color="textSecondary">Net Balance</Typography>
+              <Typography
+                variant="h6"
+                fontWeight="bold"
+                color={netBalance >= 0 ? "success.main" : "error.main"}
+              >
+                ₹ {netBalance.toLocaleString()}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
 
       {/* Table */}
       <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 3 }}>
@@ -242,7 +403,7 @@ const TransactionList = () => {
                   <TableCell align="center">{dayjs(txn.date).format("DD-MM-YYYY")} {txn.time}</TableCell>
                   <TableCell align="center">{txn.remarks}</TableCell>
                   <TableCell align="center">{txn.payment_mode_name}</TableCell>
-                  <TableCell align="center">{txn.created_by_name}</TableCell>
+                  <TableCell align="center">{txn.user_name}</TableCell>
                   <TableCell align="center">{txn.campus_name}</TableCell>
                   <TableCell align="right" sx={{ color: txn.transaction_type === "IN" ? "green" : "red", fontWeight: "bold" }}>
                     {txn.amount}

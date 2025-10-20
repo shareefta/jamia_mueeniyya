@@ -16,6 +16,12 @@ export interface TransactionProps {
   payment_mode: number;
   campus: number;
   transaction_type: "IN" | "OUT";
+  user?: number;
+  user_name?: string;
+  category_name?: string;
+  payment_mode_name?: string;
+  campus_name?: string;
+  transaction_label?: string;
 }
 
 export const getTransactions = async () => {
