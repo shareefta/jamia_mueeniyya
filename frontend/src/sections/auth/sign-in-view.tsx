@@ -35,7 +35,7 @@ export function SignInView() {
     setLoading(true); // start loading
     try {
       // 🔑 Get JWT tokens
-      const response = await api.post('api/accounts/token/', {
+      const response = await api.post('accounts/token/', {
         mobile: mobileNumber,
         password,
       });
@@ -47,7 +47,7 @@ export function SignInView() {
       enqueueSnackbar('Login successful!', { variant: 'success' });
 
       // 👤 Fetch user profile
-      const meRes = await api.get('/api/accounts/me/', {
+      const meRes = await api.get('accounts/me/', {
         headers: { Authorization: `Bearer ${access}` },
       });
 
