@@ -24,13 +24,29 @@ export interface TransactionProps {
   transaction_label?: string;
 }
 
+// get all transactions
 export const getTransactions = async () => {
   const res = await axios.get(BASE_URL, { headers: getAuthHeaders() });
   return res.data;
 };
 
+// Create transaction
 export const createTransaction = async (data: TransactionProps) => {
   const res = await axios.post(BASE_URL, data, { headers: getAuthHeaders() });
+  window.dispatchEvent(new Event("transaction-update"));
+  return res.data;
+};
+
+// Edit transaction
+export const updateTransaction = async (id: number, data: TransactionProps) => {
+  const res = await axios.put(`${BASE_URL}${id}/`, data, { headers: getAuthHeaders() });
+  window.dispatchEvent(new Event("transaction-update"));
+  return res.data;
+};
+
+// Delete transaction
+export const deleteTransaction = async (id: number) => {
+  const res = await axios.delete(`${BASE_URL}${id}/`, { headers: getAuthHeaders() });
   window.dispatchEvent(new Event("transaction-update"));
   return res.data;
 };

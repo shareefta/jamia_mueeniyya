@@ -7,29 +7,9 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 
 import { Add, Edit, Delete } from "@mui/icons-material";
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Box, 
-  Button,
-  Card,
-  CardContent,
-  Typography,
-  Grid,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Table,
-  TableHead,
-  TableBody,
-  TableCell,
-  TableRow,
-  TableContainer,
-  Paper,
-  IconButton,
+  Dialog, DialogTitle, DialogContent, DialogActions, TextField, Box, Button, Card, CardContent,
+  Typography, Grid, FormControl, InputLabel, Select, MenuItem, Table, TableHead, TableBody,
+  TableCell, TableRow, TableContainer, Paper, IconButton, FormControlLabel, RadioGroup, Radio
 } from "@mui/material";
 
 dayjs.extend(isBetween);
@@ -42,7 +22,7 @@ import { getOffCampuses } from "src/api/offCampus";
 import { getPaymentModes } from "src/api/payment-modes";
 import { getOpeningBalances } from "src/api/opening-balances";
 
-import { createTransaction, getTransactions } from "../api/transactions";
+import { createTransaction, getTransactions, updateTransaction, deleteTransaction, TransactionProps } from "../api/transactions";
 
 const TransactionList = () => {
   const { enqueueSnackbar } = useSnackbar();
@@ -56,6 +36,10 @@ const TransactionList = () => {
     campus: "All",
     user: "All",
     includeOB: true,
+    customStartDate: "",
+    customEndDate: "",
+    customLabel: "",
+    customDateType: "",
   });
 
   const [open, setOpen] = useState(false);
@@ -66,6 +50,16 @@ const TransactionList = () => {
   const [campuses, setCampuses] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [openingBalances, setOpeningBalances] = useState<any[]>([]);
+
+  // Custom date modal states
+  const [openCustomDate, setOpenCustomDate] = useState(false);
+  const [customDateType, setCustomDateType] = useState("range");
+  const [customStartDate, setCustomStartDate] = useState("");
+  const [customEndDate, setCustomEndDate] = useState("");
+
+  // Edit modal state
+  const [editOpen, setEditOpen] = useState(false);
+  const [editData, setEditData] = useState<TransactionProps | null>(null);
 
   const [formData, setFormData] = useState({
     date: "",
@@ -111,11 +105,24 @@ const TransactionList = () => {
     const lastMonthStart = dayjs().subtract(1, "month").startOf("month");
     const lastMonthEnd = dayjs().subtract(1, "month").endOf("month");
 
+    // --- Date filtering ---
     if (filters.dateRange === "Today") temp = temp.filter(t => t.date === today);
     else if (filters.dateRange === "Yesterday") temp = temp.filter(t => t.date === yesterday);
     else if (filters.dateRange === "This Month") temp = temp.filter(t => dayjs(t.date).isAfter(firstOfMonth));
     else if (filters.dateRange === "Last Month") temp = temp.filter(t => dayjs(t.date).isBetween(lastMonthStart, lastMonthEnd));
+    else if (filters.dateRange === "Custom") {
+      if (filters.customStartDate && filters.customEndDate) {
+        const start = dayjs(filters.customStartDate).startOf("day");
+        const end = dayjs(filters.customEndDate).endOf("day");
+        temp = temp.filter(t => dayjs(`${t.date} ${t.time}`).isBetween(start, end, null, "[]"));
+      } else if (filters.customStartDate) {
+        // Single date
+        const single = dayjs(filters.customStartDate).format("YYYY-MM-DD");
+        temp = temp.filter(t => t.date === single);
+      }
+    }
 
+    // --- Other filters ---
     if (filters.type !== "All") temp = temp.filter(t => t.transaction_type === filters.type);
     if (filters.category !== "All") temp = temp.filter(t => t.category === parseInt(filters.category));
     if (filters.paymentMode !== "All") temp = temp.filter(t => t.payment_mode === parseInt(filters.paymentMode));
@@ -128,42 +135,78 @@ const TransactionList = () => {
   // --- Utility to calculate opening balance dynamically ---
   const getOpeningBalance = (
     allTxns: any[],
-    appliedOpeningBalances: any[],
-    appliedFilters: any
+    obList: any[],
+    activeFilters: any,
+    filteredList: any[]
   ) => {
-    if (!appliedFilters.includeOB) return 0;
+    if (!activeFilters.includeOB) return 0;
+    if (!allTxns?.length) return 0;
 
-    // Determine start date of filtered transactions
-    const filteredTxns = appliedFilters.length ? filtered : allTxns;
-    if (!filteredTxns.length) return 0;
+    let startDate;
 
-    // Start date is the oldest transaction in filtered list
-    const startDate = dayjs(filteredTxns[filteredTxns.length - 1].date);
+    // --- Determine startDate based on filter selection ---
+    const today = dayjs().startOf("day");
+    const yesterday = dayjs().subtract(1, "day").startOf("day");
+    const firstOfMonth = dayjs().startOf("month");
+    const lastMonthStart = dayjs().subtract(1, "month").startOf("month");
 
-    // Filter transactions before start date
+    // 1️⃣ Predefined Date Ranges
+    switch (activeFilters.dateRange) {
+      case "Today":
+        startDate = today;
+        break;
+      case "Yesterday":
+        startDate = yesterday;
+        break;
+      case "This Month":
+        startDate = firstOfMonth;
+        break;
+      case "Last Month":
+        startDate = lastMonthStart;
+        break;
+      default:
+        startDate = null;
+    }
+
+    // 2️⃣ Custom Range (if customStartDate exists)
+    if (activeFilters.customStartDate) {
+      startDate = dayjs(activeFilters.customStartDate).startOf("day");
+    }
+
+    // 3️⃣ If no specific range, use earliest date in current filtered list
+    if (!startDate) {
+      const filteredTxns = filteredList.length ? filteredList : allTxns;
+      if (!filteredTxns.length) return 0;
+      startDate = dayjs(filteredTxns[filteredTxns.length - 1].date);
+    }
+
+    // --- All transactions before startDate are previous ---
     const prevTxns = allTxns.filter(txn =>
       dayjs(`${txn.date} ${txn.time}`).isBefore(startDate)
     );
 
     let balance = 0;
 
-    if (appliedFilters.campus === "All") {
-      // Add all opening balances
-      balance = appliedOpeningBalances.reduce((acc, ob) => acc + Number(ob.amount || 0), 0);
+    // --- Campus Handling ---
+    if (activeFilters.campus === "All") {
+      // Sum all campuses’ OBs
+      balance = obList.reduce((acc, ob) => acc + Number(ob.amount || 0), 0);
 
-      // Add previous transactions
+      // Add all previous transactions (before range start)
       balance += prevTxns.reduce((acc, txn) => {
         if (txn.transaction_type === "IN") return acc + Number(txn.amount);
         if (txn.transaction_type === "OUT") return acc - Number(txn.amount);
         return acc;
       }, 0);
     } else {
-      // Campus-specific opening balance
-      const ob = appliedOpeningBalances.find(o => Number(o.campus) === Number(filters.campus));
+      // Campus-specific OB
+      const ob = obList.find(o => Number(o.campus) === Number(activeFilters.campus));
       balance = ob ? Number(ob.amount) : 0;
 
-      // Previous transactions for this campus
-      const campusTxns = prevTxns.filter(txn => Number(txn.campus) === Number(filters.campus));
+      // Filter previous txns for this campus only
+      const campusTxns = prevTxns.filter(
+        txn => Number(txn.campus) === Number(activeFilters.campus)
+      );
       balance += campusTxns.reduce((acc, txn) => {
         if (txn.transaction_type === "IN") return acc + Number(txn.amount);
         if (txn.transaction_type === "OUT") return acc - Number(txn.amount);
@@ -176,22 +219,22 @@ const TransactionList = () => {
 
   // --- Refactored computeBalance to include opening balance ---
   const computeBalanceOptimized = (
-    list: any[],
-    appliedFilters: any,
-    appliedOpeningBalances: any[],
+    txnList: any[],         // renamed from list
+    activeFilters: any,     // renamed from filters
+    obList: any[],          // renamed from openingBalances
     allTxns: any[]
   ) => {
-    if (!list?.length) return [];
+    if (!txnList?.length) return [];
 
     // Sort transactions ascending
-    const sorted = [...list].sort((a, b) => {
+    const sorted = [...txnList].sort((a, b) => {
       const aTime = dayjs(`${a.date} ${a.time}`);
       const bTime = dayjs(`${b.date} ${b.time}`);
       return aTime.isAfter(bTime) ? 1 : -1;
     });
 
     // Get starting balance dynamically
-    let balance = getOpeningBalance(allTxns, appliedOpeningBalances, appliedFilters);
+    let balance = getOpeningBalance(allTxns, obList, activeFilters, txnList);
 
     // Compute running balance
     const withBalance = sorted.map(txn => {
@@ -204,20 +247,28 @@ const TransactionList = () => {
     return withBalance.reverse();
   };
 
+  // --- Filter handler ---
   const handleFilterChange = (key: string, value: any) => {
-    setFilters({ ...filters, [key]: value });
+    if (key === "dateRange" && value === "Custom") {
+      setOpenCustomDate(true);
+    } else {
+      setFilters({ ...filters, [key]: value });
+    }
   };
 
- // --- Usage ---
+  // --- Usage ---
   const computedTxns = computeBalanceOptimized(filtered, filters, openingBalances, transactions);
 
   // Opening Balance card value
-  const displayedOB = getOpeningBalance(transactions, openingBalances, filters);
+  const displayedOB = getOpeningBalance(transactions, openingBalances, filters, filtered);
 
   // Totals
-  const totalIn = computedTxns.filter(txn => txn.transaction_type === "IN")
+  const totalIn = computedTxns
+    .filter(txn => txn.transaction_type === "IN")
     .reduce((acc, t) => acc + Number(t.amount), 0);
-  const totalOut = computedTxns.filter(txn => txn.transaction_type === "OUT")
+
+  const totalOut = computedTxns
+    .filter(txn => txn.transaction_type === "OUT")
     .reduce((acc, t) => acc + Number(t.amount), 0);
 
   const netBalance = displayedOB + totalIn - totalOut;
@@ -267,16 +318,115 @@ const TransactionList = () => {
       }
     };
 
+    // Update handlers
+    const handleEditClick = (txn: TransactionProps) => {
+      setEditData(txn);
+      setEditOpen(true);
+    };
+
+    const handleEditSubmit = async () => {
+      if (!editData || !editData.id) return;
+
+      try {
+        await updateTransaction(editData.id, editData);
+        enqueueSnackbar("Transaction updated successfully", { variant: "success" });
+
+        // Update local state without refetching
+        setTransactions(prev =>
+          prev.map(t => (t.id === editData.id ? editData : t))
+        );
+        setFiltered(prev =>
+          prev.map(t => (t.id === editData.id ? editData : t))
+        );
+
+        setEditOpen(false);
+      } catch (err) {
+        enqueueSnackbar("Failed to update transaction", { variant: "error" });
+      }
+    };
+
+    const handleDeleteClick = async (id: number) => {
+      if (!window.confirm("Are you sure you want to delete this transaction?")) return;
+
+      try {
+        await deleteTransaction(id);
+
+        // Update local state to remove deleted transaction
+        setTransactions(prev => prev.filter(t => t.id !== id));
+        setFiltered(prev => prev.filter(t => t.id !== id));
+
+        enqueueSnackbar("Transaction deleted successfully", { variant: "success" });
+      } catch (err) {
+        console.error("Delete failed:", err);
+        enqueueSnackbar("Failed to delete transaction", { variant: "error" });
+      }
+    };
+
+    // Determine what to show for date display
+    const formatDate = (dateStr: string) => dayjs(dateStr).format("DD-MM-YYYY");
+    const selectedDateLabel = () => {
+      if (filters.dateRange === "Custom") {
+        if (filters.customDateType === "single") {
+          return dayjs(filters.customStartDate).format("DD-MM-YYYY");
+        } else if (filters.customDateType === "range") {
+          const start = dayjs(filters.customStartDate).format("DD-MM-YYYY");
+          const end = dayjs(filters.customEndDate).format("DD-MM-YYYY");
+          return `${start} to ${end}`;
+        }
+      } else {
+        return filters.dateRange;
+      }
+      return "";
+    };
+
   return (
     <Box p={4}>
       {/* Header */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4" fontWeight="bold">Transactions</Typography>
+        <Box display="flex" alignItems="center">
+          <Typography variant="h4" fontWeight="bold">
+            Transactions
+          </Typography>
+          {selectedDateLabel && (
+            <Box
+              onClick={() => setOpenCustomDate(true)}
+              sx={{
+                ml: 2,
+                px: 2,
+                py: 0.5,
+                borderRadius: "16px",
+                backgroundColor: "primary.light",
+                color: "primary.contrastText",
+                fontSize: "0.875rem",
+                fontWeight: 500,
+                cursor: "pointer",
+                "&:hover": {
+                  backgroundColor: "primary.main",
+                  color: "white",
+                },
+              }}
+            >
+              {selectedDateLabel()}
+            </Box>
+          )}
+        </Box>
+
         <Box>
-          <Button variant="contained" color="success" onClick={() => handleClickOpen("IN")} startIcon={<Add />} sx={{ mr: 1 }}>
+          <Button
+            variant="contained"
+            color="success"
+            onClick={() => handleClickOpen("IN")}
+            startIcon={<Add />}
+            sx={{ mr: 1 }}
+          >
             Cash In
           </Button>
-          <Button variant="contained" color="error" onClick={() => handleClickOpen("OUT")} startIcon={<Add />}>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={() => handleClickOpen("OUT")}
+            startIcon={<Add />}
+          >
             Cash Out
           </Button>
         </Box>
@@ -287,7 +437,7 @@ const TransactionList = () => {
         <CardContent>
           <Grid container spacing={2}>
             {[
-              { label: "Date", key: "dateRange", options: ["Today", "Yesterday", "This Month", "Last Month"] },
+              { label: "Date", key: "dateRange", options: ["Today", "Yesterday", "This Month", "Last Month", "Custom"] },
               { label: "Type", key: "type", options: ["IN", "OUT"] },
               { label: "Category", key: "category", options: categories.map(c => ({ id: c.id, name: c.name })) },
               { label: "Payment Mode", key: "paymentMode", options: paymentModes.map(p => ({ id: p.id, name: p.name })) },
@@ -300,12 +450,24 @@ const TransactionList = () => {
                   <Select
                     value={filters[filter.key as keyof typeof filters]}
                     label={filter.label}
-                    onChange={(e) => handleFilterChange(filter.key, e.target.value)}
+                    onChange={(e) => {
+                      // Only update filters for non-Custom values
+                      if (filter.key === "dateRange" && e.target.value === "Custom") return;
+                      handleFilterChange(filter.key, e.target.value);
+                    }}
                   >
                     <MenuItem value="All">All</MenuItem>
-                    {filter.options.map((opt: any) =>
+                    {filter.options.map((opt: any) => 
                       typeof opt === "string" ? (
-                        <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+                        <MenuItem
+                          key={opt}
+                          value={opt}
+                          {...(filter.key === "dateRange" && opt === "Custom" ? {
+                            onClick: () => setOpenCustomDate(true)
+                          } : {})}
+                        >
+                          {opt}
+                        </MenuItem>
                       ) : (
                         <MenuItem key={opt.id} value={opt.id}>{opt.name}</MenuItem>
                       )
@@ -328,8 +490,10 @@ const TransactionList = () => {
                   category: "All",
                   paymentMode: "All",
                   campus: "All",
-                  user: "All"
-                }))}              >
+                  user: "All",
+                  customStartDate: "",
+                  customEndDate: "",
+                }))}>
                 Clear
               </Button>
             </Grid>
@@ -412,7 +576,7 @@ const TransactionList = () => {
         sx={{
           borderRadius: 2,
           boxShadow: 3,
-          maxHeight: 600, // Scrollable if many rows
+          maxHeight: 600,
           border: "1px solid #ddd",
         }}
       >
@@ -421,10 +585,11 @@ const TransactionList = () => {
           <TableHead>
             <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
               {[
-                { label: "Sl. No.", width: "5%" },
+                { label: "#", width: "5%" },
                 { label: "Date & Time", width: "15%" },
-                { label: "Details", width: "40%" },
-                { label: "Payment Mode", width: "10%" },
+                { label: "Details", width: "30%" },
+                { label: "Category", width: "10%" },
+                { label: "Mode", width: "10%" },
                 { label: "Amount", width: "10%" },
                 { label: "Balance", width: "10%" },
                 { label: "Action", width: "10%" },
@@ -477,6 +642,9 @@ const TransactionList = () => {
                   {/* Details */}
                   <TableCell align="left">{txn.remarks || "-"}</TableCell>
 
+                  {/* Category */}
+                  <TableCell align="center">{txn.category_name}</TableCell>
+
                   {/* Payment Mode */}
                   <TableCell align="center">{txn.payment_mode_name}</TableCell>
 
@@ -496,10 +664,10 @@ const TransactionList = () => {
 
                   {/* Actions */}
                   <TableCell align="center">
-                    <IconButton color="primary">
+                    <IconButton onClick={() => handleEditClick(txn)} color="primary">
                       <Edit fontSize="small" />
                     </IconButton>
-                    <IconButton color="error">
+                    <IconButton onClick={() => handleDeleteClick(txn.id!)} color="error">
                       <Delete fontSize="small" />
                     </IconButton>
                   </TableCell>
@@ -515,6 +683,7 @@ const TransactionList = () => {
           </TableBody>
         </Table>
       </TableContainer>
+
       {/* Transaction Dialog */}
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
         <DialogTitle>{transactionType === "IN" ? "Add Cash In" : "Add Cash Out"}</DialogTitle>
@@ -592,6 +761,224 @@ const TransactionList = () => {
           <Button onClick={() => handleSave(false)} variant="contained">Save</Button>
           <Button onClick={() => handleSave(true)} variant="outlined">Save & Add More</Button>
           <Button onClick={handleClose}>Cancel</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Custom Date Dialog */}
+      <Dialog open={openCustomDate} onClose={() => setOpenCustomDate(false)}>
+        <DialogTitle>Select Custom Date</DialogTitle>
+        <DialogContent dividers>
+          <RadioGroup
+            row
+            value={customDateType}
+            onChange={(e) => setCustomDateType(e.target.value)}
+          >
+            <FormControlLabel value="range" control={<Radio />} label="Date Range" />
+            <FormControlLabel value="single" control={<Radio />} label="Single Date" />
+          </RadioGroup>
+
+          {customDateType === "range" ? (
+            <Box display="flex" gap={2} mt={2}>
+              <TextField
+                label="Start Date"
+                type="date"
+                InputLabelProps={{ shrink: true }}
+                value={customStartDate}
+                onChange={(e) => setCustomStartDate(e.target.value)}
+                fullWidth
+              />
+              <TextField
+                label="End Date"
+                type="date"
+                InputLabelProps={{ shrink: true }}
+                value={customEndDate}
+                onChange={(e) => setCustomEndDate(e.target.value)}
+                fullWidth
+              />
+            </Box>
+          ) : (
+            <Box mt={2}>
+              <TextField
+                label="Date"
+                type="date"
+                InputLabelProps={{ shrink: true }}
+                value={customStartDate}
+                onChange={(e) => setCustomStartDate(e.target.value)}
+                fullWidth
+              />
+            </Box>
+          )}
+        </DialogContent>
+
+        <DialogActions>
+          <Button
+            onClick={() => {
+              let label = "";
+              if (customDateType === "range") {
+                label = `${customStartDate} → ${customEndDate}`;
+              } else {
+                label = customStartDate; // single date
+              }
+              
+              setFilters({
+                ...filters,
+                dateRange: "Custom",
+                customDateType: customDateType,
+                customStartDate,
+                customEndDate: customDateType === "range" ? customEndDate : customStartDate,
+                customLabel: label,
+              });
+              setOpenCustomDate(false);
+
+              // Reset the temporary states so next open works
+              setCustomStartDate("");
+              setCustomEndDate("");
+              setCustomDateType("range");
+            }}
+            color="primary"
+            variant="contained"
+          >
+            Apply
+          </Button>
+          <Button
+            onClick={() => {
+              setCustomStartDate("");
+              setCustomEndDate("");
+              setCustomDateType("range");
+              setOpenCustomDate(false);
+            }}
+            color="secondary"
+            variant="outlined"
+          >
+            Cancel
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Transaction Dialog */}
+      <Dialog open={editOpen} onClose={() => setEditOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Edit Transaction</DialogTitle>
+
+        <DialogContent>
+
+          {/* Transaction Type */}
+          <FormControl fullWidth margin="dense">
+            <InputLabel>Transaction Type</InputLabel>
+            <Select
+              name="transaction_type"
+              value={editData?.transaction_type || ""}
+              onChange={(e) =>
+                setEditData(prev => prev ? { ...prev, transaction_type: e.target.value as "IN" | "OUT" } : prev)
+              }
+            >
+              <MenuItem value="IN">IN</MenuItem>
+              <MenuItem value="OUT">OUT</MenuItem>
+            </Select>
+          </FormControl>
+
+          {/* Date */}
+          <TextField
+            label="Date"
+            type="date"
+            name="date"
+            value={editData?.date || ""}
+            onChange={(e) => setEditData(prev => prev ? { ...prev, date: e.target.value } : prev)}
+            fullWidth
+            margin="dense"
+            InputLabelProps={{ shrink: true }}
+          />
+
+          {/* Time */}
+          <TextField
+            label="Time"
+            type="time"
+            name="time"
+            value={editData?.time || ""}
+            onChange={(e) => setEditData(prev => prev ? { ...prev, time: e.target.value } : prev)}
+            fullWidth
+            margin="dense"
+            InputLabelProps={{ shrink: true }}
+          />
+
+          {/* Amount */}
+          <TextField
+            label="Amount"
+            name="amount"
+            type="number"
+            value={editData?.amount || ""}
+            onChange={(e) =>
+              setEditData(prev => prev ? { ...prev, amount: Number(e.target.value) } : prev)
+            }
+            fullWidth
+            margin="dense"
+          />
+
+          {/* Remarks */}
+          <TextField
+            label="Remarks"
+            name="remarks"
+            value={editData?.remarks || ""}
+            onChange={(e) =>
+              setEditData(prev => prev ? { ...prev, remarks: e.target.value } : prev)
+            }
+            fullWidth
+            margin="dense"
+          />
+
+          {/* Category */}
+          <FormControl fullWidth margin="dense">
+            <InputLabel>Category</InputLabel>
+            <Select
+              name="category"
+              value={editData?.category || ""}
+              onChange={(e) =>
+                setEditData(prev => prev ? { ...prev, category: Number(e.target.value) } : prev)
+              }
+            >
+              {categories.map(c => (
+                <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          {/* Payment Mode */}
+          <FormControl fullWidth margin="dense">
+            <InputLabel>Payment Mode</InputLabel>
+            <Select
+              name="payment_mode"
+              value={editData?.payment_mode || ""}
+              onChange={(e) =>
+                setEditData(prev => prev ? { ...prev, payment_mode: Number(e.target.value) } : prev)
+              }
+            >
+              {paymentModes.map(p => (
+                <MenuItem key={p.id} value={p.id}>{p.name}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          {/* Campus */}
+          <FormControl fullWidth margin="dense">
+            <InputLabel>Campus</InputLabel>
+            <Select
+              name="campus"
+              value={editData?.campus || ""}
+              onChange={(e) =>
+                setEditData(prev => prev ? { ...prev, campus: Number(e.target.value) } : prev)
+              }
+            >
+              {campuses.map(c => (
+                <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={() => setEditOpen(false)}>Cancel</Button>
+          <Button color="primary" variant="contained" onClick={handleEditSubmit}>
+            Save
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>
