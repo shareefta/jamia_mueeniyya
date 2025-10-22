@@ -24,6 +24,18 @@ class PaymentMode(models.Model):
     def __str__(self):
         return self.name
 
+class CashBook(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    campus = models.ForeignKey(OffCampus, on_delete=models.SET_NULL, null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
 class Transaction(models.Model):
     TRANSACTION_TYPES = [
         ('IN', 'Cash In'),
@@ -34,7 +46,7 @@ class Transaction(models.Model):
     transaction_type = models.CharField(max_length=3, choices=TRANSACTION_TYPES)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
     payment_mode = models.ForeignKey(PaymentMode, on_delete=models.SET_NULL, null=True)
-    campus = models.ForeignKey(OffCampus, on_delete=models.SET_NULL, null=True, blank=True)
+    cash_book = models.ForeignKey(CashBook, on_delete=models.SET_NULL, null=True, blank=True)
     date = models.DateField()
     time = models.TimeField()
     amount = models.DecimalField(max_digits=12, decimal_places=2)
