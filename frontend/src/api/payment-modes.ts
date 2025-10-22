@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = "http://127.0.0.1:8000/api/transactions/payment_modes/";
+const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}transactions/payment_modes/`;
 
 export interface PaymentModeProps {
   id: number;

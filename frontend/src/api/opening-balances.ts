@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = "http://127.0.0.1:8000/api/transactions/opening_balances/";
+const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}transactions/opening_balances/`;
 
 const getAuthHeaders = () => ({
   Authorization: `Bearer ${localStorage.getItem("token")}`,
