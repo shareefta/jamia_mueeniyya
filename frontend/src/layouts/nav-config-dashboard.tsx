@@ -24,6 +24,11 @@ export const navData: NavItem[] = [
     icon: icon('ic-transaction'),
   },
   {
+    title: 'Cash Books',
+    path: '/cash-books-lists',
+    icon: icon('ic-transaction'),
+  },
+  {
     title: 'Settings',
     path: '/settings',
     icon: icon('ic-settings'),

@@ -23,4 +23,9 @@ export const StaffNavData = [
     path: '/staff/transaction-list',
     icon: icon('ic-transaction'),
   },
+  {
+    title: 'Cash Books',
+    path: '/staff/cash-books-lists',
+    icon: icon('ic-transaction'),
+  },
 ];

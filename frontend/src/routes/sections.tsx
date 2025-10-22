@@ -29,6 +29,9 @@ export const UsersPage = lazy(() => import('src/pages/settings/users'));
 export const PaymentModesPage = lazy(() => import('src/pages/settings/payment-modes'));
 export const CategoriesPage = lazy(() => import('src/pages/settings/categories'));
 export const OpeningBalancesPage = lazy(() => import('src/pages/settings/opening-balances'));
+export const CashBookPage = lazy(() => import('src/pages/settings/cash-book'));
+export const CashBookListsPage = lazy(() => import('src/pages//cash-book-lists'));
+
 
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
 
@@ -66,6 +69,7 @@ export const routesSection: RouteObject[] = [
     children: [
       { index: true, element: <DashboardPage /> },
       { path: 'transaction-list', element: <TransactionListPage /> },
+      { path: 'cash-books-lists', element: <CashBookListsPage /> },
       {
         path: 'settings',
         element: <SettingsLayout />,
@@ -76,6 +80,7 @@ export const routesSection: RouteObject[] = [
           { path: 'categories', element: <CategoriesPage /> },
           { path: 'payment-modes', element: <PaymentModesPage /> },
           { path: 'opening-balances', element: <OpeningBalancesPage /> },
+          { path: 'cash-book', element: <CashBookPage /> },
         ],
       },
     ],
@@ -94,6 +99,7 @@ export const routesSection: RouteObject[] = [
     children: [
       { index: true, element: <StaffDashboardPage /> },
       { path: 'transaction-list', element: <TransactionListPage /> },
+      { path: 'cash-books-lists', element: <CashBookListsPage /> },
     ],
   },
   {
