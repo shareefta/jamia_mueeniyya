@@ -20,7 +20,7 @@ export const StaffNavData = [
   },
   {
     title: 'Transactions',
-    path: '/transaction-list',
+    path: '/staff/transaction-list',
     icon: icon('ic-transaction'),
   },
 ];
