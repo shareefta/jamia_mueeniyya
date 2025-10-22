@@ -19,7 +19,6 @@ export const DashboardPage = lazy(() => import('src/pages/dashboard'));
 export const StaffDashboardPage = lazy( () => import ('src/pages/dashboard-staff'))
 export const SignInPage = lazy(() => import('src/pages/sign-in'));
 
-export const TransactionsPage = lazy(() => import('src/pages/transactions'));
 export const TransactionListPage = lazy(() => import('src/pages/transaction-list'));
 
 export const SettingsView = lazy(() => import('src/pages/settings'));
@@ -66,7 +65,6 @@ export const routesSection: RouteObject[] = [
     ),
     children: [
       { index: true, element: <DashboardPage /> },
-      { path: 'transactions', element: <TransactionsPage /> },
       { path: 'transaction-list', element: <TransactionListPage /> },
       {
         path: 'settings',

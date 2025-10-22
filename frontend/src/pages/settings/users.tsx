@@ -2,6 +2,10 @@ import { useSnackbar } from "notistack";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import EditIcon from "@mui/icons-material/Edit";
+import SaveIcon from "@mui/icons-material/Save";
+import DeleteIcon from "@mui/icons-material/Delete";
+import CancelIcon from "@mui/icons-material/Cancel";
 import {
   Breadcrumbs,
   Link,
@@ -257,7 +261,7 @@ export default function UsersPage() {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>SL. No.</TableCell>
+              <TableCell>#</TableCell>
               <TableCell>Name</TableCell>
               <TableCell>Mobile</TableCell>
               <TableCell>Email</TableCell>
@@ -272,6 +276,7 @@ export default function UsersPage() {
               <TableRow key={user.id}>
                 <TableCell>{index + 1}</TableCell>
 
+                {/* Name */}
                 <TableCell>
                   {editingId === user.id ? (
                     <TextField
@@ -284,14 +289,83 @@ export default function UsersPage() {
                   )}
                 </TableCell>
 
-                <TableCell>{user.mobile}</TableCell>
-                <TableCell>{user.email || "—"}</TableCell>
-                <TableCell>{user.role || "—"}</TableCell>
+                {/* Mobile */}
                 <TableCell>
-                  {user.off_campuses.map((oc) => oc.name).join(", ") || "—"}
+                  {editingId === user.id ? (
+                    <TextField
+                      value={editingUserMobile}
+                      onChange={(e) => setEditingUserMobile(e.target.value)}
+                      size="small"
+                    />
+                  ) : (
+                    user.mobile
+                  )}
                 </TableCell>
 
-                {/* <TableCell>
+                {/* Email */}
+                <TableCell>
+                  {editingId === user.id ? (
+                    <TextField
+                      value={editingUserEmail}
+                      onChange={(e) => setEditingUserEmail(e.target.value)}
+                      size="small"
+                    />
+                  ) : (
+                    user.email || "—"
+                  )}
+                </TableCell>
+
+                {/* Role */}
+                <TableCell>
+                  {editingId === user.id ? (
+                    <FormControl size="small" sx={{ minWidth: 150 }}>
+                      <Select
+                        value={editingUserRole}
+                        onChange={(e) => setEditingUserRole(e.target.value as number)}
+                      >
+                        {roles.map((r) => (
+                          <MenuItem key={r.id} value={r.id}>
+                            {r.name}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  ) : (
+                    user.role || "—"
+                  )}
+                </TableCell>
+
+                {/* Off Campuses */}
+                <TableCell>
+                  {editingId === user.id ? (
+                    <FormControl size="small" sx={{ minWidth: 200 }}>
+                      <Select
+                        multiple
+                        value={editingUserOffCampuses}
+                        onChange={(e) => setEditingUserOffCampuses(e.target.value as number[])}
+                        input={<OutlinedInput label="Off Campuses" />}
+                        renderValue={(selected) =>
+                          offCampuses
+                            .filter((oc) => selected.includes(oc.id))
+                            .map((oc) => oc.name)
+                            .join(", ")
+                        }
+                      >
+                        {offCampuses.map((oc) => (
+                          <MenuItem key={oc.id} value={oc.id}>
+                            <Checkbox checked={editingUserOffCampuses.includes(oc.id)} />
+                            <ListItemText primary={oc.name} />
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  ) : (
+                    user.off_campuses.map((oc) => oc.name).join(", ") || "—"
+                  )}
+                </TableCell>
+
+                {/* Password */}
+                <TableCell>
                   {editingId === user.id ? (
                     <TextField
                       type="password"
@@ -302,7 +376,9 @@ export default function UsersPage() {
                   ) : (
                     "••••••"
                   )}
-                </TableCell> */}
+                </TableCell>
+
+                {/* Active */}
                 <TableCell>
                   {editingId === user.id ? (
                     <Checkbox
@@ -315,39 +391,54 @@ export default function UsersPage() {
                   )}
                 </TableCell>
 
+                {/* Actions */}
                 <TableCell>
                   {editingId === user.id ? (
                     <>
-                      <Button size="small" onClick={() => handleUpdate(user.id)}>
-                        Save
+                      <Button
+                        color="success"
+                        size="small"
+                        onClick={() => handleUpdate(user.id)}
+                        sx={{ minWidth: 36 }}
+                      >
+                        <SaveIcon />
                       </Button>
-                      <Button size="small" onClick={() => setEditingId(null)}>
-                        Cancel
+                      <Button
+                        color="inherit"
+                        size="small"
+                        onClick={() => setEditingId(null)}
+                        sx={{ minWidth: 36 }}
+                      >
+                        <CancelIcon />
                       </Button>
                     </>
                   ) : (
                     <>
                       <Button
+                        color="primary"
                         size="small"
                         onClick={() => {
                           setEditingId(user.id);
                           setEditingUserName(user.name);
                           setEditingUserEmail(user.email || "");
                           setEditingUserMobile(user.mobile);
-                          setEditingUserRole(user.role as any);
-                          setEditingUserOffCampuses(
-                            user.off_campuses.map((oc) => oc.id)
-                          );
+                          const matchedRole = roles.find((r) => r.name === user.role);
+                          setEditingUserRole(matchedRole ? matchedRole.id : "");
+                          setEditingUserOffCampuses(user.off_campuses.map((oc) => oc.id));
+                          setEditingUserIsActive(user.is_active);
+                          setEditingUserPassword("");
                         }}
+                        sx={{ minWidth: 36 }}
                       >
-                        Edit
+                        <EditIcon />
                       </Button>
                       <Button
-                        size="small"
                         color="error"
+                        size="small"
                         onClick={() => handleDelete(user.id)}
+                        sx={{ minWidth: 36 }}
                       >
-                        Delete
+                        <DeleteIcon />
                       </Button>
                     </>
                   )}

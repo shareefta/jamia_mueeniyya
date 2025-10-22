@@ -37,12 +37,6 @@ class UserViewSet(viewsets.ModelViewSet):
         self.perform_create(serializer)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    # def perform_create(self, serializer):
-    #     serializer.save()
-
-    # def perform_update(self, serializer):
-    #     serializer.save()
-
 # JWT Login View
 class LoginView(APIView):
     permission_classes = [AllowAny]
