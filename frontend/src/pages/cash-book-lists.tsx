@@ -108,13 +108,16 @@ export default function CashBookListPage() {
 
   // Delete cash book
   const handleDelete = async (id: number) => {
-    if (!window.confirm("Are you sure you want to delete this Cash Book?")) return;
-    try {
-      await deleteCashBook(id);
-      enqueueSnackbar("Cash Book deleted successfully!", { variant: "success" });
-      fetchCashBooks();
-    } catch {
-      enqueueSnackbar("Failed to delete Cash Book", { variant: "error" });
+    if (window.confirm("Are you sure you want to delete this Cash Book?")) {
+      try {
+        const res = await deleteCashBook(id);
+        enqueueSnackbar(res.success || "Cash Book deleted successfully", { variant: "success" });
+
+        // Update table locally
+        setCashBooks(prev => prev.filter(cb => cb.id !== id));
+      } catch (error: any) {
+        enqueueSnackbar(error.message, { variant: "error" });
+      }
     }
   };
 

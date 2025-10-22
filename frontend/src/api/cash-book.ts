@@ -35,6 +35,12 @@ export const updateCashBook = async (id: number, data: CashBookProps) => {
 
 // Delete a Cash Book
 export const deleteCashBook = async (id: number) => {
-  await axios.delete(`${BASE_URL}${id}/`, { headers: getAuthHeaders() });
-  window.dispatchEvent(new Event("cashbook-update"));
+  try {
+    const res = await axios.delete(`${BASE_URL}${id}/`, { headers: getAuthHeaders() });
+    window.dispatchEvent(new Event("cashbook-update"));
+    return res.data;
+  } catch (error: any) {
+    console.error(error.response?.data || error.message);
+    throw new Error(error.response?.data?.error || "Failed to delete Cash Book");
+  }
 };

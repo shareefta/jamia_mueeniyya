@@ -23,6 +23,23 @@ class CashBookViewSet(viewsets.ModelViewSet):
     filterset_fields = ['campus', 'is_active']  # filter by campus or active status
     search_fields = ['name']  # search by cash book name
     ordering_fields = ['name', 'created_at']  # allow ordering by name or creation time
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        # Check for related OpeningBalances
+        if instance.openingbalance_set.exists():
+            return Response(
+                {"error": "Cannot delete this Cash Book. There are existing Opening Balances."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        # Optional: Check for related Transactions
+        if instance.transaction_set.exists():
+            return Response(
+                {"error": "Cannot delete this Cash Book. There are existing Transactions."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        instance.delete()
+        return Response({"success": "Cash Book deleted successfully"}, status=status.HTTP_200_OK)
 
 class TransactionViewSet(viewsets.ModelViewSet):
     queryset = Transaction.objects.all()
