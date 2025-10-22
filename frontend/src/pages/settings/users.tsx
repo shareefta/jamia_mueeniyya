@@ -267,6 +267,7 @@ export default function UsersPage() {
               <TableCell>Email</TableCell>
               <TableCell>Role</TableCell>
               <TableCell>Off Campuses</TableCell>
+              <TableCell>Password</TableCell>
               <TableCell>Active</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
