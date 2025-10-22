@@ -19,13 +19,8 @@ export const StaffNavData = [
     icon: icon('ic-analytics'),
   },
   {
-    title: 'Products',
-    path: '/staff/products',
-    icon: icon('ic-cart'),
-  },
-  {
-    title: 'Purchases',
-    path: '/staff/purchase',
-    icon: icon('ic-cart'),
+    title: 'Transactions',
+    path: '/transaction-list',
+    icon: icon('ic-transaction'),
   },
 ];
