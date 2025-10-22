@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
 
-import { getProducts } from 'src/api/products';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { _posts, _tasks, _traffic, _timeline } from 'src/_mock';
 
@@ -20,22 +19,6 @@ import { AnalyticsConversionRates } from '../analytics-conversion-rates';
 // ----------------------------------------------------------------------
 
 export function OverviewAnalyticsView() {
-  const [activeProductCount, setActiveProductCount] = useState<number>(0);
-
-  const fetchProductCount = async () => {
-      try {
-        const response = await getProducts();
-        const activeCount = response.data.filter((p) => p.active).length;
-        setActiveProductCount(activeCount);
-
-      } catch (error) {
-        console.error('Failed to fetch product count:', error);
-      }
-    };
-  
-    useEffect(() => {
-      fetchProductCount();
-    }, []);
 
   return (
     <DashboardContent maxWidth="xl">
@@ -75,7 +58,7 @@ export function OverviewAnalyticsView() {
           <AnalyticsWidgetSummary
             title="Total Students"
             percent={2.8}
-            total={activeProductCount}
+            total={1240}
             color="warning"
             icon={<img alt="Total Students" src="/assets/icons/glass/ic-glass-buy.svg" />}
             chart={{

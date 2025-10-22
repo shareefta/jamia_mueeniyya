@@ -9,7 +9,6 @@ import Alert from '@mui/material/Alert';
 import { useTheme } from '@mui/material/styles';
 
 import { _langs, _notifications } from 'src/_mock';
-import { getProductStats } from 'src/api/products';
 import { useAuthStore } from 'src/store/use-auth-store';
 
 import { Label } from 'src/components/label';
@@ -57,50 +56,7 @@ export function DashboardLayout({
   const { user } = useAuthStore();
   
   const { value: open, onFalse: onClose, onTrue: onOpen } = useBoolean();
-  const [activeProductCount, setActiveProductCount] = useState<number>(0);
   const [navItems, setNavItems] = useState(navData);
-
-  const fetchProductCount = async () => {
-    try {
-      const stats = await getProductStats();
-      console.log("Product stats API response:", stats);
-
-      const updatedNav = navData.map((item) =>
-        item.title === 'Products'
-          ? {
-              ...item,
-              info: (
-                <Label color="error" variant="inverted">
-                  {stats.active_count}
-                </Label>
-              ),
-            }
-          : item
-      );
-
-      setNavItems(updatedNav);
-      setActiveProductCount(stats.active_count);
-    } catch (error) {
-      console.error('Failed to fetch product count:', error);
-    }
-  };
-
-  useEffect(() => {
-    fetchProductCount();
-  }, []);
-
-  useEffect(() => {
-    const handleProductUpdate = () => {
-      fetchProductCount();
-    };
-
-    window.addEventListener('product-update', handleProductUpdate);
-    fetchProductCount();
-
-    return () => {
-      window.removeEventListener('product-update', handleProductUpdate);
-    };
-  }, []);
 
   const renderHeader = () => {
     const headerSlotProps: HeaderSectionProps['slotProps'] = {

@@ -8,7 +8,6 @@ import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
 import { useTheme } from '@mui/material/styles';
 
-import { getProducts } from 'src/api/products';
 import { _langs, _notifications } from 'src/_mock';
 import { NavMobile, NavDesktop } from 'src/layouts/dashboard/nav';
 import { dashboardLayoutVars } from 'src/layouts/dashboard/css-vars';
@@ -54,51 +53,7 @@ export function StaffDashboardLayout({
   const theme = useTheme();
 
   const { value: open, onFalse: onClose, onTrue: onOpen } = useBoolean();
-  const [activeProductCount, setActiveProductCount] = useState<number>(0);
   const [navItems, setNavItems] = useState(StaffNavData);
-
-  const fetchProductCount = async () => {
-    try {
-      const response = await getProducts();
-      const activeCount = response.data.filter((p) => p.active).length;
-
-      const updatedNav = StaffNavData.map((item) =>
-        item.title === 'Product'
-          ? {
-              ...item,
-              info:
-                activeCount > 0 ? (
-                  <Label color="error" variant="inverted">
-                    {activeCount}
-                  </Label>
-                ) : undefined,
-            }
-          : item
-      );
-
-      setNavItems(updatedNav);
-      setActiveProductCount(activeCount);
-    } catch (error) {
-      console.error('Failed to fetch product count:', error);
-    }
-  };
-
-  useEffect(() => {
-    fetchProductCount();
-  }, []);
-
-  useEffect(() => {
-    const handleProductUpdate = () => {
-      fetchProductCount();
-    };
-
-    window.addEventListener('product-update', handleProductUpdate);
-    fetchProductCount();
-
-    return () => {
-      window.removeEventListener('product-update', handleProductUpdate);
-    };
-  }, []);
 
   const renderHeader = () => {
     const headerSlotProps: HeaderSectionProps['slotProps'] = {
