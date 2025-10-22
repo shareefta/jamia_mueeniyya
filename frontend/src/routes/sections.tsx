@@ -17,31 +17,18 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 export const DashboardPage = lazy(() => import('src/pages/dashboard'));
 export const StaffDashboardPage = lazy( () => import ('src/pages/dashboard-staff'))
-export const UserPage = lazy(() => import('src/pages/user'));
 export const SignInPage = lazy(() => import('src/pages/sign-in'));
-export const ProductsPage = lazy(() => import('src/pages/products'));
-export const CategoryPage = lazy(() => import('src/pages/category'));
-export const LocationPage = lazy(() => import('src/pages/location'));
-export const PurchasePage = lazy(() => import('src/pages/purchase'));
 
-export const SalesLayout = lazy(() => import('src/sections/sales/sales-layout'));
-export const SalesMenuPage = lazy(() => import('src/sections/sales/sales-menu'));
-export const SalesPage = lazy(() => import('src/pages/sales'));
-export const SalesReportPage = lazy(() => import('src/sections/sales/sales-report'));
-export const SalesReturnReport = lazy(() => import('src/sections/sales/sales-return-report'));
-export const NewSalesReturnPage = lazy(() => import('src/sections/sales/new-sales-return'));
 export const TransactionsPage = lazy(() => import('src/pages/transactions'));
 export const TransactionListPage = lazy(() => import('src/pages/transaction-list'));
 
 export const SettingsView = lazy(() => import('src/pages/settings'));
 export const SettingsLayout = lazy(() => import('src/pages/settings/settings-layout'));
 export const SettingsMenuPage = lazy(() => import('src/pages/settings/settings-menu'));
-export const SalesChannelsPage = lazy(() => import('src/pages/settings/sales-channels'));
 export const OffCampusPage = lazy(() => import('src/pages/settings/off-campus'));
 export const UsersPage = lazy(() => import('src/pages/settings/users'));
 export const PaymentModesPage = lazy(() => import('src/pages/settings/payment-modes'));
 export const CategoriesPage = lazy(() => import('src/pages/settings/categories'));
-export const PurchasedByPage = lazy(() => import('src/pages/settings/purchased-by'));
 export const OpeningBalancesPage = lazy(() => import('src/pages/settings/opening-balances'));
 
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
@@ -79,33 +66,18 @@ export const routesSection: RouteObject[] = [
     ),
     children: [
       { index: true, element: <DashboardPage /> },
-      { path: 'user', element: <UserPage /> },
       { path: 'transactions', element: <TransactionsPage /> },
       { path: 'transaction-list', element: <TransactionListPage /> },
-      { path: 'new-sales-return', element: <NewSalesReturnPage /> },
       {
         path: 'settings',
         element: <SettingsLayout />,
         children: [
           { index: true, element: <SettingsMenuPage /> },
-          { path: 'channels', element: <SalesChannelsPage /> },
           { path: 'off-campus', element: <OffCampusPage /> },
           { path: 'users', element: <UsersPage /> },
           { path: 'categories', element: <CategoriesPage /> },
-          { path: 'location', element: <LocationPage /> },
           { path: 'payment-modes', element: <PaymentModesPage /> },
           { path: 'opening-balances', element: <OpeningBalancesPage /> },
-        ],
-      },
-      {
-        path: 'sales',
-        element: <SalesLayout />,
-        children: [
-          { index: true, element: <SalesMenuPage /> },
-          { path: 'sales', element: <SalesPage /> },
-          { path: 'sales-report', element: <SalesReportPage /> },
-          { path: 'sales-return-report', element: <SalesReturnReport /> },
-          { path: 'new-sales-return/:saleId', element: <NewSalesReturnPage /> },
         ],
       },
     ],
@@ -123,7 +95,7 @@ export const routesSection: RouteObject[] = [
     ),
     children: [
       { index: true, element: <StaffDashboardPage /> },
-      { path: 'products', element: <ProductsPage /> },
+      { path: 'transaction-list', element: <TransactionListPage /> },
     ],
   },
   {

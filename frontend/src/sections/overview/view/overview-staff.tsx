@@ -40,16 +40,16 @@ export function StaffOverviewAnalyticsView() {
   return (
     <DashboardContent maxWidth="xl">
       <Typography variant="h4" sx={{ mb: { xs: 3, md: 5 } }}>
-        Hi, Welcome Staff 👋
+        Hi, Welcome 👋
       </Typography>
 
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <AnalyticsWidgetSummary
-            title="Monthly Deliveries"
+            title="Total Receipts"
             percent={2.6}
             total={500}
-            icon={<img alt="Monthly Deliveries" src="/assets/icons/glass/ic-glass-bag.svg" />}
+            icon={<img alt="Total Receipts" src="/assets/icons/glass/ic-glass-bag.svg" />}
             chart={{
               categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
               series: [22, 8, 35, 50, 82, 84, 77, 12],
@@ -59,25 +59,25 @@ export function StaffOverviewAnalyticsView() {
 
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <AnalyticsWidgetSummary
-            title="Today's Deliveries"
+            title="Total Payments"
             percent={-0.1}
             total={50}
             color="secondary"
-            icon={<img alt="Today's Deliveries" src="/assets/icons/glass/ic-glass-users.svg" />}
+            icon={<img alt="Total Payments" src="/assets/icons/glass/ic-glass-users.svg" />}
             chart={{
-              categories: ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-              series: [56, 47, 40, 62, 73, 30, 23],
+              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
+              series: [22, 8, 35, 50, 82, 84, 77, 12],
             }}
           />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <AnalyticsWidgetSummary
-            title="Total Products"
+            title="Total Students"
             percent={2.8}
             total={activeProductCount}
             color="warning"
-            icon={<img alt="Total Products" src="/assets/icons/glass/ic-glass-buy.svg" />}
+            icon={<img alt="Total Students" src="/assets/icons/glass/ic-glass-buy.svg" />}
             chart={{
               categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
               series: [40, 70, 50, 28, 70, 75, 7, 64],
@@ -87,11 +87,11 @@ export function StaffOverviewAnalyticsView() {
 
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <AnalyticsWidgetSummary
-            title="Monthly Purchases"
+            title="Total Staff"
             percent={3.6}
             total={234}
             color="error"
-            icon={<img alt="Monthly Purchases" src="/assets/icons/glass/ic-glass-message.svg" />}
+            icon={<img alt="Total Staff" src="/assets/icons/glass/ic-glass-message.svg" />}
             chart={{
               categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
               series: [56, 30, 23, 54, 47, 40, 62, 73],
@@ -101,37 +101,37 @@ export function StaffOverviewAnalyticsView() {
 
         <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <AnalyticsCurrentVisits
-            title="Total Deliveries"
+            title="Total Receipts"
             chart={{
               series: [
-                { label: 'Snoonu', value: 6500 },
-                { label: 'Rafeeq', value: 4500 },
-                { label: 'Talabat - Al Ata', value: 1500 },
-                { label: 'Al Ata Shoppy', value: 2500 },
+                { label: 'Ajmer', value: 6500 },
+                { label: 'Karnataka', value: 4500 },
+                { label: 'Chennai', value: 1500 },
               ],
             }}
           />
         </Grid>
         <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <AnalyticsCurrentVisits
-            title="Deliveries - Snoonu"
+            title="Total Payments"
             chart={{
               series: [
-                { label: 'Info Arab', value: 6500 },
-                { label: 'Al Ata Shoppy', value: 8500 },
-                { label: 'Al Ata Kids', value: 4000 },
-                { label: 'Alwab', value: 5500 },
+                { label: 'Ajmer', value: 6500 },
+                { label: 'Karnataka', value: 4500 },
+                { label: 'Chennai', value: 1500 },
               ],
             }}
           />
         </Grid>
         <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <AnalyticsCurrentVisits
-            title="Deliveries - Rafeeq"
+            title="Total Students"
             chart={{
               series: [
-                { label: 'Rafeeq - Al Ata', value: 4500 },
-                { label: 'Rafeeq - info Arab', value: 3500 },
+                { label: 'Ajmer', value: 300 },
+                { label: 'Karnataka', value: 300 },
+                { label: 'Chennai', value: 200 },
+                { label: 'Online', value: 400 },
               ],
             }}
           />
