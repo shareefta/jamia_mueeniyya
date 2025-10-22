@@ -11,10 +11,5 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
     return <Navigate to="/sign-in" state={{ from: location }} replace />;
   }
 
-  // Optional: Handle unauthorized access to wrong dashboard
-  // if (location.pathname === '/dashboard/admin' && user.role !== 'Admin') {
-  //   return <Navigate to="/" replace />;
-  // }
-
   return children;
 }

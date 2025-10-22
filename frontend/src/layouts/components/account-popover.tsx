@@ -14,8 +14,6 @@ import MenuItem, { menuItemClasses } from '@mui/material/MenuItem';
 
 import { useRouter, usePathname } from 'src/routes/hooks';
 
-import { _myAccount } from 'src/_mock';
-
 // ----------------------------------------------------------------------
 
 export type AccountPopoverProps = IconButtonProps & {
@@ -29,10 +27,13 @@ export type AccountPopoverProps = IconButtonProps & {
 
 export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps) {
   const router = useRouter();
-
   const pathname = usePathname();
 
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
+
+  // ✅ Load real user data from localStorage
+  const storedUser = localStorage.getItem('user');
+  const user = storedUser ? JSON.parse(storedUser) : null;
 
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     setOpenPopover(event.currentTarget);
@@ -50,6 +51,9 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
     [handleClosePopover, router]
   );
 
+  // ✅ Optional: show nothing if user not found
+  if (!user) return null;
+
   return (
     <>
       <IconButton
@@ -64,8 +68,12 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
         }}
         {...other}
       >
-        <Avatar src={_myAccount.photoURL} alt={_myAccount.displayName} sx={{ width: 1, height: 1 }}>
-          {_myAccount.displayName.charAt(0).toUpperCase()}
+        <Avatar
+          src={user.photoURL || ''}
+          alt={user.name || 'User'}
+          sx={{ width: 1, height: 1 }}
+        >
+          {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
         </Avatar>
       </IconButton>
 
@@ -83,11 +91,11 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
       >
         <Box sx={{ p: 2, pb: 1.5 }}>
           <Typography variant="subtitle2" noWrap>
-            {_myAccount?.displayName}
+            {user.name || 'User'}
           </Typography>
 
           <Typography variant="body2" sx={{ color: 'text.secondary' }} noWrap>
-            {_myAccount?.email}
+            {user.email || ''}
           </Typography>
         </Box>
 
@@ -138,7 +146,7 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
               localStorage.removeItem('token');
               localStorage.removeItem('refresh');
               localStorage.removeItem('user');
-              router.replace('/sign-in'); // Optional: use replace to avoid going back to dashboard
+              router.replace('/sign-in');
             }}
           >
             Logout
