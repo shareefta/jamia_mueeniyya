@@ -2,6 +2,10 @@ import { useSnackbar } from "notistack";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import EditIcon from "@mui/icons-material/Edit";
+import SaveIcon from "@mui/icons-material/Save";
+import DeleteIcon from "@mui/icons-material/Delete";
+import CancelIcon from "@mui/icons-material/Cancel";
 import {
   Breadcrumbs,
   Link,
@@ -17,40 +21,41 @@ import {
   Paper,
   TextField,
   MenuItem,
+  IconButton,
 } from "@mui/material";
 
-import { getCashBooks } from "src/api/cash-book";
+import { getOffCampuses } from "src/api/offCampus";
 import {
-  getOpeningBalances,
-  createOpeningBalance,
-  updateOpeningBalance,
-  deleteOpeningBalance,
-  OpeningBalanceProps,
-} from "src/api/opening-balances";
+  getCashBooks,
+  createCashBook,
+  updateCashBook,
+  deleteCashBook,
+  CashBookProps,
+} from "src/api/cash-book";
 
-export default function OpeningBalancesPage() {
+export default function CashBooksPage() {
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
 
-  const [balances, setBalances] = useState<OpeningBalanceProps[]>([]);
-  const [cashBooks, setCashBooks] = useState<any[]>([]);
+  const [cashBooks, setCashBooks] = useState<CashBookProps[]>([]);
+  const [offCampuses, setOffCampuses] = useState<any[]>([]);
 
   // Form states
-  const [cashBook, setCashBook] = useState("");
-  const [amount, setAmount] = useState("");
+  const [offCampus, setOffCampus] = useState("");
+  const [name, setName] = useState("");
 
   // Edit states
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editingCashBook, setEditingCashBook] = useState("");
-  const [editingAmount, setEditingAmount] = useState("");
+  const [editingOffCampus, setEditingOffCampus] = useState("");
+  const [editingName, setEditingName] = useState("");
 
   const fetchData = async () => {
     try {
-      const [balanceData, cashBookData] = await Promise.all([
-        getOpeningBalances(),
+      const [offCampusData, cashBookData] = await Promise.all([
+        getOffCampuses(),
         getCashBooks(),
       ]);
-      setBalances(balanceData);
+      setOffCampuses(offCampusData);
       setCashBooks(cashBookData);
     } catch {
       enqueueSnackbar("Failed to fetch data", { variant: "error" });
@@ -60,54 +65,54 @@ export default function OpeningBalancesPage() {
   useEffect(() => {
     fetchData();
     const handleUpdate = () => fetchData();
-    window.addEventListener("openingbalance-update", handleUpdate);
-    return () => window.removeEventListener("openingbalance-update", handleUpdate);
+    window.addEventListener("cashbook-update", handleUpdate);
+    return () => window.removeEventListener("cashbook-update", handleUpdate);
   }, []);
 
   // Add new
   const handleAdd = async () => {
-    if (!cashBook || !amount) {
+    if (!offCampus || !name) {
       enqueueSnackbar("Please fill all fields", { variant: "warning" });
       return;
     }
     try {
-      await createOpeningBalance({
-        cash_book: Number(cashBook),
-        amount: Number(amount),
+      await createCashBook({
+        campus: Number(offCampus),
+        name,
       });
-      enqueueSnackbar("Opening Balance added successfully!", { variant: "success" });
-      setCashBook("");
-      setAmount("");
+      enqueueSnackbar("Cash Book added successfully!", { variant: "success" });
+      setOffCampus("");
+      setName("");
       fetchData();
     } catch {
-      enqueueSnackbar("Failed to add Opening Balance", { variant: "error" });
+      enqueueSnackbar("Failed to add Cash Book", { variant: "error" });
     }
   };
 
   // Update existing
   const handleUpdate = async (id: number) => {
-    if (!editingCashBook || !editingAmount) {
+    if (!editingOffCampus || !editingName) {
       enqueueSnackbar("Please fill all fields", { variant: "warning" });
       return;
     }
     try {
-      await updateOpeningBalance(id, {
-        cash_book: Number(editingCashBook),
-        amount: Number(editingAmount),
+      await updateCashBook(id, {
+        campus: Number(editingOffCampus),
+        name: editingName,
       });
-      enqueueSnackbar("Opening Balance updated successfully!", { variant: "success" });
+      enqueueSnackbar("Cash Book updated successfully!", { variant: "success" });
       setEditingId(null);
       fetchData();
     } catch {
-      enqueueSnackbar("Failed to update Opening Balance", { variant: "error" });
+      enqueueSnackbar("Failed to update Cash Book", { variant: "error" });
     }
   };
 
   // Delete
   const handleDelete = async (id: number) => {
-    if (!window.confirm("Are you sure you want to delete this Opening Balance?")) return;
+    if (!window.confirm("Are you sure you want to delete this Cash Book?")) return;
     try {
-      await deleteOpeningBalance(id);
+      await deleteCashBook(id);
       enqueueSnackbar("Deleted successfully!", { variant: "success" });
       fetchData();
     } catch {
@@ -122,11 +127,11 @@ export default function OpeningBalancesPage() {
         <Link component="button" onClick={() => navigate("/settings")}>
           Settings
         </Link>
-        <Typography>Opening Balances</Typography>
+        <Typography>Cash Books</Typography>
       </Breadcrumbs>
 
       <Typography variant="h6" gutterBottom>
-        Opening Balances
+        Cash Books
       </Typography>
 
       {/* Add Form */}
@@ -145,33 +150,30 @@ export default function OpeningBalancesPage() {
         >
           <TextField
             select
-            label="Cash Book"
-            value={cashBook}
-            onChange={(e) => setCashBook(e.target.value)}
+            label="Campus Name"
+            value={offCampus}
+            onChange={(e) => setOffCampus(e.target.value)}
             size="small"
             sx={{ backgroundColor: "white", minWidth: 180 }}
           >
-            {cashBooks.map((c) => {
-              const isDisabled = balances.some((b) => b.cash_book === c.id);
-              return (
-                <MenuItem key={c.id} value={c.id} disabled={isDisabled}>
-                  {c.name} {isDisabled && "(Already Added)"}
-                </MenuItem>
-              );
-            })}
+            {offCampuses.map((campus) => (
+              <MenuItem key={campus.id} value={campus.id}>
+                {campus.name}
+              </MenuItem>
+            ))}
           </TextField>
 
           <TextField
-            label="Amount"
-            type="number"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            label="Cash Book Name"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
             size="small"
             sx={{ backgroundColor: "white", minWidth: 150 }}
           />
 
           <Button variant="contained" onClick={handleAdd}>
-            + Opening Balance
+            + Cash Book
           </Button>
         </Box>
       </Box>
@@ -182,59 +184,64 @@ export default function OpeningBalancesPage() {
           <TableHead>
             <TableRow>
               <TableCell sx={{ textAlign: "center" }}>SL. No.</TableCell>
-              <TableCell sx={{ textAlign: "center" }}>Cash Book</TableCell>
-              <TableCell sx={{ textAlign: "center" }}>Amount</TableCell>
+              <TableCell sx={{ textAlign: "center" }}>Campus Name</TableCell>
+              <TableCell sx={{ textAlign: "center" }}>Cash Book Name</TableCell>
               <TableCell sx={{ textAlign: "center" }}>Actions</TableCell>
             </TableRow>
           </TableHead>
 
           <TableBody>
-            {balances.map((b, index) => (
-              <TableRow key={b.id}>
+            {cashBooks.map((c, index) => (
+              <TableRow key={c.id}>
                 <TableCell sx={{ textAlign: "center" }}>{index + 1}</TableCell>
 
-                {/* Cash Book */}
+                {/* Campus Name */}
                 <TableCell sx={{ textAlign: "center" }}>
-                  {cashBooks.find((c) => c.id === b.cash_book)?.name || b.cash_book}
+                  {offCampuses.find((campus) => campus.id === c.campus)?.name || "N/A"}
                 </TableCell>
 
-                {/* Amount */}
+                {/* Cash Book Name */}
                 <TableCell sx={{ textAlign: "center" }}>
-                  {editingId === b.id ? (
+                  {editingId === c.id ? (
                     <TextField
-                      type="number"
+                      type="text"
                       size="small"
-                      value={editingAmount}
-                      onChange={(e) => setEditingAmount(e.target.value)}
+                      value={editingName}
+                      onChange={(e) => setEditingName(e.target.value)}
                       sx={{ backgroundColor: "white", minWidth: 120 }}
                     />
                   ) : (
-                    b.amount
+                    c.name
                   )}
-                </TableCell>                
+                </TableCell>
 
                 {/* Actions */}
                 <TableCell sx={{ textAlign: "center" }}>
-                  {editingId === b.id ? (
+                  {editingId === c.id ? (
                     <>
-                      <Button size="small" onClick={() => handleUpdate(b.id!)}>Save</Button>
-                      <Button size="small" onClick={() => setEditingId(null)}>Cancel</Button>
+                      <IconButton size="small" color="primary" onClick={() => handleUpdate(c.id!)}>
+                        <SaveIcon />
+                      </IconButton>
+                      <IconButton size="small" color="inherit" onClick={() => setEditingId(null)}>
+                        <CancelIcon />
+                      </IconButton>
                     </>
                   ) : (
                     <>
-                      <Button
+                      <IconButton
                         size="small"
+                        color="primary"
                         onClick={() => {
-                          setEditingId(b.id!);
-                          setEditingCashBook(b.cash_book.toString());
-                          setEditingAmount(b.amount.toString());
+                          setEditingId(c.id!);
+                          setEditingOffCampus(c.campus!.toString());
+                          setEditingName(c.name.toString());
                         }}
                       >
-                        Edit
-                      </Button>
-                      <Button size="small" color="error" onClick={() => handleDelete(b.id!)}>
-                        Delete
-                      </Button>
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton size="small" color="error" onClick={() => handleDelete(c.id!)}>
+                        <DeleteIcon />
+                      </IconButton>
                     </>
                   )}
                 </TableCell>

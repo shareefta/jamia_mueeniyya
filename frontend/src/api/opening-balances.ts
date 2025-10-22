@@ -8,7 +8,7 @@ const getAuthHeaders = () => ({
 
 export interface OpeningBalanceProps {
   id?: number;
-  campus: number;
+  cash_book: number;
   amount: number;
 }
 

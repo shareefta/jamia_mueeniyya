@@ -34,7 +34,7 @@ class CashBook(models.Model):
         ordering = ['name']
 
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.campus})" if self.campus else self.name
 
 class Transaction(models.Model):
     TRANSACTION_TYPES = [
@@ -60,7 +60,7 @@ class Transaction(models.Model):
         return f"{self.transaction_type} - {self.amount} ({self.date})"
 
 class OpeningBalance(models.Model):
-    campus = models.ForeignKey(OffCampus, on_delete=models.CASCADE)
+    cash_book = models.ForeignKey(CashBook, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     date = models.DateField(auto_now_add=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
