@@ -1,3 +1,4 @@
+import { useSnackbar } from "notistack";
 import React, { useEffect, useState } from "react";
 
 import { Add, Edit, Delete } from "@mui/icons-material";
@@ -5,7 +6,7 @@ import {
   Box,
   Button,
   Card,
-  CardContent,
+  Paper,
   Grid,
   IconButton,
   MenuItem,
@@ -35,9 +36,12 @@ import {
 } from "../api/cash-book";
 
 export default function CashBookListPage() {
+  const { enqueueSnackbar } = useSnackbar();
+
   const [cashBooks, setCashBooks] = useState<CashBookProps[]>([]);
   const [campuses, setCampuses] = useState<any[]>([]);
- const [selectedCampus, setSelectedCampus] = useState<number | null>(null);
+  const [selectedCampus, setSelectedCampus] = useState<number | null>(null);
+
   const [openDialog, setOpenDialog] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [cashBookName, setCashBookName] = useState("");
@@ -52,53 +56,77 @@ export default function CashBookListPage() {
     if (selectedCampus) fetchCashBooks();
   }, [selectedCampus]);
 
-  useEffect(() => {
-    window.addEventListener("cashbook-update", fetchCashBooks);
-    return () => window.removeEventListener("cashbook-update", fetchCashBooks);
-  }, []);
-
   const fetchCampuses = async () => {
-    const data = await getOffCampuses();
-    setCampuses(data);
-    if (data.length > 0) setSelectedCampus(data[0].id);
-  };
-
-  const fetchCashBooks = async () => {
-    const data = await getCashBooks();
-    const filtered = selectedCampus ? data.filter((cb: any) => cb.campus === selectedCampus) : data;
-    setCashBooks(filtered);
-  };
-
-  const handleCreate = async () => {
-    if (!cashBookName.trim() || !selectedCampus) return;
-    await createCashBook({ name: cashBookName, campus: selectedCampus });
-    setOpenDialog(false);
-    setCashBookName("");
-  };
-
-  const handleUpdate = async () => {
-    if (!selectedCashBookId || !cashBookName.trim()) return;
-    await updateCashBook(selectedCashBookId, { name: cashBookName, campus: selectedCampus });
-    setOpenDialog(false);
-    setCashBookName("");
-    setEditMode(false);
-  };
-
-  const handleDelete = async (id: number) => {
-    if (window.confirm("Are you sure you want to delete this Cash Book?")) {
-      await deleteCashBook(id);
+    try {
+      const data = await getOffCampuses();
+      setCampuses(data);
+      if (data.length > 0) setSelectedCampus(data[0].id);
+    } catch {
+      enqueueSnackbar("Failed to fetch campuses", { variant: "error" });
     }
   };
 
-  const handleOpenDialog = (cashBook?: CashBookProps) => {
-    if (cashBook) {
+  const fetchCashBooks = async () => {
+    if (!selectedCampus) return;
+    try {
+      const data = await getCashBooks();
+      const filtered = data.filter((cb: CashBookProps) => cb.campus === selectedCampus);
+      setCashBooks(filtered);
+    } catch {
+      enqueueSnackbar("Failed to fetch cash books", { variant: "error" });
+    }
+  };
+
+  // Create cash book
+  const handleCreate = async () => {
+    if (!cashBookName.trim() || !selectedCampus) return;
+    try {
+      await createCashBook({ name: cashBookName, campus: selectedCampus });
+      enqueueSnackbar("Cash Book created successfully!", { variant: "success" });
+      setCashBookName("");
+      setOpenDialog(false);
+      fetchCashBooks();
+    } catch {
+      enqueueSnackbar("Failed to create Cash Book", { variant: "error" });
+    }
+  };
+
+  // Update cash book
+  const handleUpdate = async () => {
+    if (!selectedCashBookId || !cashBookName.trim() || !selectedCampus) return;
+    try {
+      await updateCashBook(selectedCashBookId, { name: cashBookName, campus: selectedCampus });
+      enqueueSnackbar("Cash Book updated successfully!", { variant: "success" });
+      setCashBookName("");
+      setEditMode(false);
+      setOpenDialog(false);
+      fetchCashBooks();
+    } catch {
+      enqueueSnackbar("Failed to update Cash Book", { variant: "error" });
+    }
+  };
+
+  // Delete cash book
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("Are you sure you want to delete this Cash Book?")) return;
+    try {
+      await deleteCashBook(id);
+      enqueueSnackbar("Cash Book deleted successfully!", { variant: "success" });
+      fetchCashBooks();
+    } catch {
+      enqueueSnackbar("Failed to delete Cash Book", { variant: "error" });
+    }
+  };
+
+  const handleOpenDialog = (cb?: CashBookProps) => {
+    if (cb) {
       setEditMode(true);
-      setSelectedCashBookId(cashBook.id || null);
-      setCashBookName(cashBook.name);
+      setSelectedCashBookId(cb.id || null);
+      setCashBookName(cb.name);
     } else {
       setEditMode(false);
-      setCashBookName("");
       setSelectedCashBookId(null);
+      setCashBookName("");
     }
     setOpenDialog(true);
   };
@@ -106,23 +134,18 @@ export default function CashBookListPage() {
   return (
     <Box sx={{ p: 2 }}>
       <Card sx={{ borderRadius: 3, boxShadow: 4, p: 2 }}>
-        <Grid container alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
-          <Grid size={{ xs: 12, md: 6 }} sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+        <Grid container alignItems="center" justifyContent="space-between" sx={{ mb: 2 }} spacing={2}>
+          <Grid size={{ xs: 12, md: 6 }} sx={{ display: "flex", gap: 2, alignItems: "center" }}>
             <Typography variant="h6" fontWeight={600}>
               Cash Books
             </Typography>
             <Select
-              value={selectedCampus}
-              onChange={(e) => setSelectedCampus(Number(e.target.value))}
+              value={selectedCampus || ""}
+              onChange={e => setSelectedCampus(Number(e.target.value))}
               size="small"
-              sx={{
-                minWidth: 200,
-                backgroundColor: "white",
-                borderRadius: 2,
-                boxShadow: 1,
-              }}
+              sx={{ minWidth: 200, backgroundColor: "white", borderRadius: 2 }}
             >
-              {campuses.map((campus) => (
+              {campuses.map(campus => (
                 <MenuItem key={campus.id} value={campus.id}>
                   {campus.name}
                 </MenuItem>
@@ -140,9 +163,7 @@ export default function CashBookListPage() {
                 color: "white",
                 textTransform: "none",
                 borderRadius: 2,
-                "&:hover": {
-                  background: "linear-gradient(135deg, #5b0db5 0%, #1f60d6 100%)",
-                },
+                "&:hover": { background: "linear-gradient(135deg, #5b0db5 0%, #1f60d6 100%)" },
               }}
             >
               New Cash Book
@@ -150,7 +171,7 @@ export default function CashBookListPage() {
           </Grid>
         </Grid>
 
-        <TableContainer sx={{ borderRadius: 2, boxShadow: 2 }}>
+        <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 2 }}>
           <Table>
             <TableHead>
               <TableRow sx={{ backgroundColor: "#f5f6fa" }}>
@@ -160,16 +181,11 @@ export default function CashBookListPage() {
                 <TableCell sx={{ textAlign: "center", fontWeight: 600 }}>Delete</TableCell>
               </TableRow>
             </TableHead>
+
             <TableBody>
               {cashBooks.length > 0 ? (
                 cashBooks.map((cb, index) => (
-                  <TableRow
-                    key={cb.id}
-                    sx={{
-                      "&:hover": { backgroundColor: "#f1f2f6" },
-                      transition: "0.3s",
-                    }}
-                  >
+                  <TableRow key={cb.id} sx={{ "&:hover": { backgroundColor: "#f1f2f6" }, transition: "0.3s" }}>
                     <TableCell>{index + 1}</TableCell>
                     <TableCell>{cb.name}</TableCell>
                     <TableCell align="center">
@@ -200,7 +216,7 @@ export default function CashBookListPage() {
         </TableContainer>
       </Card>
 
-      {/* Create / Edit Dialog */}
+      {/* Dialog for Create/Edit */}
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)} fullWidth maxWidth="xs">
         <DialogTitle>{editMode ? "Edit Cash Book" : "Add New Cash Book"}</DialogTitle>
         <DialogContent>
@@ -208,7 +224,7 @@ export default function CashBookListPage() {
             fullWidth
             label="Cash Book Name"
             value={cashBookName}
-            onChange={(e) => setCashBookName(e.target.value)}
+            onChange={e => setCashBookName(e.target.value)}
             sx={{ mt: 2 }}
           />
         </DialogContent>
@@ -217,10 +233,7 @@ export default function CashBookListPage() {
           <Button
             onClick={editMode ? handleUpdate : handleCreate}
             variant="contained"
-            sx={{
-              background: "linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)",
-              color: "white",
-            }}
+            sx={{ background: "linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)", color: "white" }}
           >
             {editMode ? "Update" : "Create"}
           </Button>
