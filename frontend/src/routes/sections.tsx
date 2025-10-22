@@ -80,7 +80,7 @@ export const routesSection: RouteObject[] = [
           { path: 'categories', element: <CategoriesPage /> },
           { path: 'payment-modes', element: <PaymentModesPage /> },
           { path: 'opening-balances', element: <OpeningBalancesPage /> },
-          { path: 'cash-book', element: <CashBookPage /> },
+          { path: 'cash-books', element: <CashBookPage /> },
         ],
       },
     ],

@@ -9,7 +9,7 @@ const getAuthHeaders = () => ({
 export interface CashBookProps {
   id?: number;
   name: string;
-  campus?: number;
+  campus?: number | null;
   is_active?: boolean;
 }
 
