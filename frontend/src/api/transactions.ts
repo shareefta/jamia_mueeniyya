@@ -14,13 +14,13 @@ export interface TransactionProps {
   remarks: string;
   category: number;
   payment_mode: number;
-  campus: number;
+  cash_book: number;
   transaction_type: "IN" | "OUT";
   user?: number;
   user_name?: string;
   category_name?: string;
   payment_mode_name?: string;
-  campus_name?: string;
+  cash_book_name?: string;
   transaction_label?: string;
 }
 

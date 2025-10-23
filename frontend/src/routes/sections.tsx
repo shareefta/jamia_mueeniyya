@@ -69,6 +69,7 @@ export const routesSection: RouteObject[] = [
     children: [
       { index: true, element: <DashboardPage /> },
       { path: 'transaction-list', element: <TransactionListPage /> },
+      { path: 'transaction-list/:cashBookId', element: <TransactionListPage /> },
       { path: 'cash-books-lists', element: <CashBookListsPage /> },
       {
         path: 'settings',
@@ -99,6 +100,7 @@ export const routesSection: RouteObject[] = [
     children: [
       { index: true, element: <StaffDashboardPage /> },
       { path: 'transaction-list', element: <TransactionListPage /> },
+      { path: 'transaction-list/:cashBookId', element: <TransactionListPage /> },
       { path: 'cash-books-lists', element: <CashBookListsPage /> },
     ],
   },

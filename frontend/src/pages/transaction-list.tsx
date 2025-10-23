@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 import { useSnackbar } from "notistack";
 import minMax from "dayjs/plugin/minMax";
 import { useEffect, useState } from "react";
+import { useParams } from 'react-router-dom';
 import isBetween from "dayjs/plugin/isBetween";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 
@@ -17,14 +18,15 @@ dayjs.extend(minMax);
 dayjs.extend(customParseFormat);
 
 import { getUsers } from "src/api/users";
+import { getCashBooks } from "src/api/cash-book";
 import { getCategories } from "src/api/categories";
-import { getOffCampuses } from "src/api/offCampus";
 import { getPaymentModes } from "src/api/payment-modes";
 import { getOpeningBalances } from "src/api/opening-balances";
 
 import { createTransaction, getTransactions, updateTransaction, deleteTransaction, TransactionProps } from "../api/transactions";
 
 const TransactionList = () => {
+  const { cashBookId } = useParams<{ cashBookId: string }>();
   const { enqueueSnackbar } = useSnackbar();
   const [transactions, setTransactions] = useState<any[]>([]);
   const [filtered, setFiltered] = useState<any[]>([]);
@@ -33,7 +35,7 @@ const TransactionList = () => {
     type: "All",
     category: "All",
     paymentMode: "All",
-    campus: "All",
+    cash_book: cashBookId || 'All',
     user: "All",
     includeOB: true,
     customStartDate: "",
@@ -47,7 +49,7 @@ const TransactionList = () => {
 
   const [categories, setCategories] = useState<any[]>([]);
   const [paymentModes, setPaymentModes] = useState<any[]>([]);
-  const [campuses, setCampuses] = useState<any[]>([]);
+  const [cashBooks, setCashBooks] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [openingBalances, setOpeningBalances] = useState<any[]>([]);
 
@@ -68,18 +70,18 @@ const TransactionList = () => {
     remarks: "",
     category: "",
     payment_mode: "",
-    campus: "",
+    cash_book: "",
   });
 
   // Fetch data
   useEffect(() => {
     (async () => {
       try {
-        const [txns, cats, modes, camps, usrs, obs] = await Promise.all([
+        const [txns, cats, modes, books, usrs, obs] = await Promise.all([
           getTransactions(),
           getCategories(),
           getPaymentModes(),
-          getOffCampuses(),
+          getCashBooks(),
           getUsers(),
           getOpeningBalances(),
         ]);
@@ -87,7 +89,7 @@ const TransactionList = () => {
         setFiltered(txns);
         setCategories(cats);
         setPaymentModes(modes);
-        setCampuses(camps);
+        setCashBooks(books);
         setUsers(usrs);
         setOpeningBalances(obs);
       } catch (err) {
@@ -126,7 +128,7 @@ const TransactionList = () => {
     if (filters.type !== "All") temp = temp.filter(t => t.transaction_type === filters.type);
     if (filters.category !== "All") temp = temp.filter(t => t.category === parseInt(filters.category));
     if (filters.paymentMode !== "All") temp = temp.filter(t => t.payment_mode === parseInt(filters.paymentMode));
-    if (filters.campus !== "All") temp = temp.filter(t => t.campus === parseInt(filters.campus));
+    if (filters.cash_book !== "All") temp = temp.filter(t => t.cash_book === parseInt(filters.cash_book));
     if (filters.user !== "All") temp = temp.filter(t => t.user_id === parseInt(filters.user));    
 
     setFiltered(temp);
@@ -187,9 +189,9 @@ const TransactionList = () => {
 
     let balance = 0;
 
-    // --- Campus Handling ---
-    if (activeFilters.campus === "All") {
-      // Sum all campuses’ OBs
+    // --- Cash Book Handling ---
+    if (activeFilters.cash_book === "All") {
+      // Sum all cash book’s OBs
       balance = obList.reduce((acc, ob) => acc + Number(ob.amount || 0), 0);
 
       // Add all previous transactions (before range start)
@@ -199,15 +201,15 @@ const TransactionList = () => {
         return acc;
       }, 0);
     } else {
-      // Campus-specific OB
-      const ob = obList.find(o => Number(o.campus) === Number(activeFilters.campus));
+      // Cash Book-specific OB
+      const ob = obList.find(o => Number(o.cash_book) === Number(activeFilters.cash_book));
       balance = ob ? Number(ob.amount) : 0;
 
-      // Filter previous txns for this campus only
-      const campusTxns = prevTxns.filter(
-        txn => Number(txn.campus) === Number(activeFilters.campus)
+      // Filter previous txns for this cash book only
+      const cashBookTxns = prevTxns.filter(
+        txn => Number(txn.cash_book) === Number(activeFilters.cash_book)
       );
-      balance += campusTxns.reduce((acc, txn) => {
+      balance += cashBookTxns.reduce((acc, txn) => {
         if (txn.transaction_type === "IN") return acc + Number(txn.amount);
         if (txn.transaction_type === "OUT") return acc - Number(txn.amount);
         return acc;
@@ -273,50 +275,62 @@ const TransactionList = () => {
 
   const netBalance = displayedOB + totalIn - totalOut;
 
+  // Helper functions to get current date and time
+  const getCurrentDate = () => new Date().toISOString().split("T")[0]; // yyyy-mm-dd
+  const getCurrentTime = () => new Date().toTimeString().slice(0, 5);   // hh:mm
+
   // --- Handlers for Dialog ---
   const handleClickOpen = (type: "IN" | "OUT") => {
-      setTransactionType(type);
-      setOpen(true);
-    };
-  
-    const handleClose = () => setOpen(false);
-  
-    const handleChange = (e: any) => {
-      setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
-  
-    const handleSave = async (addMore = false) => {
-      try {
-        const newTxn = await createTransaction({
-          ...formData,
-          amount: Number(formData.amount),
-          category: Number(formData.category),
-          payment_mode: Number(formData.payment_mode),
-          campus: Number(formData.campus),
-          transaction_type: transactionType,
-        });
-  
-        enqueueSnackbar("Transaction added successfully!", { variant: "success" });
+    setTransactionType(type);
+    setFormData({
+      date: getCurrentDate(),
+      time: getCurrentTime(),
+      amount: "",
+      remarks: "",
+      category: "",
+      payment_mode: "",
+      cash_book: cashBookId || "",
+    }); // Auto-fill date & time
+    setOpen(true);
+  };
 
-        setTransactions((prev) => [...prev, newTxn]);
-  
-        if (!addMore) {
-          handleClose();
-        } else {
-          setFormData({
-            date: "",
-            time: "",
-            amount: "",
-            remarks: "",
-            category: "",
-            payment_mode: "",
-            campus: "",
-          });
-        }
-      } catch {
-        enqueueSnackbar("Failed to add transaction", { variant: "error" });
+  const handleClose = () => setOpen(false);
+
+  const handleChange = (e: any) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSave = async (addMore = false) => {
+    try {
+      const newTxn = await createTransaction({
+        ...formData,
+        amount: Number(formData.amount),
+        category: Number(formData.category),
+        payment_mode: Number(formData.payment_mode),
+        cash_book: cashBookId ? Number(cashBookId) : Number(formData.cash_book),
+        transaction_type: transactionType,
+      });
+
+      enqueueSnackbar("Transaction added successfully!", { variant: "success" });
+      setTransactions((prev) => [...prev, newTxn]);
+
+      if (!addMore) {
+        handleClose();
+      } else {
+        setFormData({
+          date: getCurrentDate(),
+          time: getCurrentTime(),
+          amount: "",
+          remarks: "",
+          category: "",
+          payment_mode: "",
+          cash_book: cashBookId || "",
+        }); // Reset form but keep date & time current
       }
-    };
+    } catch {
+      enqueueSnackbar("Failed to add transaction", { variant: "error" });
+    }
+  };
 
     // Update handlers
     const handleEditClick = (txn: TransactionProps) => {
@@ -441,7 +455,7 @@ const TransactionList = () => {
               { label: "Type", key: "type", options: ["IN", "OUT"] },
               { label: "Category", key: "category", options: categories.map(c => ({ id: c.id, name: c.name })) },
               { label: "Payment Mode", key: "paymentMode", options: paymentModes.map(p => ({ id: p.id, name: p.name })) },
-              { label: "Campus", key: "campus", options: campuses.map(c => ({ id: c.id, name: c.name })) },
+              { label: "Cash Book", key: "cash_book", options: cashBooks.map(c => ({ id: c.id, name: c.name })) },
               { label: "User", key: "user", options: users.map(u => ({ id: u.id, name: u.name })) },
             ].map(filter => (
               <Grid size={{ xs: 12, sm: 6, md: 1.5 }} key={filter.key}>
@@ -489,7 +503,7 @@ const TransactionList = () => {
                   type: "All",
                   category: "All",
                   paymentMode: "All",
-                  campus: "All",
+                  cash_book: "All",
                   user: "All",
                   customStartDate: "",
                   customEndDate: "",
@@ -744,17 +758,19 @@ const TransactionList = () => {
             ))}
           </TextField>
 
-          <TextField
-            select
-            label="Campus"
-            name="campus"
-            value={formData.campus}
-            onChange={handleChange}
-          >
-            {campuses.map((camp) => (
-              <MenuItem key={camp.id} value={camp.id}>{camp.name}</MenuItem>
-            ))}
-          </TextField>
+          {!cashBookId && (
+            <TextField
+              select
+              label="Cash Book"
+              name="cash_book"
+              value={formData.cash_book}
+              onChange={handleChange}
+            >
+              {cashBooks.map((book) => (
+                <MenuItem key={book.id} value={book.id}>{book.name}</MenuItem>
+              ))}
+            </TextField>
+          )}
         </DialogContent>
 
         <DialogActions>
@@ -957,21 +973,23 @@ const TransactionList = () => {
             </Select>
           </FormControl>
 
-          {/* Campus */}
-          <FormControl fullWidth margin="dense">
-            <InputLabel>Campus</InputLabel>
-            <Select
-              name="campus"
-              value={editData?.campus || ""}
-              onChange={(e) =>
-                setEditData(prev => prev ? { ...prev, campus: Number(e.target.value) } : prev)
-              }
-            >
-              {campuses.map(c => (
-                <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          {/* Cash Book */}
+          {!cashBookId && (
+            <FormControl fullWidth margin="dense">
+              <InputLabel>Cash Book</InputLabel>
+              <Select
+                name="cash_book"
+                value={editData?.cash_book || ""}
+                onChange={(e) =>
+                  setEditData(prev => prev ? { ...prev, cash_book: Number(e.target.value) } : prev)
+                }
+              >
+                {cashBooks.map(c => (
+                  <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
         </DialogContent>
 
         <DialogActions>

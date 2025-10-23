@@ -1,5 +1,6 @@
 import { useSnackbar } from "notistack";
-import React, { useEffect, useState } from "react";
+import { Link } from 'react-router-dom';
+import { useEffect, useState } from "react";
 
 import { Add, Edit, Delete } from "@mui/icons-material";
 import {
@@ -108,16 +109,18 @@ export default function CashBookListPage() {
 
   // Delete cash book
   const handleDelete = async (id: number) => {
-    if (window.confirm("Are you sure you want to delete this Cash Book?")) {
-      try {
-        const res = await deleteCashBook(id);
-        enqueueSnackbar(res.success || "Cash Book deleted successfully", { variant: "success" });
+    if (!window.confirm("Are you sure you want to delete this Cash Book?")) return;
 
-        // Update table locally
-        setCashBooks(prev => prev.filter(cb => cb.id !== id));
-      } catch (error: any) {
-        enqueueSnackbar(error.message, { variant: "error" });
-      }
+    try {
+      const res = await deleteCashBook(id);
+      // If backend returned success
+      enqueueSnackbar(res.success || "Cash Book deleted successfully", { variant: "success" });
+
+      // Update table locally
+      setCashBooks(prev => prev.filter(cb => cb.id !== id));
+    } catch (error: any) {
+      // Backend error: show message
+      enqueueSnackbar(error.message || "Failed to delete Cash Book", { variant: "error" });
     }
   };
 
@@ -190,7 +193,15 @@ export default function CashBookListPage() {
                 cashBooks.map((cb, index) => (
                   <TableRow key={cb.id} sx={{ "&:hover": { backgroundColor: "#f1f2f6" }, transition: "0.3s" }}>
                     <TableCell>{index + 1}</TableCell>
-                    <TableCell>{cb.name}</TableCell>
+
+                    <TableCell>
+        <Link
+          to={`/transaction-list/${cb.id}`}
+          style={{ textDecoration: 'none', color: 'inherit' }}
+        >
+          {cb.name}
+        </Link>
+      </TableCell>
                     <TableCell align="center">
                       <Tooltip title="Edit Cash Book">
                         <IconButton onClick={() => handleOpenDialog(cb)} color="primary">
