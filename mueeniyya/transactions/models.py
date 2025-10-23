@@ -60,7 +60,7 @@ class Transaction(models.Model):
         return f"{self.transaction_type} - {self.amount} ({self.date})"
 
 class OpeningBalance(models.Model):
-    cash_book = models.ForeignKey(CashBook, on_delete=models.CASCADE)
+    cash_book = models.ForeignKey(CashBook, on_delete=models.CASCADE, blank=True, null=True)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     date = models.DateField(auto_now_add=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
