@@ -42,12 +42,9 @@ class TransactionSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
     payment_mode_name = serializers.CharField(source='payment_mode.name', read_only=True)
 
-    # ✅ Updated for CashBook
     cash_book_name = serializers.CharField(source='cash_book.name', read_only=True)
-    cash_book_id = serializers.PrimaryKeyRelatedField(
-        source='cash_book',
-        queryset=CashBook.objects.all(),
-        write_only=True
+    cash_book = serializers.PrimaryKeyRelatedField(
+        queryset=CashBook.objects.all()
     )
 
     transaction_label = serializers.SerializerMethodField()
@@ -59,7 +56,7 @@ class TransactionSerializer(serializers.ModelSerializer):
             'transaction_type', 'transaction_label',
             'category', 'category_name',
             'payment_mode', 'payment_mode_name',
-            'cash_book_id', 'cash_book_name',
+            'cash_book', 'cash_book_name',
             'date', 'time', 'amount', 'remarks', 'created_at'
         ]
 
