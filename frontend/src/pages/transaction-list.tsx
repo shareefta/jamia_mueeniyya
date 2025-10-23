@@ -400,16 +400,24 @@ const TransactionList = () => {
   return (
     <Box p={4}>
       {/* Header */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Box display="flex" alignItems="center">
+      <Box
+        display="flex"
+        flexDirection={{ xs: "column", sm: "row" }} // column on mobile, row on larger screens
+        justifyContent="space-between"
+        alignItems={{ xs: "flex-start", sm: "center" }}
+        mb={3}
+        gap={2} // spacing between rows on mobile
+      >
+        {/* Left side: Heading + Date Label */}
+        <Box display="flex" alignItems="center" flexWrap="wrap" gap={1}>
           <Typography variant="h4" fontWeight="bold">
             Transactions
           </Typography>
+
           {selectedDateLabel && (
             <Box
               onClick={() => setOpenCustomDate(true)}
               sx={{
-                ml: 2,
                 px: 2,
                 py: 0.5,
                 borderRadius: "16px",
@@ -429,13 +437,13 @@ const TransactionList = () => {
           )}
         </Box>
 
-        <Box>
+        {/* Right side: Buttons */}
+        <Box display="flex" gap={1} flexWrap="wrap">
           <Button
             variant="contained"
             color="success"
             onClick={() => handleClickOpen("IN")}
             startIcon={<Add />}
-            sx={{ mr: 1 }}
           >
             Cash In
           </Button>
@@ -454,55 +462,117 @@ const TransactionList = () => {
       <Card sx={{ mb: 4 }}>
         <CardContent>
           <Grid container spacing={2}>
-            {[
-              { label: "Date", key: "dateRange", options: ["Today", "Yesterday", "This Month", "Last Month", "Custom"] },
-              { label: "Type", key: "type", options: ["IN", "OUT"] },
-              { label: "Category", key: "category", options: categories.map(c => ({ id: c.id, name: c.name })) },
-              { label: "Payment Mode", key: "paymentMode", options: paymentModes.map(p => ({ id: p.id, name: p.name })) },
-              { label: "Cash Book", key: "cash_book", options: cashBooks.map(c => ({ id: c.id, name: c.name })) },
-              { label: "User", key: "user", options: users.map(u => ({ id: u.id, name: u.name })) },
-            ].map(filter => (
-              <Grid size={{ xs: 12, sm: 6, md: 1.5 }} key={filter.key}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>{filter.label}</InputLabel>
-                  <Select
-                    value={filters[filter.key as keyof typeof filters]}
-                    label={filter.label}
-                    onChange={(e) => {
-                      // Only update filters for non-Custom values
-                      if (filter.key === "dateRange" && e.target.value === "Custom") return;
-                      handleFilterChange(filter.key, e.target.value);
-                    }}
-                  >
-                    <MenuItem value="All">All</MenuItem>
-                    {filter.options.map((opt: any) => 
-                      typeof opt === "string" ? (
-                        <MenuItem
-                          key={opt}
-                          value={opt}
-                          {...(filter.key === "dateRange" && opt === "Custom" ? {
-                            onClick: () => setOpenCustomDate(true)
-                          } : {})}
-                        >
-                          {opt}
-                        </MenuItem>
-                      ) : (
-                        <MenuItem key={opt.id} value={opt.id}>{opt.name}</MenuItem>
-                      )
-                    )}
-                  </Select>
-                </FormControl>
-              </Grid>
-            ))}
-            {/* Clear Button */}
-            <Grid size={{ xs: 12, sm: 3, md: 1 }}>
+            {/* First Row: Date, Type, Category */}
+            <Grid size={{ xs: 4, sm: 6, md: 1.5 }}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Date</InputLabel>
+                <Select
+                  value={filters.dateRange}
+                  label="Date"
+                  onChange={(e) => {
+                    if (e.target.value === "Custom") {
+                      setOpenCustomDate(true);
+                      return; // just stop execution, not return a value
+                    }
+                    handleFilterChange("dateRange", e.target.value);
+                  }}
+                >
+                  <MenuItem value="All">All</MenuItem>
+                  {["Today", "Yesterday", "This Month", "Last Month", "Custom"].map(opt => (
+                    <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid size={{ xs: 4, sm: 6, md: 1.5 }}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Type</InputLabel>
+                <Select
+                  value={filters.type}
+                  label="Type"
+                  onChange={(e) => handleFilterChange("type", e.target.value)}
+                >
+                  <MenuItem value="All">All</MenuItem>
+                  <MenuItem value="IN">IN</MenuItem>
+                  <MenuItem value="OUT">OUT</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid size={{ xs: 4, sm: 6, md: 1.5 }}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Category</InputLabel>
+                <Select
+                  value={filters.category}
+                  label="Category"
+                  onChange={(e) => handleFilterChange("category", e.target.value)}
+                >
+                  <MenuItem value="All">All</MenuItem>
+                  {categories.map(c => (
+                    <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* Second Row: Payment Mode, Cash Book, User */}
+            <Grid size={{ xs: 4, sm: 6, md: 1.5 }}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Payment Mode</InputLabel>
+                <Select
+                  value={filters.paymentMode}
+                  label="Payment Mode"
+                  onChange={(e) => handleFilterChange("paymentMode", e.target.value)}
+                >
+                  <MenuItem value="All">All</MenuItem>
+                  {paymentModes.map(p => (
+                    <MenuItem key={p.id} value={p.id}>{p.name}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid size={{ xs: 4, sm: 6, md: 1.5 }}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Cash Book</InputLabel>
+                <Select
+                  value={filters.cash_book}
+                  label="Cash Book"
+                  onChange={(e) => handleFilterChange("cash_book", e.target.value)}
+                >
+                  <MenuItem value="All">All</MenuItem>
+                  {cashBooks.map(c => (
+                    <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid size={{ xs: 4, sm: 6, md: 1.5 }}>
+              <FormControl fullWidth size="small">
+                <InputLabel>User</InputLabel>
+                <Select
+                  value={filters.user}
+                  label="User"
+                  onChange={(e) => handleFilterChange("user", e.target.value)}
+                >
+                  <MenuItem value="All">All</MenuItem>
+                  {users.map(u => (
+                    <MenuItem key={u.id} value={u.id}>{u.name}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* Third Row: Clear & Include OB */}
+            <Grid size={{ xs: 4, sm: 3, md: 1 }}>
               <Button
                 variant="outlined"
                 color="secondary"
                 fullWidth
-                sx={{ mt: 1 }}
                 onClick={() => setFilters(prev => ({
-                  ...prev, // keep other fields like includeOB
+                  ...prev,
                   dateRange: "All",
                   type: "All",
                   category: "All",
@@ -511,27 +581,26 @@ const TransactionList = () => {
                   user: "All",
                   customStartDate: "",
                   customEndDate: "",
-                }))}>
+                }))}
+              >
                 Clear
               </Button>
             </Grid>
-            {/* Include Opening Balance */}
-            <Grid size={{ xs: 12, sm: 3, md: 2 }}>
-              <FormControl fullWidth size="small">
-                <Box display="flex" alignItems="center" sx={{ mt: 1 }}>
-                  <Typography variant="body2">Include OB</Typography>
-                  <Button
-                    variant={filters.includeOB ? "outlined" : "contained"}
-                    color={filters.includeOB ? "inherit" : "success"}
-                    size="small"
-                    onClick={() => handleFilterChange("includeOB", !filters.includeOB)}
-                  >
-                    {filters.includeOB ? "No" : "Yes"}
-                  </Button>
-                </Box>
-              </FormControl>
-            </Grid>            
-          </Grid>          
+
+            <Grid size={{ xs: 8, sm: 3, md: 2 }}>
+              <Box display="flex" alignItems="center" gap={2}>
+                <Typography variant="body2">Include OB</Typography>
+                <Button
+                  variant={filters.includeOB ? "outlined" : "contained"}
+                  color={filters.includeOB ? "inherit" : "success"}
+                  size="small"
+                  onClick={() => handleFilterChange("includeOB", !filters.includeOB)}
+                >
+                  {filters.includeOB ? "No" : "Yes"}
+                </Button>
+              </Box>
+            </Grid>
+          </Grid>
         </CardContent>
       </Card>
 
