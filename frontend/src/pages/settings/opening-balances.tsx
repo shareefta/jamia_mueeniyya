@@ -3,20 +3,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
-  Breadcrumbs,
-  Link,
-  Typography,
-  Box,
-  Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  TextField,
-  MenuItem,
+  Breadcrumbs, Link, Typography, Box, Button,
+  Table, TableBody, TableCell, TableContainer,
+  TableHead, TableRow, Paper, TextField, MenuItem
 } from "@mui/material";
 
 import { getCashBooks } from "src/api/cash-book";
@@ -33,16 +22,16 @@ export default function OpeningBalancesPage() {
   const { enqueueSnackbar } = useSnackbar();
 
   const [balances, setBalances] = useState<OpeningBalanceProps[]>([]);
-  const [cashBooks, setCashBooks] = useState<any[]>([]);
+  const [cashBooks, setCashBooks] = useState<{ id: number; name: string }[]>([]);
 
-  // Form states
-  const [cashBook, setCashBook] = useState("");
-  const [amount, setAmount] = useState("");
+  // Add form states
+  const [cashBook, setCashBook] = useState<number | "">("");
+  const [amount, setAmount] = useState<number | "">("");
 
   // Edit states
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editingCashBook, setEditingCashBook] = useState("");
-  const [editingAmount, setEditingAmount] = useState("");
+  const [editingCashBook, setEditingCashBook] = useState<number | "">("");
+  const [editingAmount, setEditingAmount] = useState<number | "">("");
 
   const fetchData = async () => {
     try {
@@ -66,7 +55,7 @@ export default function OpeningBalancesPage() {
 
   // Add new
   const handleAdd = async () => {
-    if (!cashBook || !amount) {
+    if (cashBook === "" || amount === "") {
       enqueueSnackbar("Please fill all fields", { variant: "warning" });
       return;
     }
@@ -78,15 +67,14 @@ export default function OpeningBalancesPage() {
       enqueueSnackbar("Opening Balance added successfully!", { variant: "success" });
       setCashBook("");
       setAmount("");
-      fetchData();
     } catch {
       enqueueSnackbar("Failed to add Opening Balance", { variant: "error" });
     }
   };
 
   // Update existing
-  const handleUpdate = async (id: number) => {
-    if (!editingCashBook || !editingAmount) {
+  const handleUpdateBalance = async (id: number) => {
+    if (editingCashBook === "" || editingAmount === "") {
       enqueueSnackbar("Please fill all fields", { variant: "warning" });
       return;
     }
@@ -97,7 +85,8 @@ export default function OpeningBalancesPage() {
       });
       enqueueSnackbar("Opening Balance updated successfully!", { variant: "success" });
       setEditingId(null);
-      fetchData();
+      setEditingCashBook("");
+      setEditingAmount("");
     } catch {
       enqueueSnackbar("Failed to update Opening Balance", { variant: "error" });
     }
@@ -109,7 +98,6 @@ export default function OpeningBalancesPage() {
     try {
       await deleteOpeningBalance(id);
       enqueueSnackbar("Deleted successfully!", { variant: "success" });
-      fetchData();
     } catch {
       enqueueSnackbar("Failed to delete", { variant: "error" });
     }
@@ -117,7 +105,6 @@ export default function OpeningBalancesPage() {
 
   return (
     <>
-      {/* Breadcrumb */}
       <Breadcrumbs sx={{ mb: 2 }}>
         <Link component="button" onClick={() => navigate("/settings")}>
           Settings
@@ -131,23 +118,21 @@ export default function OpeningBalancesPage() {
 
       {/* Add Form */}
       <Box sx={{ maxWidth: 700, mb: 3 }}>
-        <Box
-          sx={{
-            display: "flex",
-            gap: 2,
-            flexWrap: "wrap",
-            p: 2,
-            background: "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)",
-            borderRadius: 2,
-            boxShadow: 3,
-            alignItems: "center",
-          }}
-        >
+        <Box sx={{
+          display: "flex",
+          gap: 2,
+          flexWrap: "wrap",
+          p: 2,
+          background: "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)",
+          borderRadius: 2,
+          boxShadow: 3,
+          alignItems: "center",
+        }}>
           <TextField
             select
             label="Cash Book"
             value={cashBook}
-            onChange={(e) => setCashBook(e.target.value)}
+            onChange={(e) => setCashBook(Number(e.target.value))}
             size="small"
             sx={{ backgroundColor: "white", minWidth: 180 }}
           >
@@ -165,7 +150,7 @@ export default function OpeningBalancesPage() {
             label="Amount"
             type="number"
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={(e) => setAmount(Number(e.target.value))}
             size="small"
             sx={{ backgroundColor: "white", minWidth: 150 }}
           />
@@ -187,37 +172,30 @@ export default function OpeningBalancesPage() {
               <TableCell sx={{ textAlign: "center" }}>Actions</TableCell>
             </TableRow>
           </TableHead>
-
           <TableBody>
             {balances.map((b, index) => (
               <TableRow key={b.id}>
                 <TableCell sx={{ textAlign: "center" }}>{index + 1}</TableCell>
-
-                {/* Cash Book */}
                 <TableCell sx={{ textAlign: "center" }}>
                   {cashBooks.find((c) => c.id === b.cash_book)?.name || b.cash_book}
                 </TableCell>
-
-                {/* Amount */}
                 <TableCell sx={{ textAlign: "center" }}>
                   {editingId === b.id ? (
                     <TextField
                       type="number"
                       size="small"
                       value={editingAmount}
-                      onChange={(e) => setEditingAmount(e.target.value)}
+                      onChange={(e) => setEditingAmount(Number(e.target.value))}
                       sx={{ backgroundColor: "white", minWidth: 120 }}
                     />
                   ) : (
                     b.amount
                   )}
-                </TableCell>                
-
-                {/* Actions */}
+                </TableCell>
                 <TableCell sx={{ textAlign: "center" }}>
                   {editingId === b.id ? (
                     <>
-                      <Button size="small" onClick={() => handleUpdate(b.id!)}>Save</Button>
+                      <Button size="small" onClick={() => handleUpdateBalance(b.id!)}>Save</Button>
                       <Button size="small" onClick={() => setEditingId(null)}>Cancel</Button>
                     </>
                   ) : (
@@ -226,8 +204,8 @@ export default function OpeningBalancesPage() {
                         size="small"
                         onClick={() => {
                           setEditingId(b.id!);
-                          setEditingCashBook(b.cash_book.toString());
-                          setEditingAmount(b.amount.toString());
+                          setEditingCashBook(b.cash_book);
+                          setEditingAmount(b.amount);
                         }}
                       >
                         Edit

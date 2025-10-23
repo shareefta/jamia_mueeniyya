@@ -68,15 +68,11 @@ class TransactionSerializer(serializers.ModelSerializer):
 # OPENING BALANCE SERIALIZER
 # ----------------------------------------------------------------------
 class OpeningBalanceSerializer(serializers.ModelSerializer):
-    # hide created_by and set it automatically from the request user
-    created_by = serializers.HiddenField(default=serializers.CurrentUserDefault())
-    created_by_name = serializers.CharField(source='created_by.name', read_only=True)
     cash_book_name = serializers.CharField(source='cash_book.name', read_only=True)
 
     class Meta:
         model = OpeningBalance
         fields = [
-            'id', 'cash_book', 'cash_book_name',
-            'amount', 'date', 'created_by', 'created_by_name'
+            'id', 'cash_book', 'cash_book_name', 'amount', 'date', 'created_by'
         ]
-        read_only_fields = ['date', 'created_by', 'created_by_name', 'cash_book_name']
+        read_only_fields = ['date', 'created_by', 'cash_book_name']
