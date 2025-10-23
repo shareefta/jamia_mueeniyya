@@ -19,9 +19,9 @@ dayjs.extend(customParseFormat);
 
 import { getUsers } from "src/api/users";
 import { getCashBooks } from "src/api/cash-book";
-import { getCategories } from "src/api/categories";
 import { getPaymentModes } from "src/api/payment-modes";
-import { getOpeningBalances } from "src/api/opening-balances";
+import { getOpeningBalances } from "src/api/opening-balances"
+import { getCategories, createCategory } from "src/api/categories";
 
 import { createTransaction, getTransactions, updateTransaction, deleteTransaction, TransactionProps } from "../api/transactions";
 
@@ -62,6 +62,10 @@ const TransactionList = () => {
   // Edit modal state
   const [editOpen, setEditOpen] = useState(false);
   const [editData, setEditData] = useState<TransactionProps | null>(null);
+
+  // Add Category from dialog
+  const [addCatOpen, setAddCatOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
 
   const [formData, setFormData] = useState({
     date: "",
@@ -739,11 +743,21 @@ const TransactionList = () => {
             label="Category"
             name="category"
             value={formData.category}
-            onChange={handleChange}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value === "__new__") {
+                setAddCatOpen(true); // Open dialog
+                return;
+              }
+              setFormData((prev) => ({ ...prev, category: value }));
+            }}
           >
             {categories.map((cat) => (
               <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>
             ))}
+            <MenuItem value="__new__" sx={{ fontStyle: "italic", color: "primary.main" }}>
+              + New Category
+            </MenuItem>
           </TextField>
 
           <TextField
@@ -996,6 +1010,46 @@ const TransactionList = () => {
           <Button onClick={() => setEditOpen(false)}>Cancel</Button>
           <Button color="primary" variant="contained" onClick={handleEditSubmit}>
             Save
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={addCatOpen} onClose={() => setAddCatOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Add New Category</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Category Name"
+            value={newCategoryName}
+            onChange={(e) => setNewCategoryName(e.target.value)}
+            fullWidth
+            autoFocus
+            sx={{ mt: 1 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddCatOpen(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={async () => {
+              if (!newCategoryName.trim()) return;
+
+              try {
+                // API call to create category
+                const newCat = await createCategory({ name: newCategoryName.trim() });
+
+                // Update categories list and select new one
+                setCategories((prev) => [...prev, newCat]);
+                setFormData((prev) => ({ ...prev, category: newCat.id }));
+
+                // Reset and close
+                setNewCategoryName("");
+                setAddCatOpen(false);
+              } catch (err) {
+                enqueueSnackbar("Failed to create category", { variant: "error" });
+              }
+            }}
+          >
+            Add
           </Button>
         </DialogActions>
       </Dialog>
