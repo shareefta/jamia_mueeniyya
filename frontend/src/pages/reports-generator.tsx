@@ -20,9 +20,14 @@ import {
 
 import { getUsers } from "../api/users";
 import { getCashBooks } from "../api/cash-book";
-import { getCategories } from "../api/categories";
 import { getOffCampuses } from "../api/offCampus";
-import { getPaymentModes } from "../api/payment-modes";
+import { getCategories, CategoryProps } from "../api/categories";
+import { getPaymentModes, PaymentModeProps } from "../api/payment-modes";
+
+interface SelectOption {
+  id: number;
+  name: string;
+}
 
 export default function ReportGenerator() {
   const isMobile = useMediaQuery("(max-width:600px)");
@@ -42,12 +47,12 @@ export default function ReportGenerator() {
     to: dayjs().format("YYYY-MM-DD"),
   });
 
-  const [categories, setCategories] = useState<string[]>([]);
-  const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
-  const [modes, setModes] = useState<string[]>([]);
-  const [modeOptions, setModeOptions] = useState<string[]>([]);
-  const [users, setUsers] = useState<string[]>([]);
-  const [userOptions, setUserOptions] = useState<string[]>([]);
+  const [categories, setCategories] = useState<CategoryProps[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<CategoryProps[]>([]);
+  const [modes, setModes] = useState<PaymentModeProps[]>([]);
+  const [modeOptions, setModeOptions] = useState<PaymentModeProps[]>([]);
+  const [users, setUsers] = useState<SelectOption[]>([]);
+  const [userOptions, setUserOptions] = useState<SelectOption[]>([]);
 
   const [loading, setLoading] = useState(true);
 
@@ -238,9 +243,21 @@ export default function ReportGenerator() {
                 <Grid size={{ xs: 12, md: 6 }}>
                   <Autocomplete
                     multiple
-                    options={categoryOptions}
-                    value={categories}
-                    onChange={(e, newVal) => setCategories(newVal)}
+                    options={[{ id: 0, name: "All" }, ...categoryOptions]}
+                    getOptionLabel={(option) => option.name}
+                    value={
+                      categories.length === categoryOptions.length
+                        ? [{ id: 0, name: "All" }, ...categoryOptions]
+                        : categories
+                    }
+                    onChange={(e, newVal) => {
+                      if (newVal.some(opt => opt.id === 0)) {
+                        // If "All" selected → select all actual categories
+                        setCategories(categoryOptions);
+                      } else {
+                        setCategories(newVal as CategoryProps[]);
+                      }
+                    }}
                     renderInput={(params) => (
                       <TextField {...params} label="Category" placeholder="Select..." />
                     )}
@@ -251,9 +268,20 @@ export default function ReportGenerator() {
                 <Grid size={{ xs: 12, md: 6 }}>
                   <Autocomplete
                     multiple
-                    options={modeOptions}
-                    value={modes}
-                    onChange={(e, newVal) => setModes(newVal)}
+                    options={[{ id: 0, name: "All" }, ...modeOptions]}
+                    getOptionLabel={(option) => option.name}
+                    value={
+                      modes.length === modeOptions.length
+                        ? [{ id: 0, name: "All" }, ...modeOptions]
+                        : modes
+                    }
+                    onChange={(e, newVal) => {
+                      if (newVal.some(opt => opt.id === 0)) {
+                        setModes(modeOptions);
+                      } else {
+                        setModes(newVal);
+                      }
+                    }}
                     renderInput={(params) => (
                       <TextField {...params} label="Payment Mode" placeholder="Select..." />
                     )}
@@ -264,9 +292,20 @@ export default function ReportGenerator() {
                 <Grid size={{ xs: 12 }}>
                   <Autocomplete
                     multiple
-                    options={userOptions}
-                    value={users}
-                    onChange={(e, newVal) => setUsers(newVal)}
+                    options={[{ id: 0, name: "All" }, ...userOptions]}
+                    getOptionLabel={(option) => option.name}
+                    value={
+                      users.length === userOptions.length
+                        ? [{ id: 0, name: "All" }, ...userOptions]
+                        : users
+                    }
+                    onChange={(e, newVal) => {
+                      if (newVal.some(opt => opt.id === 0)) {
+                        setUsers(userOptions);
+                      } else {
+                        setUsers(newVal);
+                      }
+                    }}
                     renderInput={(params) => (
                       <TextField {...params} label="User" placeholder="Select..." />
                     )}

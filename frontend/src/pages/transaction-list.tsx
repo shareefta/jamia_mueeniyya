@@ -990,9 +990,16 @@ const TransactionList = () => {
                   <Typography variant="body2" color="text.secondary">
                     {txn.category_name} - {txn.payment_mode_name}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Created by {txn.user_name || "-"} on{" "}
-                    {dayjs(txn.date).format("DD-MM-YYYY")} at{" "}
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    Created by {txn.user_name || "-"} on {dayjs(txn.date).format("DD-MM-YYYY")} at{" "}
                     {txn.time ? dayjs(`1970-01-01T${txn.time}`).format("hh:mm A") : "-"}
                   </Typography>
                 </Box>
