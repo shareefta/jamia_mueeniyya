@@ -10,7 +10,7 @@ import { Add, Edit, Delete } from "@mui/icons-material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useTheme, useMediaQuery, Accordion, AccordionSummary, AccordionDetails } from "@mui/material";
 import {
-  Dialog, DialogTitle, DialogContent, DialogActions, TextField, Box, Button, Card, CardContent,
+  Chip, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Box, Button, Card, CardContent,
   Typography, Grid, FormControl, InputLabel, Select, MenuItem, Table, TableHead, TableBody,
   TableCell, TableRow, TableContainer, Paper, IconButton, FormControlLabel, RadioGroup, Radio
 } from "@mui/material";
@@ -423,16 +423,26 @@ const TransactionList = () => {
         <Box display="flex" flexDirection="column" gap={0.5}>
           {/* Cash Book Name */}
           {selectedCashBook && (
-            <Typography
-              variant="subtitle1"
-              sx={{
-                color: "primary.main",
-                fontWeight: 600,
-                textTransform: "uppercase",
-              }}
+            <Box
+              display="flex"
+              alignItems="center"
+              flexWrap="wrap"
+              gap={0.5}
+              sx={{ mb: 0.5 }}
             >
-              {selectedCashBook}
-            </Typography>
+              <Chip
+                label={selectedCashBook.campus_name}
+                color="info"
+                size="small"
+                sx={{ fontWeight: 600 }}
+              />
+              <Chip
+                label={selectedCashBook.name}
+                color="success"
+                size="small"
+                sx={{ fontWeight: 600 }}
+              />
+            </Box>
           )}
 
           {/* Heading + Date Label */}
