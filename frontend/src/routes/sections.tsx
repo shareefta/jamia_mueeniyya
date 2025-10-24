@@ -31,6 +31,7 @@ export const CategoriesPage = lazy(() => import('src/pages/settings/categories')
 export const OpeningBalancesPage = lazy(() => import('src/pages/settings/opening-balances'));
 export const CashBookPage = lazy(() => import('src/pages/settings/cash-book'));
 export const CashBookListsPage = lazy(() => import('src/pages//cash-book-lists'));
+export const ReportsGeneratorPage = lazy(() => import('src/pages/reports-generator'));
 
 
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
@@ -71,6 +72,7 @@ export const routesSection: RouteObject[] = [
       { path: 'transaction-list', element: <TransactionListPage /> },
       { path: 'transaction-list/:cashBookId', element: <TransactionListPage /> },
       { path: 'cash-books-lists', element: <CashBookListsPage /> },
+      { path: 'reports-generator', element: <ReportsGeneratorPage /> },
       {
         path: 'settings',
         element: <SettingsLayout />,
@@ -102,6 +104,7 @@ export const routesSection: RouteObject[] = [
       { path: 'transaction-list', element: <TransactionListPage /> },
       { path: 'transaction-list/:cashBookId', element: <TransactionListPage /> },
       { path: 'cash-books-lists', element: <CashBookListsPage /> },
+      { path: 'reports-generator', element: <ReportsGeneratorPage /> },
     ],
   },
   {
