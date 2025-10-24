@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import { useSnackbar } from "notistack";
 import minMax from "dayjs/plugin/minMax";
 import { useEffect, useState } from "react";
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import isBetween from "dayjs/plugin/isBetween";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 
@@ -28,6 +28,7 @@ import { getCategories, createCategory } from "src/api/categories";
 import { createTransaction, getTransactions, updateTransaction, deleteTransaction, TransactionProps } from "../api/transactions";
 
 const TransactionList = () => {
+  const navigate = useNavigate();
   const { cashBookId } = useParams<{ cashBookId: string }>();
   const { enqueueSnackbar } = useSnackbar();
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -73,10 +74,11 @@ const TransactionList = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  // Derived variable for the selected cashbook
-  const selectedCashBook = cashBooks.find(
-    (cb) => cb.id.toString() === cashBookId
-  );
+  // Dynamically get selected cash book details
+  const selectedCashBook =
+    filters.cash_book !== "All"
+      ? cashBooks.find(cb => cb.id === parseInt(filters.cash_book))
+      : null;
 
   const [formData, setFormData] = useState({
     date: "",
@@ -422,7 +424,7 @@ const TransactionList = () => {
         {/* Left side: Cash Book Name + Heading + Date Label */}
         <Box display="flex" flexDirection="column" gap={0.5}>
           {/* Cash Book Name */}
-          {selectedCashBook && (
+          {selectedCashBook ? (
             <Box
               display="flex"
               alignItems="center"
@@ -434,7 +436,13 @@ const TransactionList = () => {
                 label={selectedCashBook.campus_name}
                 color="info"
                 size="small"
-                sx={{ fontWeight: 600 }}
+                clickable
+                onClick={() => navigate(`/cash-books-lists?campus=${selectedCashBook.campus_id}`)}
+                sx={{
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  "&:hover": { opacity: 0.8 },
+                }}
               />
               <Chip
                 label={selectedCashBook.name}
@@ -443,6 +451,20 @@ const TransactionList = () => {
                 sx={{ fontWeight: 600 }}
               />
             </Box>
+          ) : (
+            filters.cash_book === "All" && (
+              <Chip
+                label="All Cash Books"
+                color="default"
+                size="small"
+                sx={{
+                  fontWeight: 600,
+                  bgcolor: "grey.100",
+                  color: "text.primary",
+                  mb: 0.5,
+                }}
+              />
+            )
           )}
 
           {/* Heading + Date Label */}

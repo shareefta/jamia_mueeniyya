@@ -1,31 +1,12 @@
 import { useSnackbar } from "notistack";
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 import { Add, Edit, Delete } from "@mui/icons-material";
 import {
-  Box,
-  Button,
-  Card,
-  Paper,
-  Grid,
-  IconButton,
-  MenuItem,
-  Select,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Typography,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Tooltip,
-} from "@mui/material";
+  Box, Button, Card, Paper, Grid, IconButton, MenuItem, Select, Table, TableBody,
+  TableCell, TableContainer, TableHead, TableRow, Typography, Dialog, DialogTitle,
+  DialogContent, DialogActions, TextField, Tooltip,} from "@mui/material";
 
 import { getOffCampuses } from "../api/offCampus";
 import {
@@ -38,6 +19,7 @@ import {
 
 export default function CashBookListPage() {
   const { enqueueSnackbar } = useSnackbar();
+  const location = useLocation();
 
   const [cashBooks, setCashBooks] = useState<CashBookProps[]>([]);
   const [campuses, setCampuses] = useState<any[]>([]);
@@ -47,6 +29,15 @@ export default function CashBookListPage() {
   const [editMode, setEditMode] = useState(false);
   const [cashBookName, setCashBookName] = useState("");
   const [selectedCashBookId, setSelectedCashBookId] = useState<number | null>(null);
+
+  // Extract campusId from URL query params
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const campusId = params.get("campus");
+    if (campusId) {
+      setSelectedCampus(Number(campusId));
+    }
+  }, [location.search]);
 
   // Fetch campuses & cashbooks
   useEffect(() => {
@@ -61,7 +52,10 @@ export default function CashBookListPage() {
     try {
       const data = await getOffCampuses();
       setCampuses(data);
-      if (data.length > 0) setSelectedCampus(data[0].id);
+      // Only set default if selectedCampus is not already from query param
+      if (data.length > 0 && !selectedCampus) {
+        setSelectedCampus(data[0].id);
+      }
     } catch {
       enqueueSnackbar("Failed to fetch campuses", { variant: "error" });
     }
@@ -182,7 +176,7 @@ export default function CashBookListPage() {
             <TableHead>
               <TableRow sx={{ backgroundColor: "#f5f6fa" }}>
                 <TableCell sx={{ fontWeight: 600 }}>Sl. No.</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Cash Book Name</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Cash Book</TableCell>
                 <TableCell sx={{ textAlign: "center", fontWeight: 600 }}>Edit</TableCell>
                 <TableCell sx={{ textAlign: "center", fontWeight: 600 }}>Delete</TableCell>
               </TableRow>
@@ -191,28 +185,73 @@ export default function CashBookListPage() {
             <TableBody>
               {cashBooks.length > 0 ? (
                 cashBooks.map((cb, index) => (
-                  <TableRow key={cb.id} sx={{ "&:hover": { backgroundColor: "#f1f2f6" }, transition: "0.3s" }}>
-                    <TableCell>{index + 1}</TableCell>
+                  <TableRow
+                    key={cb.id}
+                    sx={{
+                      "&:hover": {
+                        backgroundColor: "#f1f8e9",
+                        transform: "scale(1.01)",
+                        boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
+                        "& .action-icons": { visibility: "visible" }, // show icons on hover
+                      },
+                      transition: "all 0.25s ease-in-out",
+                      height: "50px",
+                    }}
+                  >
+                    <TableCell
+                      sx={{ fontWeight: 500, color: "#424242", py: 0.8, px: 1.5, width: "60px" }}
+                    >
+                      {index + 1}
+                    </TableCell>
 
-                    <TableCell>
-        <Link
-          to={`/transaction-list/${cb.id}`}
-          style={{ textDecoration: 'none', color: 'inherit' }}
-        >
-          {cb.name}
-        </Link>
-      </TableCell>
-                    <TableCell align="center">
+                    <TableCell sx={{ py: 0.8, px: 1.5 }}>
+                      <Link
+                        to={`/transaction-list/${cb.id}`}
+                        style={{
+                          textDecoration: "none",
+                          color: "#1b5e20",
+                          fontWeight: 700,
+                          fontSize: "1rem",
+                        }}
+                      >
+                        {cb.name}
+                      </Link>
+                    </TableCell>
+
+                    <TableCell align="center" sx={{ py: 0.8, px: 1, width: "60px" }}>
                       <Tooltip title="Edit Cash Book">
-                        <IconButton onClick={() => handleOpenDialog(cb)} color="primary">
-                          <Edit />
+                        <IconButton
+                          onClick={() => handleOpenDialog(cb)}
+                          color="primary"
+                          size="small"
+                          className="action-icons"
+                          sx={{
+                            backgroundColor: "#e3f2fd",
+                            "&:hover": { backgroundColor: "#bbdefb" },
+                            transition: "0.2s",
+                            visibility: "hidden", // hidden by default
+                          }}
+                        >
+                          <Edit fontSize="small" />
                         </IconButton>
                       </Tooltip>
                     </TableCell>
-                    <TableCell align="center">
+
+                    <TableCell align="center" sx={{ py: 0.8, px: 1, width: "60px" }}>
                       <Tooltip title="Delete Cash Book">
-                        <IconButton onClick={() => handleDelete(cb.id!)} color="error">
-                          <Delete />
+                        <IconButton
+                          onClick={() => handleDelete(cb.id!)}
+                          color="error"
+                          size="small"
+                          className="action-icons"
+                          sx={{
+                            backgroundColor: "#ffebee",
+                            "&:hover": { backgroundColor: "#ffcdd2" },
+                            transition: "0.2s",
+                            visibility: "hidden", // hidden by default
+                          }}
+                        >
+                          <Delete fontSize="small" />
                         </IconButton>
                       </Tooltip>
                     </TableCell>
@@ -220,7 +259,7 @@ export default function CashBookListPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={4} align="center">
+                  <TableCell colSpan={4} align="center" sx={{ py: 3, color: "#757575" }}>
                     No Cash Books found.
                   </TableCell>
                 </TableRow>
