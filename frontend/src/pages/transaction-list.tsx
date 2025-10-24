@@ -73,6 +73,11 @@ const TransactionList = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
+  // Derived variable for the selected cashbook
+  const selectedCashBook = cashBooks.find(
+    (cb) => cb.id.toString() === cashBookId
+  );
+
   const [formData, setFormData] = useState({
     date: "",
     time: "",
@@ -408,56 +413,89 @@ const TransactionList = () => {
       {/* Header */}
       <Box
         display="flex"
-        flexDirection={{ xs: "column", sm: "row" }} // column on mobile, row on larger screens
+        flexDirection={{ xs: "column", sm: "row" }}
         justifyContent="space-between"
         alignItems={{ xs: "flex-start", sm: "center" }}
         mb={3}
-        gap={2} // spacing between rows on mobile
+        gap={2}
       >
-        {/* Left side: Heading + Date Label */}
-        <Box display="flex" alignItems="center" flexWrap="wrap" gap={1}>
-          <Typography variant="h4" fontWeight="bold">
-            Transactions
-          </Typography>
-
-          {selectedDateLabel && (
-            <Box
-              onClick={() => setOpenCustomDate(true)}
+        {/* Left side: Cash Book Name + Heading + Date Label */}
+        <Box display="flex" flexDirection="column" gap={0.5}>
+          {/* Cash Book Name */}
+          {selectedCashBook && (
+            <Typography
+              variant="subtitle1"
               sx={{
-                px: 2,
-                py: 0.5,
-                borderRadius: "16px",
-                backgroundColor: "primary.light",
-                color: "primary.contrastText",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                cursor: "pointer",
-                "&:hover": {
-                  backgroundColor: "primary.main",
-                  color: "white",
-                },
+                color: "primary.main",
+                fontWeight: 600,
+                textTransform: "uppercase",
               }}
             >
-              {selectedDateLabel()}
-            </Box>
+              {selectedCashBook}
+            </Typography>
           )}
+
+          {/* Heading + Date Label */}
+          <Box display="flex" alignItems="center" flexWrap="wrap" gap={1}>
+            <Typography variant="h4" fontWeight="bold">
+              Transactions
+            </Typography>
+
+            {selectedDateLabel && (
+              <Box
+                onClick={() => setOpenCustomDate(true)}
+                sx={{
+                  px: 2,
+                  py: 0.5,
+                  borderRadius: "16px",
+                  backgroundColor: "primary.light",
+                  color: "primary.contrastText",
+                  fontSize: "0.875rem",
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  "&:hover": {
+                    backgroundColor: "primary.main",
+                    color: "white",
+                  },
+                }}
+              >
+                {selectedDateLabel()}
+              </Box>
+            )}
+          </Box>
         </Box>
 
         {/* Right side: Buttons */}
-        <Box display="flex" gap={1} flexWrap="wrap">
+        <Box
+          display="flex"
+          gap={1}
+          flexWrap="wrap"
+          width={{ xs: "100%", sm: "auto" }}
+        >
           <Button
             variant="contained"
             color="success"
             onClick={() => handleClickOpen("IN")}
             startIcon={<Add />}
+            fullWidth
+            sx={{
+              flex: { xs: 1, sm: "none" },
+              fontSize: { xs: "0.9rem", sm: "1rem" },
+            }}
           >
             Cash In
           </Button>
+
           <Button
             variant="contained"
             color="error"
             onClick={() => handleClickOpen("OUT")}
             startIcon={<Add />}
+            fullWidth
+            sx={{
+              flex: { xs: 1, sm: "none" },
+              fontSize: { xs: "0.9rem", sm: "1rem" },
+            }}
           >
             Cash Out
           </Button>
@@ -779,57 +817,113 @@ const TransactionList = () => {
       )}
 
       {/* Summary Cards */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        {filters.includeOB && (
-          <Grid size={{ xs: 3 }}>
-            <Card sx={{ bgcolor: "#fff8e1", boxShadow: 3, borderLeft: "6px solid #fbc02d" }}>
+      {isMobile ? (
+        // --- MOBILE VIEW: Compact single card layout ---
+        <Card sx={{ mb: 3, p: 1, boxShadow: 3 }}>
+          <CardContent>
+            <Box display="flex" flexDirection="column" gap={1}>
+              {/* Include OB Section if enabled */}
+              {filters.includeOB && (
+                <Box display="flex" justifyContent="space-between" alignItems="center">
+                  <Typography variant="body2" color="textSecondary">
+                    Opening Balance
+                  </Typography>
+                  <Typography variant="subtitle1" fontWeight="bold" color="warning.main">
+                    ₹ {displayedOB.toLocaleString()}
+                  </Typography>
+                </Box>
+              )}
+
+              {/* Total In */}
+              <Box display="flex" justifyContent="space-between" alignItems="center">
+                <Typography variant="body2" color="textSecondary">
+                  Total In
+                </Typography>
+                <Typography variant="subtitle1" fontWeight="bold" color="success.main">
+                  ₹ {totalIn.toLocaleString()}
+                </Typography>
+              </Box>
+
+              {/* Total Out */}
+              <Box display="flex" justifyContent="space-between" alignItems="center">
+                <Typography variant="body2" color="textSecondary">
+                  Total Out
+                </Typography>
+                <Typography variant="subtitle1" fontWeight="bold" color="error.main">
+                  ₹ {totalOut.toLocaleString()}
+                </Typography>
+              </Box>
+
+              {/* Net Balance */}
+              <Box display="flex" justifyContent="space-between" alignItems="center">
+                <Typography variant="body2" color="textSecondary">
+                  Net Balance
+                </Typography>
+                <Typography
+                  variant="subtitle1"
+                  fontWeight="bold"
+                  color={netBalance >= 0 ? "success.main" : "error.main"}
+                >
+                  ₹ {netBalance.toLocaleString()}
+                </Typography>
+              </Box>
+            </Box>
+          </CardContent>
+        </Card>
+      ) : (
+        // --- DESKTOP VIEW: Grid of 4 summary cards ---
+        <Grid container spacing={2} sx={{ mb: 3 }}>
+          {filters.includeOB && (
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <Card sx={{ bgcolor: "#fff8e1", boxShadow: 3, borderLeft: "6px solid #fbc02d" }}>
+                <CardContent>
+                  <Typography variant="subtitle2" color="textSecondary">Opening Balance</Typography>
+                  <Typography variant="h6" fontWeight="bold" color="warning.main">
+                    ₹ {displayedOB.toLocaleString()}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          )}
+
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Card sx={{ bgcolor: "#e8f5e9", boxShadow: 3, borderLeft: "6px solid #2e7d32" }}>
               <CardContent>
-                <Typography variant="subtitle2" color="textSecondary">Opening Balance</Typography>
-                <Typography variant="h6" fontWeight="bold" color="warning.main">
-                  ₹ {displayedOB.toLocaleString()}
+                <Typography variant="subtitle2" color="textSecondary">Total In</Typography>
+                <Typography variant="h6" fontWeight="bold" color="success.main">
+                  ₹ {totalIn.toLocaleString()}
                 </Typography>
               </CardContent>
             </Card>
           </Grid>
-        )}
 
-        <Grid size={{ xs: 3 }}>
-          <Card sx={{ bgcolor: "#e8f5e9", boxShadow: 3, borderLeft: "6px solid #2e7d32" }}>
-            <CardContent>
-              <Typography variant="subtitle2" color="textSecondary">Total In</Typography>
-              <Typography variant="h6" fontWeight="bold" color="success.main">
-                ₹ {totalIn.toLocaleString()}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Card sx={{ bgcolor: "#ffebee", boxShadow: 3, borderLeft: "6px solid #c62828" }}>
+              <CardContent>
+                <Typography variant="subtitle2" color="textSecondary">Total Out</Typography>
+                <Typography variant="h6" fontWeight="bold" color="error.main">
+                  ₹ {totalOut.toLocaleString()}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
 
-        <Grid size={{ xs: 3 }}>
-          <Card sx={{ bgcolor: "#ffebee", boxShadow: 3, borderLeft: "6px solid #c62828" }}>
-            <CardContent>
-              <Typography variant="subtitle2" color="textSecondary">Total Out</Typography>
-              <Typography variant="h6" fontWeight="bold" color="error.main">
-                ₹ {totalOut.toLocaleString()}
-              </Typography>
-            </CardContent>
-          </Card>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Card sx={{ bgcolor: "#e3f2fd", boxShadow: 3, borderLeft: "6px solid #1565c0" }}>
+              <CardContent>
+                <Typography variant="subtitle2" color="textSecondary">Net Balance</Typography>
+                <Typography
+                  variant="h6"
+                  fontWeight="bold"
+                  color={netBalance >= 0 ? "success.main" : "error.main"}
+                >
+                  ₹ {netBalance.toLocaleString()}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
         </Grid>
-
-        <Grid size={{ xs: 3 }}>
-          <Card sx={{ bgcolor: "#e3f2fd", boxShadow: 3, borderLeft: "6px solid #1565c0" }}>
-            <CardContent>
-              <Typography variant="subtitle2" color="textSecondary">Net Balance</Typography>
-              <Typography
-                variant="h6"
-                fontWeight="bold"
-                color={netBalance >= 0 ? "success.main" : "error.main"}
-              >
-                ₹ {netBalance.toLocaleString()}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+      )}
 
       {/* Table */}
       <TableContainer
