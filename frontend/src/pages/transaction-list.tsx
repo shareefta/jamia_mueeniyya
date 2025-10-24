@@ -957,119 +957,166 @@ const TransactionList = () => {
         </Grid>
       )}
 
-      {/* Table */}
-      <TableContainer
-        component={Paper}
-        sx={{
-          borderRadius: 2,
-          boxShadow: 3,
-          maxHeight: 600,
-          border: "1px solid #ddd",
-        }}
-      >
-        <Table stickyHeader sx={{ minWidth: 650, borderCollapse: "collapse" }}>
-          {/* Table Head */}
-          <TableHead>
-            <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-              {[
-                { label: "#", width: "5%" },
-                { label: "Date & Time", width: "15%" },
-                { label: "Details", width: "30%" },
-                { label: "Category", width: "10%" },
-                { label: "Mode", width: "10%" },
-                { label: "Amount", width: "10%" },
-                { label: "Balance", width: "10%" },
-                { label: "Action", width: "10%" },
-              ].map((h) => (
-                <TableCell
-                  key={h.label}
-                  align={["Amount", "Balance"].includes(h.label) ? "right" : "center"}
-                  sx={{
-                    fontWeight: "bold",
-                    borderBottom: "2px solid #ccc",
-                    width: h.width,
-                  }}
-                >
-                  {h.label}
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
+      {/* Total Transactions */}
+      <Box sx={{ mb: 2 }}>        
+        <Typography variant="subtitle1" fontWeight={600}>
+          Total Transactions: {computedTxns.length}
+        </Typography>
+      </Box>
+      
+      {/* Transaction List */}
+      {/* Mobile view - Cards */}
+      {isMobile ? (        
+        <Box display="flex" flexDirection="column" gap={2}>
+          {computedTxns.length > 0 ? (
+            computedTxns.map((txn) => (
+              <Card
+                key={txn.id}
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  p: 2,
+                  boxShadow: 3,
+                  borderRadius: 2,
+                  transition: "0.3s",
+                  "&:hover": { boxShadow: 6 },
+                }}
+              >
+                {/* Left side */}
+                <Box display="flex" flexDirection="column" gap={0.5}>
+                  <Typography variant="subtitle1" fontWeight={600}>
+                    {txn.remarks || "-"}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {txn.category_name} - {txn.payment_mode_name}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Created by {txn.user_name || "-"} on{" "}
+                    {dayjs(txn.date).format("DD-MM-YYYY")} at{" "}
+                    {txn.time ? dayjs(`1970-01-01T${txn.time}`).format("hh:mm A") : "-"}
+                  </Typography>
+                </Box>
 
-          {/* Table Body */}
-          <TableBody>
-            {computedTxns.length > 0 ? (
-              computedTxns.map((txn, idx) => (
-                <TableRow
-                  key={txn.id}
-                  hover
-                  sx={{
-                    backgroundColor: "#ffffff", // all rows white
-                    transition: "0.2s",
-                    "&:hover": {
-                      backgroundColor: "#e3f2fd", // light hover effect
-                    },
-                  }}
-                >
-                  <TableCell align="center">{idx + 1}</TableCell>
-
-                  {/* Date & Time */}
-                  <TableCell align="center">
-                    <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                      {dayjs(txn.date).format("DD-MM-YYYY")}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{ fontWeight: "bold", color: "text.secondary" }}
-                    >
-                      {txn.time ? dayjs(`1970-01-01T${txn.time}`).format("hh:mm A") : "-"}
-                    </Typography>
-                  </TableCell>
-
-                  {/* Details */}
-                  <TableCell align="left">{txn.remarks || "-"}</TableCell>
-
-                  {/* Category */}
-                  <TableCell align="center">{txn.category_name}</TableCell>
-
-                  {/* Payment Mode */}
-                  <TableCell align="center">{txn.payment_mode_name}</TableCell>
-
-                  {/* Amount */}
-                  <TableCell
-                    align="right"
-                    sx={{
-                      color: txn.transaction_type === "IN" ? "green" : "red",
-                      fontWeight: "bold",
-                    }}
+                {/* Right side */}
+                <Box display="flex" flexDirection="column" alignItems="flex-end" gap={0.5}>
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight={700}
+                    color={txn.transaction_type === "IN" ? "green" : "red"}
                   >
                     ₹ {Number(txn.amount).toLocaleString()}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Balance: ₹ {txn.running_balance.toFixed(2)}
+                  </Typography>
+                </Box>
+              </Card>
+            ))
+          ) : (
+            <Typography align="center" sx={{ py: 4, color: "text.secondary" }}>
+              No transactions found.
+            </Typography>
+          )}
+        </Box>
+      ) : (
+        // Desktop view: Table (existing)
+        <TableContainer
+          component={Paper}
+          sx={{
+            borderRadius: 2,
+            boxShadow: 3,
+            maxHeight: 600,
+            border: "1px solid #ddd",
+          }}
+        >
+          <Table stickyHeader sx={{ minWidth: 650, borderCollapse: "collapse" }}>
+            {/* Table Head */}
+            <TableHead>
+              <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+                {[
+                  { label: "#", width: "5%" },
+                  { label: "Date & Time", width: "15%" },
+                  { label: "Details", width: "30%" },
+                  { label: "Category", width: "10%" },
+                  { label: "Mode", width: "10%" },
+                  { label: "Amount", width: "10%" },
+                  { label: "Balance", width: "10%" },
+                  { label: "Action", width: "10%" },
+                ].map((h) => (
+                  <TableCell
+                    key={h.label}
+                    align={["Amount", "Balance"].includes(h.label) ? "right" : "center"}
+                    sx={{
+                      fontWeight: "bold",
+                      borderBottom: "2px solid #ccc",
+                      width: h.width,
+                    }}
+                  >
+                    {h.label}
                   </TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
 
-                  {/* Balance */}
-                  <TableCell align="right">₹ {txn.running_balance.toFixed(2)}</TableCell>
-
-                  {/* Actions */}
-                  <TableCell align="center">
-                    <IconButton onClick={() => handleEditClick(txn)} color="primary">
-                      <Edit fontSize="small" />
-                    </IconButton>
-                    <IconButton onClick={() => handleDeleteClick(txn.id!)} color="error">
-                      <Delete fontSize="small" />
-                    </IconButton>
+            {/* Table Body */}
+            <TableBody>
+              {computedTxns.length > 0 ? (
+                computedTxns.map((txn, idx) => (
+                  <TableRow
+                    key={txn.id}
+                    hover
+                    sx={{
+                      backgroundColor: "#ffffff",
+                      transition: "0.2s",
+                      "&:hover": { backgroundColor: "#e3f2fd" },
+                    }}
+                  >
+                    <TableCell align="center">{idx + 1}</TableCell>
+                    <TableCell align="center">
+                      <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+                        {dayjs(txn.date).format("DD-MM-YYYY")}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{ fontWeight: "bold", color: "text.secondary" }}
+                      >
+                        {txn.time ? dayjs(`1970-01-01T${txn.time}`).format("hh:mm A") : "-"}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="left">{txn.remarks || "-"}</TableCell>
+                    <TableCell align="center">{txn.category_name}</TableCell>
+                    <TableCell align="center">{txn.payment_mode_name}</TableCell>
+                    <TableCell
+                      align="right"
+                      sx={{
+                        color: txn.transaction_type === "IN" ? "green" : "red",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      ₹ {Number(txn.amount).toLocaleString()}
+                    </TableCell>
+                    <TableCell align="right">₹ {txn.running_balance.toFixed(2)}</TableCell>
+                    <TableCell align="center">
+                      <IconButton onClick={() => handleEditClick(txn)} color="primary">
+                        <Edit fontSize="small" />
+                      </IconButton>
+                      <IconButton onClick={() => handleDeleteClick(txn.id!)} color="error">
+                        <Delete fontSize="small" />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+                    No transactions found.
                   </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
-                  No transactions found.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
 
       {/* Transaction Dialog */}
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
