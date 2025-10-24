@@ -998,7 +998,7 @@ const TransactionList = () => {
                 </Box>
 
                 {/* Right side */}
-                <Box display="flex" flexDirection="column" alignItems="flex-end" gap={0.5}>
+                <Box display="flex" flexDirection="column" alignItems="flex-end" gap={0.25}>
                   <Typography
                     variant="subtitle1"
                     fontWeight={700}
@@ -1006,8 +1006,26 @@ const TransactionList = () => {
                   >
                     ₹ {Number(txn.amount).toLocaleString()}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Balance: ₹ {txn.running_balance.toFixed(2)}
+
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      whiteSpace: "nowrap",
+                      gap: 0.5,
+                      color: "text.secondary",
+                      "& .label": {
+                        color: "#666",
+                      },
+                      "& .value": {
+                        fontWeight: 600,
+                        color: "#222",
+                      },
+                    }}
+                  >
+                    <span className="label">Balance:</span>
+                    <span className="value">₹ {txn.running_balance.toFixed(2)}</span>
                   </Typography>
                 </Box>
               </Card>
