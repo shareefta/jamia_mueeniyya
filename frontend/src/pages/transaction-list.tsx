@@ -967,7 +967,7 @@ const TransactionList = () => {
       {/* Transaction List */}
       {/* Mobile view - Cards */}
       {isMobile ? (        
-        <Box display="flex" flexDirection="column" gap={2}>
+        <Box display="flex" flexDirection="column" gap={1}>
           {computedTxns.length > 0 ? (
             computedTxns.map((txn) => (
               <Card
