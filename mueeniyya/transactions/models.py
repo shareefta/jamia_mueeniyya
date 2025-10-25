@@ -68,3 +68,10 @@ class OpeningBalance(models.Model):
     def __str__(self):
         return f"{self.cash_book} - {self.amount}"
 
+class Party(models.Model):
+    name = models.CharField(max_length=100)
+    mobile_number = models.CharField(max_length=15, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.mobile_number})" if self.mobile_number else self.name
+
