@@ -20,9 +20,9 @@ dayjs.extend(minMax);
 dayjs.extend(customParseFormat);
 
 import { getUsers } from "src/api/users";
-import { getParties } from "src/api/parties";
 import { getCashBooks } from "src/api/cash-book";
 import { getPaymentModes } from "src/api/payment-modes";
+import { getParties, createParty } from "src/api/parties";
 import { getOpeningBalances } from "src/api/opening-balances"
 import { getCategories, createCategory } from "src/api/categories";
 
@@ -94,7 +94,7 @@ const TransactionList = () => {
     category: "",
     payment_mode: "",
     cash_book: "",
-    party: "",
+    party: "" as string | number,
   });
 
   // Fetch data
@@ -1231,6 +1231,30 @@ const TransactionList = () => {
             ))}
           </TextField>
 
+          <TextField
+            select
+            label="Party"
+            name="party"
+            value={formData.party}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value === "__new__") {
+                setAddPartyOpen(true); // Open new Party dialog
+                return;
+              }
+              setFormData((prev) => ({ ...prev, party: value }));
+            }}
+          >
+            {parties.map((p) => (
+              <MenuItem key={p.id} value={p.id}>
+                {p.name} {p.mobile_number ? `(${p.mobile_number})` : ""}
+              </MenuItem>
+            ))}
+            <MenuItem value="__new__" sx={{ fontStyle: "italic", color: "primary.main" }}>
+              + New Party
+            </MenuItem>
+          </TextField>
+
           {!cashBookId && (
             <TextField
               select
@@ -1250,6 +1274,55 @@ const TransactionList = () => {
           <Button onClick={() => handleSave(false)} variant="contained">Save</Button>
           <Button onClick={() => handleSave(true)} variant="outlined">Save & Add More</Button>
           <Button onClick={handleClose}>Cancel</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Add Party Dialog */}
+      <Dialog open={addPartyOpen} onClose={() => setAddPartyOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Add New Party</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Party Name"
+            value={newPartyName}
+            onChange={(e) => setNewPartyName(e.target.value)}
+            fullWidth
+            autoFocus
+            sx={{ mt: 1 }}
+          />
+          <TextField
+            label="Mobile Number"
+            value={newPartyMobile}
+            onChange={(e) => setNewPartyMobile(e.target.value)}
+            fullWidth
+            sx={{ mt: 2 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddPartyOpen(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={async () => {
+              if (!newPartyName.trim()) return;
+
+              try {
+                const newParty = await createParty({ 
+                  name: newPartyName.trim(), 
+                  mobile_number: newPartyMobile.trim() || undefined 
+                });
+                setParties((prev) => [...prev, newParty]);
+                setFormData((prev) => ({ ...prev, party: newParty.id }));
+
+                // Reset and close
+                setNewPartyName("");
+                setNewPartyMobile("");
+                setAddPartyOpen(false);
+              } catch (err) {
+                enqueueSnackbar("Failed to create party", { variant: "error" });
+              }
+            }}
+          >
+            Add
+          </Button>
         </DialogActions>
       </Dialog>
 
