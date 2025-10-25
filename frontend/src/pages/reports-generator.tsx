@@ -1,7 +1,8 @@
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 
-import CheckIcon from "@mui/icons-material/Check";
+import CheckBoxIcon from "@mui/icons-material/CheckBox";
+import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import {
   Box,
   Card,
@@ -33,6 +34,8 @@ interface SelectOption {
 
 export default function ReportGenerator() {
   const isMobile = useMediaQuery("(max-width:600px)");
+  const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
+  const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
   // Step 1: campus & cash book
   const [campuses, setCampuses] = useState<any[]>([]);
@@ -253,16 +256,15 @@ export default function ReportGenerator() {
                         ? [{ id: 0, name: "All" }, ...categoryOptions]
                         : categories
                     }
-                    onChange={(e, newVal) => {
-                      const hasAll = newVal.some((opt) => opt.id === 0);
-                      const allSelected = categories.length === categoryOptions.length;
-
-                      if (hasAll && !allSelected) {
+                    isOptionEqualToValue={(option, value) => option.id === value.id}
+                    onChange={(event, newValue) => {
+                      const isAllSelected = newValue.some((item) => item.id === 0);
+                      if (isAllSelected) {
+                        // If "All" selected → select all
                         setCategories(categoryOptions);
-                      } else if (hasAll && allSelected) {
-                        setCategories([]);
                       } else {
-                        setCategories(newVal.filter((opt) => opt.id !== 0));
+                        // Otherwise set selected normally
+                        setCategories(newValue.filter((item) => item.id !== 0));
                       }
                     }}
                     renderOption={(props, option, { selected }) => {
@@ -272,24 +274,16 @@ export default function ReportGenerator() {
                       return (
                         <li {...props}>
                           <Checkbox
+                            icon={icon}
+                            checkedIcon={checkedIcon}
                             checked={isAll ? allSelected : selected}
-                            icon={<CheckIcon sx={{ visibility: "hidden" }} />}
-                            checkedIcon={<CheckIcon color="primary" />}
-                            sx={{ mr: 1 }}
                           />
-                          <Typography
-                            sx={{
-                              fontWeight: isAll ? "bold" : "normal",
-                              color: isAll ? (allSelected ? "primary.main" : "text.primary") : "text.primary",
-                            }}
-                          >
-                            {option.name}
-                          </Typography>
+                          {option.name}
                         </li>
                       );
                     }}
                     renderInput={(params) => (
-                      <TextField {...params} label="Category" placeholder="Select..." />
+                      <TextField {...params} label="Category" placeholder="Select categories..." />
                     )}
                   />
                 </Grid>
@@ -306,16 +300,15 @@ export default function ReportGenerator() {
                         ? [{ id: 0, name: "All" }, ...modeOptions]
                         : modes
                     }
-                    onChange={(e, newVal) => {
-                      const hasAll = newVal.some((opt) => opt.id === 0);
-                      const allSelected = modes.length === modeOptions.length;
-
-                      if (hasAll && !allSelected) {
+                    isOptionEqualToValue={(option, value) => option.id === value.id}
+                    onChange={(event, newValue) => {
+                      const isAllSelected = newValue.some((item) => item.id === 0);
+                      if (isAllSelected) {
+                        // If "All" selected → select all
                         setModes(modeOptions);
-                      } else if (hasAll && allSelected) {
-                        setModes([]);
                       } else {
-                        setModes(newVal.filter((opt) => opt.id !== 0));
+                        // Otherwise set selected normally
+                        setModes(newValue.filter((item) => item.id !== 0));
                       }
                     }}
                     renderOption={(props, option, { selected }) => {
@@ -325,24 +318,16 @@ export default function ReportGenerator() {
                       return (
                         <li {...props}>
                           <Checkbox
+                            icon={icon}
+                            checkedIcon={checkedIcon}
                             checked={isAll ? allSelected : selected}
-                            icon={<CheckIcon sx={{ visibility: "hidden" }} />}
-                            checkedIcon={<CheckIcon color="primary" />}
-                            sx={{ mr: 1 }}
                           />
-                          <Typography
-                            sx={{
-                              fontWeight: isAll ? "bold" : "normal",
-                              color: isAll ? (allSelected ? "primary.main" : "text.primary") : "text.primary",
-                            }}
-                          >
-                            {option.name}
-                          </Typography>
+                          {option.name}
                         </li>
                       );
                     }}
                     renderInput={(params) => (
-                      <TextField {...params} label="Payment Mode" placeholder="Select..." />
+                      <TextField {...params} label="Payment Mode" placeholder="Select payment modes..." />
                     )}
                   />
                 </Grid>
@@ -359,16 +344,15 @@ export default function ReportGenerator() {
                         ? [{ id: 0, name: "All" }, ...userOptions]
                         : users
                     }
-                    onChange={(e, newVal) => {
-                      const hasAll = newVal.some((opt) => opt.id === 0);
-                      const allSelected = users.length === userOptions.length;
-
-                      if (hasAll && !allSelected) {
+                    isOptionEqualToValue={(option, value) => option.id === value.id}
+                    onChange={(event, newValue) => {
+                      const isAllSelected = newValue.some((item) => item.id === 0);
+                      if (isAllSelected) {
+                        // If "All" selected → select all
                         setUsers(userOptions);
-                      } else if (hasAll && allSelected) {
-                        setUsers([]);
                       } else {
-                        setUsers(newVal.filter((opt) => opt.id !== 0));
+                        // Otherwise set selected normally
+                        setUsers(newValue.filter((item) => item.id !== 0));
                       }
                     }}
                     renderOption={(props, option, { selected }) => {
@@ -378,24 +362,16 @@ export default function ReportGenerator() {
                       return (
                         <li {...props}>
                           <Checkbox
+                            icon={icon}
+                            checkedIcon={checkedIcon}
                             checked={isAll ? allSelected : selected}
-                            icon={<CheckIcon sx={{ visibility: "hidden" }} />}
-                            checkedIcon={<CheckIcon color="primary" />}
-                            sx={{ mr: 1 }}
                           />
-                          <Typography
-                            sx={{
-                              fontWeight: isAll ? "bold" : "normal",
-                              color: isAll ? (allSelected ? "primary.main" : "text.primary") : "text.primary",
-                            }}
-                          >
-                            {option.name}
-                          </Typography>
+                          {option.name}
                         </li>
                       );
                     }}
                     renderInput={(params) => (
-                      <TextField {...params} label="Users" placeholder="Select..." />
+                      <TextField {...params} label="User" placeholder="Select users..." />
                     )}
                   />
                 </Grid>
