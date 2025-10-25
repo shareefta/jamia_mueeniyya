@@ -57,8 +57,7 @@ class TransactionSerializer(serializers.ModelSerializer):
             'category', 'category_name',
             'payment_mode', 'payment_mode_name',
             'cash_book', 'cash_book_name',
-            'date', 'time', 'amount', 'remarks', 
-            'party', 'mobile_number', 'created_at'
+            'date', 'time', 'amount', 'remarks', 'created_at'
         ]
 
     def get_transaction_label(self, obj):
