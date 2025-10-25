@@ -113,28 +113,29 @@ export default function ReportGenerator() {
     label: string;
     options: any[];
     selectedValues: number[];
-    setSelectedValues: (values: number[]) => void;
+    setSelectedValues: React.Dispatch<React.SetStateAction<number[]>>;
   }) => {
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState("");
     const allSelected = selectedValues.length === options.length;
 
-    // Filtered options based on search
     const filteredOptions = options.filter((o) =>
       o.name.toLowerCase().includes(search.toLowerCase())
     );
 
-    const handleChange = (event: any) => {
-      const value = event.target.value;
-
-      if (value.includes("All")) {
+    const handleChange = (value: any) => {
+      if (value === "All") {
         if (allSelected) {
           setSelectedValues([]);
         } else {
           setSelectedValues(options.map((o) => o.id));
         }
       } else {
-        setSelectedValues(value);
+        setSelectedValues((prev) =>
+          prev.includes(value)
+            ? prev.filter((id) => id !== value)
+            : [...prev, value]
+        );
       }
     };
 
@@ -148,7 +149,6 @@ export default function ReportGenerator() {
           onClose={() => setOpen(false)}
           label={label}
           value={selectedValues}
-          onChange={handleChange}
           renderValue={(selected) => {
             if (selected.length === 0) return "Select...";
             if (allSelected) return `All ${label}s`;
@@ -158,13 +158,10 @@ export default function ReportGenerator() {
             return names.join(", ");
           }}
           MenuProps={{
-            PaperProps: {
-              style: { maxHeight: 300 },
-              onMouseDown: (event: React.MouseEvent) => event.stopPropagation(),
-            },
+            PaperProps: { style: { maxHeight: 300 } },
           }}
         >
-          {/* Search box inside dropdown */}
+          {/* Search box */}
           <Box sx={{ px: 2, py: 1 }}>
             <TextField
               placeholder="Search..."
@@ -172,25 +169,37 @@ export default function ReportGenerator() {
               fullWidth
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()} // Prevent closing
             />
           </Box>
 
           {/* "All" option */}
-          <MenuItem value="All">
+          <MenuItem
+            value="All"
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent dropdown close
+              handleChange("All");
+            }}
+          >
             <Checkbox checked={allSelected} />
             <ListItemText primary="All" />
           </MenuItem>
 
-          {/* Filtered options */}
+          {/* Individual options */}
           {filteredOptions.map((option) => (
-            <MenuItem key={option.id} value={option.id}>
+            <MenuItem
+              key={option.id}
+              value={option.id}
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent dropdown close
+                handleChange(option.id);
+              }}
+            >
               <Checkbox checked={selectedValues.includes(option.id)} />
               <ListItemText primary={option.name} />
             </MenuItem>
           ))}
 
-          {/* No results */}
           {filteredOptions.length === 0 && (
             <MenuItem disabled>
               <ListItemText primary="No results found" />
