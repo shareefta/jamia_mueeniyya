@@ -56,17 +56,6 @@ class TransactionSerializer(serializers.ModelSerializer):
     )
 
     transaction_label = serializers.SerializerMethodField()
-    
-    # Add fields for Party
-    party_name = serializers.CharField(source='party.name', read_only=True)
-    party_mobile_number = serializers.CharField(source='party.mobile_number', read_only=True)
-    party_id = serializers.PrimaryKeyRelatedField(
-        queryset=Party.objects.all(), source='party', required=False, allow_null=True
-    )
-
-    # Optional: allow creating a new Party inline
-    new_party_name = serializers.CharField(write_only=True, required=False)
-    new_party_mobile_number = serializers.CharField(write_only=True, required=False)
 
     class Meta:
         model = Transaction
@@ -76,28 +65,11 @@ class TransactionSerializer(serializers.ModelSerializer):
             'category', 'category_name',
             'payment_mode', 'payment_mode_name',
             'cash_book', 'cash_book_name',
-            'date', 'time', 'amount', 'remarks', 'created_at',
-            'party_id', 'party_name', 'party_mobile_number',
-            'new_party_name', 'new_party_mobile_number'
+            'date', 'time', 'amount', 'remarks', 'created_at'
         ]
 
     def get_transaction_label(self, obj):
         return dict(Transaction.TRANSACTION_TYPES).get(obj.transaction_type, obj.transaction_type)
-    
-    def create(self, validated_data):
-        # Check if new Party is provided
-        new_party_name = validated_data.pop('new_party_name', None)
-        new_party_mobile_number = validated_data.pop('new_party_mobile_number', None)
-
-        if new_party_name:
-            party = Party.objects.create(
-                name=new_party_name,
-                mobile_number=new_party_mobile_number
-            )
-            validated_data['party'] = party
-
-        return super().create(validated_data)
-
 
 # ----------------------------------------------------------------------
 # OPENING BALANCE SERIALIZER
