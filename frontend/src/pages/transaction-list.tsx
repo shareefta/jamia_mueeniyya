@@ -1038,15 +1038,15 @@ const TransactionList = () => {
                     </Typography>
 
                     {/* Balance */}
-                    {txn.balance !== undefined && (
+                    {txn.running_balance !== undefined && (
                       <Typography variant="body2" color="text.secondary">
-                        Bal: ₹{parseFloat(txn.balance).toLocaleString("en-IN")}
+                        Bal: ₹{parseFloat(txn.running_balance).toLocaleString("en-IN")}
                       </Typography>
                     )}
 
                     {/* Created by */}
                     <Typography variant="caption" color="text.secondary">
-                      {txn.user_name || "-"}
+                      User:{txn.user_name || "-"}
                     </Typography>
 
                     {/* Date & Time */}
