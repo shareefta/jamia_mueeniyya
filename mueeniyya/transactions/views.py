@@ -1,6 +1,6 @@
 from rest_framework import viewsets, permissions, filters
-from .models import Category, PaymentMode, Transaction, OpeningBalance, CashBook, Party
-from .serializers import CategorySerializer, PaymentModeSerializer, TransactionSerializer, OpeningBalanceSerializer, CashBookSerializer, PartySerializer
+from .models import Category, PaymentMode, Transaction, OpeningBalance, CashBook
+from .serializers import CategorySerializer, PaymentModeSerializer, TransactionSerializer, OpeningBalanceSerializer, CashBookSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -68,9 +68,3 @@ class OpeningBalanceViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
-
-class PartyViewSet(viewsets.ModelViewSet):
-    queryset = Party.objects.all().order_by('name')
-    serializer_class = PartySerializer
-    permission_classes = [permissions.IsAuthenticated]
-

@@ -22,7 +22,6 @@ dayjs.extend(customParseFormat);
 import { getUsers } from "src/api/users";
 import { getCashBooks } from "src/api/cash-book";
 import { getPaymentModes } from "src/api/payment-modes";
-import { getParties, createParty } from "src/api/parties";
 import { getOpeningBalances } from "src/api/opening-balances"
 import { getCategories, createCategory } from "src/api/categories";
 
@@ -56,7 +55,6 @@ const TransactionList = () => {
   const [cashBooks, setCashBooks] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [openingBalances, setOpeningBalances] = useState<any[]>([]);
-  const [parties, setParties] = useState<any[]>([]);
 
   // Custom date modal states
   const [openCustomDate, setOpenCustomDate] = useState(false);
@@ -71,10 +69,6 @@ const TransactionList = () => {
   // Add Category from dialog
   const [addCatOpen, setAddCatOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
-
-  const [addPartyOpen, setAddPartyOpen] = useState(false);
-  const [newPartyName, setNewPartyName] = useState("");
-  const [newPartyMobile, setNewPartyMobile] = useState("");
 
   // Responsive Filters
   const theme = useTheme();
@@ -94,20 +88,21 @@ const TransactionList = () => {
     category: "",
     payment_mode: "",
     cash_book: "",
+    party_name: "",
+    party_mobile_number: "",
   });
 
   // Fetch data
   useEffect(() => {
     (async () => {
       try {
-        const [txns, cats, modes, books, usrs, obs, prts] = await Promise.all([
+        const [txns, cats, modes, books, usrs, obs] = await Promise.all([
           getTransactions(),
           getCategories(),
           getPaymentModes(),
           getCashBooks(),
           getUsers(),
           getOpeningBalances(),
-          getParties(),
         ]);
         setTransactions(txns);
         setFiltered(txns);
@@ -116,7 +111,6 @@ const TransactionList = () => {
         setCashBooks(books);
         setUsers(usrs);
         setOpeningBalances(obs);
-        setParties(prts);
       } catch (err) {
         enqueueSnackbar("Failed to fetch data", { variant: "error" });
       }
@@ -315,6 +309,8 @@ const TransactionList = () => {
       category: "",
       payment_mode: "",
       cash_book: cashBookId || "",
+      party_name: "",
+      party_mobile_number: "",
     }); // Auto-fill date & time
     setOpen(true);
   };
@@ -350,6 +346,8 @@ const TransactionList = () => {
           category: "",
           payment_mode: "",
           cash_book: cashBookId || "",
+          party_name: "",
+          party_mobile_number: "",
         }); // Reset form but keep date & time current
       }
     } catch {
@@ -981,74 +979,83 @@ const TransactionList = () => {
               <Card
                 key={txn.id}
                 sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  p: 2,
-                  boxShadow: 3,
+                  mb: 1.5,
+                  p: 1.5,
+                  borderLeft: `5px solid ${
+                    txn.transaction_type === "IN" ? "#2e7d32" : "#c62828"
+                  }`,
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
                   borderRadius: 2,
-                  transition: "0.3s",
-                  "&:hover": { boxShadow: 6 },
                 }}
               >
-                {/* Left side */}
-                <Box display="flex" flexDirection="column" gap={0.5}>
-                  <Typography variant="subtitle1" fontWeight={600}>
-                    {txn.remarks || "-"}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {txn.category_name} - {txn.payment_mode_name}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                  >
-                    Created by {txn.user_name || "-"}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                  >
-                    {dayjs(txn.date).format("DD-MM-YYYY")} at{" "}
-                    {txn.time ? dayjs(`1970-01-01T${txn.time}`).format("hh:mm A") : "-"}
-                  </Typography>
-                </Box>
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="flex-start"
+                  gap={2}
+                >
+                  {/* LEFT SIDE — Details */}
+                  <Box flex={1}>
+                    {/* Remarks */}
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight={600}
+                      sx={{ wordBreak: "break-word" }}
+                    >
+                      {txn.remarks || "-"}
+                    </Typography>
 
-                {/* Right side */}
-                <Box display="flex" flexDirection="column" alignItems="flex-end" gap={0.25}>
-                  <Typography
-                    variant="subtitle1"
-                    fontWeight={700}
-                    color={txn.transaction_type === "IN" ? "green" : "red"}
-                  >
-                    ₹ {Number(txn.amount).toLocaleString()}
-                  </Typography>
+                    {/* Category - Mode */}
+                    <Typography variant="body2" color="text.secondary">
+                      {txn.category_name || "—"}{" "}
+                      {txn.payment_mode_name ? `- ${txn.payment_mode_name}` : ""}
+                    </Typography>
 
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      whiteSpace: "nowrap",
-                      gap: 0.5,
-                      color: "text.secondary",
-                      "& .label": {
-                        color: "#666",
-                      },
-                      "& .value": {
-                        fontWeight: 600,
-                        color: "#222",
-                      },
-                    }}
-                  >
-                    <span className="label">Balance:</span>
-                    <span className="value">₹ {txn.running_balance.toFixed(2)}</span>
-                  </Typography>
-                </Box>
+                    {/* Party Name */}
+                    {txn.party_name && (
+                      <Typography variant="body2" color="text.secondary">
+                        {txn.party_name}
+                      </Typography>
+                    )}
+
+                    {/* Party Mobile Number */}
+                    {txn.party_mobile_number && (
+                      <Typography variant="body2" color="text.secondary">
+                        {txn.party_mobile_number}
+                      </Typography>
+                    )}
+                  </Box>
+
+                  {/* RIGHT SIDE — Amount / Balance / Created by / Date */}
+                  <Box textAlign="right">
+                    {/* Amount */}
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight={700}
+                      color={txn.transaction_type === "IN" ? "success.main" : "error.main"}
+                    >
+                      ₹{parseFloat(txn.amount).toLocaleString("en-IN")}
+                    </Typography>
+
+                    {/* Balance */}
+                    {txn.balance !== undefined && (
+                      <Typography variant="body2" color="text.secondary">
+                        Bal: ₹{parseFloat(txn.balance).toLocaleString("en-IN")}
+                      </Typography>
+                    )}
+
+                    {/* Created by */}
+                    <Typography variant="caption" color="text.secondary">
+                      {txn.user_name || "-"}
+                    </Typography>
+
+                    {/* Date & Time */}
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      {dayjs(txn.date).format("DD MMM YYYY")},{" "}
+                      {dayjs(txn.time, "HH:mm:ss").format("hh:mm A")}
+                    </Typography>
+                  </Box>
+                </Box>                
               </Card>
             ))
           ) : (
@@ -1075,7 +1082,8 @@ const TransactionList = () => {
                 {[
                   { label: "#", width: "5%" },
                   { label: "Date & Time", width: "15%" },
-                  { label: "Details", width: "30%" },
+                  { label: "Details", width: "15%" },
+                  { label: "Party Details", width: "15%" },
                   { label: "Category", width: "10%" },
                   { label: "Mode", width: "10%" },
                   { label: "Amount", width: "10%" },
@@ -1123,6 +1131,20 @@ const TransactionList = () => {
                       </Typography>
                     </TableCell>
                     <TableCell align="left">{txn.remarks || "-"}</TableCell>
+                    <TableCell align="center">
+                      {txn.party_name ? (
+                        <Box lineHeight={1.2}>
+                          <Typography variant="body2" fontWeight={600}>
+                            {txn.party_name}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {txn.party_mobile_number || "-"}
+                          </Typography>
+                        </Box>
+                      ) : (
+                        "-"
+                      )}
+                    </TableCell>
                     <TableCell align="center">{txn.category_name}</TableCell>
                     <TableCell align="center">{txn.payment_mode_name}</TableCell>
                     <TableCell
@@ -1183,6 +1205,7 @@ const TransactionList = () => {
             type="number"
             value={formData.amount}
             onChange={handleChange}
+            required
           />
           <TextField
             label="Remarks"
@@ -1191,12 +1214,25 @@ const TransactionList = () => {
             rows={2}
             value={formData.remarks}
             onChange={handleChange}
+            required
           />
-
+          <TextField
+            label="Party Name"
+            name="party_name"
+            value={formData.party_name}
+            onChange={handleChange}
+          />
+          <TextField
+            label="Mobile Number"
+            name="party_mobile_number"
+            value={formData.party_mobile_number}
+            onChange={handleChange}
+          />
           <TextField
             select
             label="Category"
             name="category"
+            required
             value={formData.category}
             onChange={(e) => {
               const value = e.target.value;

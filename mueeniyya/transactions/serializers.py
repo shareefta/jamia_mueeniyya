@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Category, PaymentMode, CashBook, Transaction, OpeningBalance, Party
+from .models import Category, PaymentMode, CashBook, Transaction, OpeningBalance
 
 
 # ----------------------------------------------------------------------
@@ -30,14 +30,6 @@ class CashBookSerializer(serializers.ModelSerializer):
         model = CashBook
         fields = ['id', 'name', 'campus', 'campus_name', 'is_active', 'created_at']
 
-# ----------------------------------------------------------------------
-# PARTY SERIALIZER
-# ----------------------------------------------------------------------
-class PartySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Party
-        fields = ['id', 'name', 'mobile_number']
-
 
 # ----------------------------------------------------------------------
 # TRANSACTION SERIALIZER
@@ -65,7 +57,8 @@ class TransactionSerializer(serializers.ModelSerializer):
             'category', 'category_name',
             'payment_mode', 'payment_mode_name',
             'cash_book', 'cash_book_name',
-            'date', 'time', 'amount', 'remarks', 'created_at'
+            'date', 'time', 'amount', 'remarks', 'created_at',
+            'party_name', 'party_mobile_number',
         ]
 
     def get_transaction_label(self, obj):
