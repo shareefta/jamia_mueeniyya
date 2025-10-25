@@ -4,7 +4,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('transactions', '0004_remove_openingbalance_campus_and_more'),  # last applied migration
+        ('transactions', '0003_cashbook'),  # last applied migration
     ]
 
     operations = [
