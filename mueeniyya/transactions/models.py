@@ -60,6 +60,8 @@ class Transaction(models.Model):
     remarks = models.TextField(blank=True, null=True)
     party = models.ForeignKey(Party, on_delete=models.SET_NULL, null=True, blank=True, related_name="transactions")
     created_at = models.DateTimeField(auto_now_add=True)
+    party_name = models.CharField(max_length=100, null=True, blank=True)
+    party_mobile_number = models.CharField(max_length=15, null=True, blank=True)
 
     class Meta:
         ordering = ['-date', '-time']
