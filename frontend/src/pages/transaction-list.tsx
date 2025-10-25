@@ -20,6 +20,7 @@ dayjs.extend(minMax);
 dayjs.extend(customParseFormat);
 
 import { getUsers } from "src/api/users";
+import { getParties } from "src/api/parties";
 import { getCashBooks } from "src/api/cash-book";
 import { getPaymentModes } from "src/api/payment-modes";
 import { getOpeningBalances } from "src/api/opening-balances"
@@ -55,6 +56,7 @@ const TransactionList = () => {
   const [cashBooks, setCashBooks] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [openingBalances, setOpeningBalances] = useState<any[]>([]);
+  const [parties, setParties] = useState<any[]>([]);
 
   // Custom date modal states
   const [openCustomDate, setOpenCustomDate] = useState(false);
@@ -69,6 +71,10 @@ const TransactionList = () => {
   // Add Category from dialog
   const [addCatOpen, setAddCatOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
+
+  const [addPartyOpen, setAddPartyOpen] = useState(false);
+  const [newPartyName, setNewPartyName] = useState("");
+  const [newPartyMobile, setNewPartyMobile] = useState("");
 
   // Responsive Filters
   const theme = useTheme();
@@ -88,19 +94,21 @@ const TransactionList = () => {
     category: "",
     payment_mode: "",
     cash_book: "",
+    party: "",
   });
 
   // Fetch data
   useEffect(() => {
     (async () => {
       try {
-        const [txns, cats, modes, books, usrs, obs] = await Promise.all([
+        const [txns, cats, modes, books, usrs, obs, prts] = await Promise.all([
           getTransactions(),
           getCategories(),
           getPaymentModes(),
           getCashBooks(),
           getUsers(),
           getOpeningBalances(),
+          getParties(),
         ]);
         setTransactions(txns);
         setFiltered(txns);
@@ -109,6 +117,7 @@ const TransactionList = () => {
         setCashBooks(books);
         setUsers(usrs);
         setOpeningBalances(obs);
+        setParties(prts);
       } catch (err) {
         enqueueSnackbar("Failed to fetch data", { variant: "error" });
       }
@@ -307,6 +316,7 @@ const TransactionList = () => {
       category: "",
       payment_mode: "",
       cash_book: cashBookId || "",
+      party: "",
     }); // Auto-fill date & time
     setOpen(true);
   };
@@ -326,6 +336,7 @@ const TransactionList = () => {
         payment_mode: Number(formData.payment_mode),
         cash_book: cashBookId ? Number(cashBookId) : Number(formData.cash_book),
         transaction_type: transactionType,
+        party: formData.party ? Number(formData.party) : undefined,
       });
 
       enqueueSnackbar("Transaction added successfully!", { variant: "success" });
@@ -342,6 +353,7 @@ const TransactionList = () => {
           category: "",
           payment_mode: "",
           cash_book: cashBookId || "",
+          party: "",
         }); // Reset form but keep date & time current
       }
     } catch {

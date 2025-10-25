@@ -22,6 +22,7 @@ export interface TransactionProps {
   payment_mode_name?: string;
   cash_book_name?: string;
   transaction_label?: string;
+  party?: number;
 }
 
 // get all transactions
