@@ -103,7 +103,7 @@ export default function ReportGenerator() {
     console.log("Generate report with filters:", filters);
   };
 
-  // --- Reusable function for multi-select dropdown with "All" ---
+  // --- Reusable Multi-select with "All" + Search ---
   const MultiSelectWithAll = ({
     label,
     options,
@@ -116,7 +116,13 @@ export default function ReportGenerator() {
     setSelectedValues: (values: number[]) => void;
   }) => {
     const [open, setOpen] = useState(false);
+    const [search, setSearch] = useState("");
     const allSelected = selectedValues.length === options.length;
+
+    // Filtered options based on search
+    const filteredOptions = options.filter((o) =>
+      o.name.toLowerCase().includes(search.toLowerCase())
+    );
 
     const handleChange = (event: any) => {
       const value = event.target.value;
@@ -139,7 +145,7 @@ export default function ReportGenerator() {
           multiple
           open={open}
           onOpen={() => setOpen(true)}
-          onClose={() => setOpen(false)} // ✅ Simplified and type-safe
+          onClose={() => setOpen(false)}
           label={label}
           value={selectedValues}
           onChange={handleChange}
@@ -152,26 +158,44 @@ export default function ReportGenerator() {
             return names.join(", ");
           }}
           MenuProps={{
-            PaperProps: { style: { maxHeight: 250 } },
+            PaperProps: {
+              style: { maxHeight: 300 },
+              onMouseDown: (event: React.MouseEvent) => event.stopPropagation(),
+            },
           }}
         >
+          {/* Search box inside dropdown */}
+          <Box sx={{ px: 2, py: 1 }}>
+            <TextField
+              placeholder="Search..."
+              size="small"
+              fullWidth
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+            />
+          </Box>
+
           {/* "All" option */}
-          <MenuItem value="All" onClick={(e) => e.stopPropagation()}>
+          <MenuItem value="All">
             <Checkbox checked={allSelected} />
             <ListItemText primary="All" />
           </MenuItem>
 
-          {/* Individual options */}
-          {options.map((option) => (
-            <MenuItem
-              key={option.id}
-              value={option.id}
-              onClick={(e) => e.stopPropagation()} // Prevent menu from closing
-            >
+          {/* Filtered options */}
+          {filteredOptions.map((option) => (
+            <MenuItem key={option.id} value={option.id}>
               <Checkbox checked={selectedValues.includes(option.id)} />
               <ListItemText primary={option.name} />
             </MenuItem>
           ))}
+
+          {/* No results */}
+          {filteredOptions.length === 0 && (
+            <MenuItem disabled>
+              <ListItemText primary="No results found" />
+            </MenuItem>
+          )}
         </Select>
       </FormControl>
     );
