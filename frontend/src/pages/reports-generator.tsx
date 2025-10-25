@@ -89,7 +89,18 @@ export default function ReportGenerator() {
     loadCashBooks();
   }, [selectedCampus]);
 
-  const handleGenerate = () => {
+  // --- Function to download report ---
+  const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}`;
+
+  const getAuthHeaders = () => ({
+    Authorization: `Bearer ${localStorage.getItem("token")}`,
+  });
+  const downloadReport = async (format: "pdf" | "excel") => {
+    if (!selectedCashBook) {
+      alert("Select a cash book first");
+      return;
+    }
+
     const filters = {
       campus: selectedCampus,
       cash_book: selectedCashBook,
@@ -99,8 +110,33 @@ export default function ReportGenerator() {
       modes,
       users,
       customDateRange,
+      format,
     };
-    console.log("Generate report with filters:", filters);
+
+    try {
+      const res = await fetch(`${BASE_URL}transactions/generate-report/`, {
+        method: "POST",
+        body: JSON.stringify(filters),
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
+      });
+
+      if (!res.ok) throw new Error("Failed to generate report");
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `report.${format === "excel" ? "xlsx" : "pdf"}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (err) {
+      console.error(err);
+      alert("Error generating report");
+    }
   };
 
   // --- Reusable Multi-select with "All" + Search ---
@@ -157,9 +193,7 @@ export default function ReportGenerator() {
               .map((o) => o.name);
             return names.join(", ");
           }}
-          MenuProps={{
-            PaperProps: { style: { maxHeight: 300 } },
-          }}
+          MenuProps={{ PaperProps: { style: { maxHeight: 300 } } }}
         >
           {/* Search box */}
           <Box sx={{ px: 2, py: 1 }}>
@@ -169,7 +203,7 @@ export default function ReportGenerator() {
               fullWidth
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              onClick={(e) => e.stopPropagation()} // Prevent closing
+              onClick={(e) => e.stopPropagation()}
             />
           </Box>
 
@@ -177,7 +211,7 @@ export default function ReportGenerator() {
           <MenuItem
             value="All"
             onClick={(e) => {
-              e.stopPropagation(); // Prevent dropdown close
+              e.stopPropagation();
               handleChange("All");
             }}
           >
@@ -185,13 +219,12 @@ export default function ReportGenerator() {
             <ListItemText primary="All" />
           </MenuItem>
 
-          {/* Individual options */}
           {filteredOptions.map((option) => (
             <MenuItem
               key={option.id}
               value={option.id}
               onClick={(e) => {
-                e.stopPropagation(); // Prevent dropdown close
+                e.stopPropagation();
                 handleChange(option.id);
               }}
             >
@@ -232,7 +265,7 @@ export default function ReportGenerator() {
       <Card sx={{ borderRadius: 3, boxShadow: 4, p: isMobile ? 1 : 2 }}>
         <CardContent>
           <Grid container spacing={isMobile ? 2 : 3}>
-            {/* Step 1: Campus */}
+            {/* Campus */}
             <Grid size={{ xs: 12, md: 6 }}>
               <FormControl fullWidth>
                 <InputLabel>Select Campus</InputLabel>
@@ -253,7 +286,7 @@ export default function ReportGenerator() {
               </FormControl>
             </Grid>
 
-            {/* Step 2: Cash Book */}
+            {/* Cash Book */}
             {selectedCampus && (
               <Grid size={{ xs: 12, md: 6 }}>
                 <FormControl fullWidth>
@@ -273,10 +306,10 @@ export default function ReportGenerator() {
               </Grid>
             )}
 
-            {/* Step 3: Filters */}
+            {/* Filters */}
             {selectedCashBook && (
               <>
-                {/* Date Filters */}
+                {/* Date Filter */}
                 <Grid size={{ xs: 12, md: 4 }}>
                   <FormControl fullWidth>
                     <InputLabel>Date Range</InputLabel>
@@ -371,23 +404,23 @@ export default function ReportGenerator() {
                   />
                 </Grid>
 
-                {/* Generate Button */}
+                {/* Download Buttons */}
                 <Grid size={{ xs: 12 }}>
                   <Box textAlign="center" mt={isMobile ? 2 : 3}>
                     <Button
                       variant="contained"
-                      color="primary"
-                      size="large"
-                      sx={{
-                        px: 5,
-                        py: 1.5,
-                        borderRadius: 3,
-                        fontWeight: "bold",
-                        textTransform: "none",
-                      }}
-                      onClick={handleGenerate}
+                      color="secondary"
+                      sx={{ mx: 1 }}
+                      onClick={() => downloadReport("excel")}
                     >
-                      Generate Report
+                      Download Excel
+                    </Button>
+                    <Button
+                      variant="contained"
+                      color="secondary"
+                      onClick={() => downloadReport("pdf")}
+                    >
+                      Download PDF
                     </Button>
                   </Box>
                 </Grid>
