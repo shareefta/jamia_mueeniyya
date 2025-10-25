@@ -58,6 +58,7 @@ class Transaction(models.Model):
     time = models.TimeField()
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     remarks = models.TextField(blank=True, null=True)
+    party = models.ForeignKey(Party, on_delete=models.SET_NULL, null=True, blank=True, related_name="transactions")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

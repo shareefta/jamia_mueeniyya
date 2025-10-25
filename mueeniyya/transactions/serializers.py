@@ -54,9 +54,6 @@ class TransactionSerializer(serializers.ModelSerializer):
     cash_book = serializers.PrimaryKeyRelatedField(
         queryset=CashBook.objects.all()
     )
-    
-    party_name = serializers.CharField(source='party.name', read_only=True)
-    party_mobile = serializers.CharField(source='party.mobile_number', read_only=True)
 
     transaction_label = serializers.SerializerMethodField()
 
@@ -69,7 +66,6 @@ class TransactionSerializer(serializers.ModelSerializer):
             'payment_mode', 'payment_mode_name',
             'cash_book', 'cash_book_name',
             'date', 'time', 'amount', 'remarks', 'created_at'
-            'party', 'party_name', 'party_mobile'
         ]
 
     def get_transaction_label(self, obj):
