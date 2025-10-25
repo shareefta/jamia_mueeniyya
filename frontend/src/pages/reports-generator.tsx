@@ -114,7 +114,7 @@ export default function ReportGenerator() {
     };
 
     try {
-      const res = await fetch(`${BASE_URL}transactions/generate-report/`, {
+      const res = await fetch(`${BASE_URL}transactions/generate_report/`, {
         method: "POST",
         body: JSON.stringify(filters),
         headers: {
