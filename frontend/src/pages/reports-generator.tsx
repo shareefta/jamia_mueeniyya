@@ -115,6 +115,7 @@ export default function ReportGenerator() {
     selectedValues: number[];
     setSelectedValues: (values: number[]) => void;
   }) => {
+    const [open, setOpen] = useState(false);
     const allSelected = selectedValues.length === options.length;
 
     const handleChange = (event: any) => {
@@ -136,6 +137,9 @@ export default function ReportGenerator() {
         <InputLabel>{label}</InputLabel>
         <Select
           multiple
+          open={open}
+          onOpen={() => setOpen(true)}
+          onClose={() => setOpen(false)} // ✅ Simplified and type-safe
           label={label}
           value={selectedValues}
           onChange={handleChange}
@@ -147,14 +151,23 @@ export default function ReportGenerator() {
               .map((o) => o.name);
             return names.join(", ");
           }}
+          MenuProps={{
+            PaperProps: { style: { maxHeight: 250 } },
+          }}
         >
-          <MenuItem value="All">
+          {/* "All" option */}
+          <MenuItem value="All" onClick={(e) => e.stopPropagation()}>
             <Checkbox checked={allSelected} />
             <ListItemText primary="All" />
           </MenuItem>
 
+          {/* Individual options */}
           {options.map((option) => (
-            <MenuItem key={option.id} value={option.id}>
+            <MenuItem
+              key={option.id}
+              value={option.id}
+              onClick={(e) => e.stopPropagation()} // Prevent menu from closing
+            >
               <Checkbox checked={selectedValues.includes(option.id)} />
               <ListItemText primary={option.name} />
             </MenuItem>
