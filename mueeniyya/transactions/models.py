@@ -36,6 +36,13 @@ class CashBook(models.Model):
     def __str__(self):
         return f"{self.name} ({self.campus})" if self.campus else self.name
 
+class Party(models.Model):
+    name = models.CharField(max_length=100)
+    mobile_number = models.CharField(max_length=15, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.mobile_number})" if self.mobile_number else self.name
+
 class Transaction(models.Model):
     TRANSACTION_TYPES = [
         ('IN', 'Cash In'),
@@ -51,6 +58,7 @@ class Transaction(models.Model):
     time = models.TimeField()
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     remarks = models.TextField(blank=True, null=True)
+    party = models.ForeignKey(Party, on_delete=models.SET_NULL, null=True, blank=True, related_name="transactions")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -68,10 +76,5 @@ class OpeningBalance(models.Model):
     def __str__(self):
         return f"{self.cash_book} - {self.amount}"
 
-class Party(models.Model):
-    name = models.CharField(max_length=100)
-    mobile_number = models.CharField(max_length=15, blank=True, null=True)
 
-    def __str__(self):
-        return f"{self.name} ({self.mobile_number})" if self.mobile_number else self.name
 
