@@ -2,19 +2,17 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: `${import.meta.env.VITE_API_BASE_URL}`,
+  baseURL: import.meta.env.VITE_API_BASE_URL,
 });
 
-// Add access token to every request
+// Automatically attach access token to all requests
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
+  if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-// Handle expired tokens (401)
+// Handle token refresh on 401
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -26,18 +24,14 @@ api.interceptors.response.use(
       const refresh = localStorage.getItem("refresh");
       if (refresh) {
         try {
-          const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}accounts/token_refresh/`, {
-            refresh,
-          });
-
-          // Save new access token
+          const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}accounts/token_refresh/`, { refresh });
           localStorage.setItem("token", res.data.access);
 
-          // Retry original request
+          // retry with new access token
           originalRequest.headers.Authorization = `Bearer ${res.data.access}`;
           return api(originalRequest);
         } catch (refreshError) {
-          console.error("Refresh token failed:", refreshError);
+          console.error("Token refresh failed:", refreshError);
           localStorage.clear();
           window.location.href = "/sign-in";
         }

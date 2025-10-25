@@ -50,7 +50,9 @@ class Transaction(models.Model):
     date = models.DateField()
     time = models.TimeField()
     amount = models.DecimalField(max_digits=12, decimal_places=2)
-    remarks = models.TextField(blank=True, null=True)
+    remarks = models.TextField(blank=False, null=False)
+    party = models.CharField(max_length=100, blank=False, null=False)
+    mobile_number = models.CharField(max_length=15, blank=False, null=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
