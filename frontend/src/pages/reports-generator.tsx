@@ -1,8 +1,7 @@
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 
-import CheckBoxIcon from "@mui/icons-material/CheckBox";
-import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
+import { useMediaQuery } from "@mui/material";
 import {
   Box,
   Card,
@@ -16,26 +15,18 @@ import {
   TextField,
   Button,
   CircularProgress,
-  Autocomplete,
-  useMediaQuery,
   Checkbox,
+  ListItemText,
 } from "@mui/material";
 
 import { getUsers } from "../api/users";
 import { getCashBooks } from "../api/cash-book";
 import { getOffCampuses } from "../api/offCampus";
-import { getCategories, CategoryProps } from "../api/categories";
-import { getPaymentModes, PaymentModeProps } from "../api/payment-modes";
-
-interface SelectOption {
-  id: number;
-  name: string;
-}
+import { getCategories } from "../api/categories";
+import { getPaymentModes } from "../api/payment-modes";
 
 export default function ReportGenerator() {
   const isMobile = useMediaQuery("(max-width:600px)");
-  const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
-  const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
   // Step 1: campus & cash book
   const [campuses, setCampuses] = useState<any[]>([]);
@@ -52,12 +43,13 @@ export default function ReportGenerator() {
     to: dayjs().format("YYYY-MM-DD"),
   });
 
-  const [categories, setCategories] = useState<CategoryProps[]>([]);
-  const [categoryOptions, setCategoryOptions] = useState<CategoryProps[]>([]);
-  const [modes, setModes] = useState<PaymentModeProps[]>([]);
-  const [modeOptions, setModeOptions] = useState<PaymentModeProps[]>([]);
-  const [users, setUsers] = useState<SelectOption[]>([]);
-  const [userOptions, setUserOptions] = useState<SelectOption[]>([]);
+  // Dropdown filters
+  const [categories, setCategories] = useState<number[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<any[]>([]);
+  const [modes, setModes] = useState<number[]>([]);
+  const [modeOptions, setModeOptions] = useState<any[]>([]);
+  const [users, setUsers] = useState<number[]>([]);
+  const [userOptions, setUserOptions] = useState<any[]>([]);
 
   const [loading, setLoading] = useState(true);
 
@@ -72,9 +64,9 @@ export default function ReportGenerator() {
           getUsers(),
           getOffCampuses(),
         ]);
-        setCategoryOptions(cats.map((c: any) => c.name));
-        setModeOptions(mods.map((m: any) => m.name));
-        setUserOptions(usrs.map((u: any) => u.name));
+        setCategoryOptions(cats);
+        setModeOptions(mods);
+        setUserOptions(usrs);
         setCampuses(camps);
       } catch (err) {
         console.error("Error loading data:", err);
@@ -97,7 +89,7 @@ export default function ReportGenerator() {
     loadCashBooks();
   }, [selectedCampus]);
 
-  const handleGenerate = async () => {
+  const handleGenerate = () => {
     const filters = {
       campus: selectedCampus,
       cash_book: selectedCashBook,
@@ -108,9 +100,68 @@ export default function ReportGenerator() {
       users,
       customDateRange,
     };
-
     console.log("Generate report with filters:", filters);
-    // ⬇️ Will implement PDF/Excel generation in Stage 2
+  };
+
+  // --- Reusable function for multi-select dropdown with "All" ---
+  const MultiSelectWithAll = ({
+    label,
+    options,
+    selectedValues,
+    setSelectedValues,
+  }: {
+    label: string;
+    options: any[];
+    selectedValues: number[];
+    setSelectedValues: (values: number[]) => void;
+  }) => {
+    const allSelected = selectedValues.length === options.length;
+
+    const handleChange = (event: any) => {
+      const value = event.target.value;
+
+      if (value.includes("All")) {
+        if (allSelected) {
+          setSelectedValues([]);
+        } else {
+          setSelectedValues(options.map((o) => o.id));
+        }
+      } else {
+        setSelectedValues(value);
+      }
+    };
+
+    return (
+      <FormControl fullWidth size="small">
+        <InputLabel>{label}</InputLabel>
+        <Select
+          multiple
+          label={label}
+          value={selectedValues}
+          onChange={handleChange}
+          renderValue={(selected) => {
+            if (selected.length === 0) return "Select...";
+            if (allSelected) return `All ${label}s`;
+            const names = options
+              .filter((o) => selected.includes(o.id))
+              .map((o) => o.name);
+            return names.join(", ");
+          }}
+        >
+          <MenuItem value="All">
+            <Checkbox checked={allSelected} />
+            <ListItemText primary="All" />
+          </MenuItem>
+
+          {options.map((option) => (
+            <MenuItem key={option.id} value={option.id}>
+              <Checkbox checked={selectedValues.includes(option.id)} />
+              <ListItemText primary={option.name} />
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+    );
   };
 
   if (loading) {
@@ -229,7 +280,7 @@ export default function ReportGenerator() {
                 )}
 
                 {/* Type Filter */}
-                <Grid size={{ xs: 3 }}>
+                <Grid size={{ xs: 12, md: 3 }}>
                   <FormControl fullWidth>
                     <InputLabel>Type</InputLabel>
                     <Select
@@ -245,134 +296,32 @@ export default function ReportGenerator() {
                 </Grid>
 
                 {/* Category */}
-                <Grid size={{ xs: 3 }}>
-                  <Autocomplete
-                    multiple
-                    disableCloseOnSelect
-                    options={[{ id: 0, name: "All" }, ...categoryOptions]}
-                    getOptionLabel={(option) => option.name}
-                    value={
-                      categories.length === categoryOptions.length
-                        ? [{ id: 0, name: "All" }, ...categoryOptions]
-                        : categories
-                    }
-                    isOptionEqualToValue={(option, value) => option.id === value.id}
-                    onChange={(event, newValue) => {
-                      const isAllSelected = newValue.some((item) => item.id === 0);
-                      if (isAllSelected) {
-                        // If "All" selected → select all
-                        setCategories(categoryOptions);
-                      } else {
-                        // Otherwise set selected normally
-                        setCategories(newValue.filter((item) => item.id !== 0));
-                      }
-                    }}
-                    renderOption={(props, option, { selected }) => {
-                      const isAll = option.id === 0;
-                      const allSelected = categories.length === categoryOptions.length;
-
-                      return (
-                        <li {...props}>
-                          <Checkbox
-                            icon={icon}
-                            checkedIcon={checkedIcon}
-                            checked={isAll ? allSelected : selected}
-                          />
-                          {option.name}
-                        </li>
-                      );
-                    }}
-                    renderInput={(params) => (
-                      <TextField {...params} label="Category" placeholder="Select categories..." />
-                    )}
+                <Grid size={{ xs: 12, md: 3 }}>
+                  <MultiSelectWithAll
+                    label="Category"
+                    options={categoryOptions}
+                    selectedValues={categories}
+                    setSelectedValues={setCategories}
                   />
                 </Grid>
 
                 {/* Payment Mode */}
-                <Grid size={{ xs: 3 }}>
-                  <Autocomplete
-                    multiple
-                    disableCloseOnSelect
-                    options={[{ id: 0, name: "All" }, ...modeOptions]}
-                    getOptionLabel={(option) => option.name}
-                    value={
-                      modes.length === modeOptions.length
-                        ? [{ id: 0, name: "All" }, ...modeOptions]
-                        : modes
-                    }
-                    isOptionEqualToValue={(option, value) => option.id === value.id}
-                    onChange={(event, newValue) => {
-                      const isAllSelected = newValue.some((item) => item.id === 0);
-                      if (isAllSelected) {
-                        // If "All" selected → select all
-                        setModes(modeOptions);
-                      } else {
-                        // Otherwise set selected normally
-                        setModes(newValue.filter((item) => item.id !== 0));
-                      }
-                    }}
-                    renderOption={(props, option, { selected }) => {
-                      const isAll = option.id === 0;
-                      const allSelected = modes.length === modeOptions.length;
-
-                      return (
-                        <li {...props}>
-                          <Checkbox
-                            icon={icon}
-                            checkedIcon={checkedIcon}
-                            checked={isAll ? allSelected : selected}
-                          />
-                          {option.name}
-                        </li>
-                      );
-                    }}
-                    renderInput={(params) => (
-                      <TextField {...params} label="Payment Mode" placeholder="Select payment modes..." />
-                    )}
+                <Grid size={{ xs: 12, md: 3 }}>
+                  <MultiSelectWithAll
+                    label="Payment Mode"
+                    options={modeOptions}
+                    selectedValues={modes}
+                    setSelectedValues={setModes}
                   />
                 </Grid>
 
                 {/* User */}
-                <Grid size={{ xs: 3 }}>
-                  <Autocomplete
-                    multiple
-                    disableCloseOnSelect
-                    options={[{ id: 0, name: "All" }, ...userOptions]}
-                    getOptionLabel={(option) => option.name}
-                    value={
-                      users.length === userOptions.length
-                        ? [{ id: 0, name: "All" }, ...userOptions]
-                        : users
-                    }
-                    isOptionEqualToValue={(option, value) => option.id === value.id}
-                    onChange={(event, newValue) => {
-                      const isAllSelected = newValue.some((item) => item.id === 0);
-                      if (isAllSelected) {
-                        // If "All" selected → select all
-                        setUsers(userOptions);
-                      } else {
-                        // Otherwise set selected normally
-                        setUsers(newValue.filter((item) => item.id !== 0));
-                      }
-                    }}
-                    renderOption={(props, option, { selected }) => {
-                      const isAll = option.id === 0;
-                      const allSelected = users.length === userOptions.length;
-
-                      return (
-                        <li {...props}>
-                          <Checkbox
-                            icon={icon}
-                            checkedIcon={checkedIcon}
-                            checked={isAll ? allSelected : selected}
-                          />
-                          {option.name}
-                        </li>
-                      );
-                    }}
-                    renderInput={(params) => (
-                      <TextField {...params} label="User" placeholder="Select users..." />
-                    )}
+                <Grid size={{ xs: 12, md: 3 }}>
+                  <MultiSelectWithAll
+                    label="User"
+                    options={userOptions}
+                    selectedValues={users}
+                    setSelectedValues={setUsers}
                   />
                 </Grid>
 
