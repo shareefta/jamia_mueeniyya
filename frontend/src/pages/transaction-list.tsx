@@ -967,7 +967,7 @@ const TransactionList = () => {
       {/* Transaction List */}
       {/* Mobile view - Cards */}
       {isMobile ? (        
-        <Box display="flex" flexDirection="column" gap={1}>
+        <Box display="flex" flexDirection="column" gap={2}>
           {computedTxns.length > 0 ? (
             computedTxns.map((txn) => (
               <Card
@@ -999,7 +999,13 @@ const TransactionList = () => {
                       textOverflow: "ellipsis",
                     }}
                   >
-                    Created by {txn.user_name || "-"} on {dayjs(txn.date).format("DD-MM-YYYY")} at{" "}
+                    Created by {txn.user_name || "-"}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                  >
+                    {dayjs(txn.date).format("DD-MM-YYYY")} at{" "}
                     {txn.time ? dayjs(`1970-01-01T${txn.time}`).format("hh:mm A") : "-"}
                   </Typography>
                 </Box>
