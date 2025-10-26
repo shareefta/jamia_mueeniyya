@@ -21,6 +21,7 @@ dayjs.extend(customParseFormat);
 
 import { getUsers } from "src/api/users";
 import { getCashBooks } from "src/api/cash-book";
+import { useAuthStore } from 'src/store/use-auth-store';
 import { getPaymentModes } from "src/api/payment-modes";
 import { getOpeningBalances } from "src/api/opening-balances"
 import { getCategories, createCategory } from "src/api/categories";
@@ -47,6 +48,16 @@ const TransactionList = () => {
     customLabel: "",
     customDateType: "",
   });
+
+  const getStoredUser = () => {
+    try {
+      return JSON.parse(localStorage.getItem("user") || "null");
+    } catch {
+      return null;
+    }
+  };
+
+  const user = useAuthStore((state) => state.user) || getStoredUser();
 
   const [open, setOpen] = useState(false);
   const [transactionType, setTransactionType] = useState<"IN" | "OUT">("IN");
@@ -1227,6 +1238,9 @@ const TransactionList = () => {
             value={formData.date}
             onChange={handleChange}
             InputLabelProps={{ shrink: true }}
+            inputProps={{
+              min: user?.role?.toLowerCase() === "staff" ? dayjs().format("YYYY-MM-DD") : undefined,
+            }}
           />
           <TextField
             label="Time"
