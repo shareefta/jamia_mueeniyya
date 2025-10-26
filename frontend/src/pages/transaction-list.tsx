@@ -421,7 +421,6 @@ const TransactionList = () => {
     <Box p={4}>
       {/* Header */}
       <Box display="flex" flexDirection="column" gap={2} mb={3} width="100%">
-
         {/* ===== First Row: Campus + Cash Book + Download Buttons ===== */}
         <Box
           display="flex"
@@ -458,7 +457,11 @@ const TransactionList = () => {
                   label="All Cash Books"
                   color="default"
                   size="small"
-                  sx={{ fontWeight: 600, bgcolor: "grey.100", color: "text.primary" }}
+                  sx={{
+                    fontWeight: 600,
+                    bgcolor: "grey.100",
+                    color: "text.primary",
+                  }}
                 />
               )
             )}
@@ -476,24 +479,25 @@ const TransactionList = () => {
           </Box>
         </Box>
 
-        {/* ===== Second Row: Transactions Heading + Date Range ===== */}
+        {/* ===== Second Row ===== */}
         <Box
           display="flex"
           flexDirection={{ xs: "column", sm: "row" }}
           justifyContent={{ xs: "center", sm: "space-between" }}
-          alignItems="center"
-          flexWrap="wrap"
-          gap={1}
+          alignItems={{ xs: "center", sm: "center" }}
+          gap={2}
           width="100%"
         >
-          {/* Left (desktop) / Center (mobile): Heading + Date */}
+          {/* Left side (Transactions + Date Range) */}
           <Box
             display="flex"
-            flexDirection={{ xs: "column", sm: "row" }}
+            flexDirection="row"
             gap={1}
             alignItems="center"
+            justifyContent={{ xs: "center", sm: "flex-start" }}
+            flexWrap="wrap"
           >
-            <Typography variant="h4" fontWeight="bold" textAlign={{ xs: "center", sm: "left" }}>
+            <Typography variant="h4" fontWeight="bold">
               Transactions
             </Typography>
 
@@ -510,6 +514,7 @@ const TransactionList = () => {
                   fontWeight: 500,
                   cursor: "pointer",
                   "&:hover": { backgroundColor: "primary.main", color: "white" },
+                  whiteSpace: "nowrap",
                 }}
               >
                 {selectedDateLabel()}
@@ -517,12 +522,8 @@ const TransactionList = () => {
             )}
           </Box>
 
-          {/* Right side: Cash In / Out buttons (desktop) */}
-          <Box
-            display={{ xs: "none", sm: "flex" }}
-            gap={1}
-            flexDirection="row"
-          >
+          {/* Right side (Cash In / Out) - shown only on desktop */}
+          <Box display={{ xs: "none", sm: "flex" }} gap={1}>
             <Button
               variant="contained"
               color="success"
@@ -545,15 +546,17 @@ const TransactionList = () => {
           </Box>
         </Box>
 
-        {/* Third Row: Cash In / Out buttons only for mobile */}
-        <Box display={{ xs: "flex", sm: "none" }} gap={1} flexWrap="wrap">
+        {/* ===== Third Row (mobile only): Cash In / Out ===== */}
+        <Box display={{ xs: "flex", sm: "none" }} gap={1} justifyContent="center" width="100%">
           <Button
             variant="contained"
             color="success"
             onClick={() => handleClickOpen("IN")}
             startIcon={<Add />}
-            fullWidth
-            sx={{ fontSize: "0.9rem" }}
+            sx={{
+              flex: 1,
+              fontSize: "0.9rem",
+            }}
           >
             Cash In
           </Button>
@@ -563,8 +566,10 @@ const TransactionList = () => {
             color="error"
             onClick={() => handleClickOpen("OUT")}
             startIcon={<Add />}
-            fullWidth
-            sx={{ fontSize: "0.9rem" }}
+            sx={{
+              flex: 1,
+              fontSize: "0.9rem",
+            }}
           >
             Cash Out
           </Button>
