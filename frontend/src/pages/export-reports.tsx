@@ -1,37 +1,11 @@
-import 'jspdf-autotable';
-
 import jsPDF from 'jspdf';
 import React from 'react';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
+import autoTable from 'jspdf-autotable';
 
-import { Button, Box } from '@mui/material';
-
-/**
- * ExportReports.tsx
- * -----------------
- * A reusable React component that takes your computed transactions, filters and
- * opening balances and generates:
- *  - PDF report (styled to match your requested layout)
- *  - Excel (.xlsx) report
- *
- * Usage:
- *  <ExportReports
- *     transactions={computedTxns}
- *     filters={filters}
- *     openingBalances={openingBalances}
- *     cashBooks={cashBooks}
- *     campusName={selectedCampusName}
- *  />
- *
- * npm/yarn packages required:
- *  npm i jspdf jspdf-autotable xlsx file-saver
- *
- * Notes:
- *  - This component is framework-agnostic in the sense it only depends on data
- *    you already have in the page (computedTxns, filters, lists etc.)
- *  - It uses jsPDF + autotable to create a neat PDF and XLSX for Excel export.
- */
+import { Box, IconButton } from '@mui/material';
+import { PictureAsPdf, GridOn } from '@mui/icons-material';
 
 type Txn = any;
 
@@ -154,7 +128,7 @@ const ExportReports: React.FC<Props> = ({ transactions, filters, openingBalances
     const body = buildRows();
 
     // autoTable with styles to make it attractive
-    (doc as any).autoTable({
+    autoTable(doc, {
       startY,
       head,
       body,
@@ -187,57 +161,69 @@ const ExportReports: React.FC<Props> = ({ transactions, filters, openingBalances
     doc.save(`${fileTitleBase}.pdf`);
   };
 
-  // Excel generator
-  const generateExcel = () => {
-    // Build worksheet rows as objects
-    const rows = transactions.map((t: any, idx: number) => ({
-      'Sl. No.': idx + 1,
-      'Date & Time': `${t.date} ${t.time}`,
-      'Remarks & User': `${t.remarks || ''} / ${t.user_name || t.user || ''}`,
-      'Party & Mobile': `${t.party_name || ''} / ${t.party_mobile_number || ''}`,
-      'Category': t.category_name || t.category || '',
-      'Mode': t.payment_mode_name || t.payment_mode || '',
-      'Amount': Number(t.amount || 0),
-      'Balance': Number(t.running_balance || 0),
-    }));
+    // Excel generator
+    const generateExcel = () => {
+    if (!transactions || transactions.length === 0) {
+        alert("No transactions to export!");
+        return;
+    }
 
-    // Add a header sheet with summary and meta as the first sheet
-    const wb = XLSX.utils.book_new();
-
-    // Meta/summary sheet
     const sums = calcSummaries();
-    const metaData = [
-      ['Campus', campusName || 'All Campuses'],
-      ['Cash Book', getCashBookLabel()],
-      ['Date Range', getDateLabel()],
-      [],
-      ['Opening Balance', sums.ob],
-      ['Total In', sums.totalIn],
-      ['Total Out', sums.totalOut],
-      ['Net Balance', sums.net],
-    ];
-    const metaWs = XLSX.utils.aoa_to_sheet(metaData);
-    XLSX.utils.book_append_sheet(wb, metaWs, 'Summary');
 
-    const ws = XLSX.utils.json_to_sheet(rows);
+    // 1️⃣ Build summary/meta rows
+    const metaRows = [
+        ['Campus', campusName || 'All Campuses'],
+        ['Cash Book', getCashBookLabel()],
+        ['Date Range', getDateLabel()],
+        [],
+        ['Opening Balance', sums.ob],
+        ['Total In', sums.totalIn],
+        ['Total Out', sums.totalOut],
+        ['Net Balance', sums.net],
+        [], // empty row before table
+        ['Sl. No.', 'Date & Time', 'Remarks & User', 'Party & Mobile', 'Category', 'Mode', 'Amount', 'Balance']
+    ];
+
+    // 2️⃣ Build transactions rows
+    const txnRows = transactions.map((t: any, idx: number) => [
+        idx + 1,
+        `${t.date} ${t.time}`,
+        `${t.remarks || ''} / ${t.user_name || t.user || ''}`,
+        `${t.party_name || ''} / ${t.party_mobile_number || ''}`,
+        t.category_name || t.category || '',
+        t.payment_mode_name || t.payment_mode || '',
+        Number(t.amount || 0),
+        Number(t.running_balance || 0),
+    ]);
+
+    // 3️⃣ Combine meta + transactions
+    const allRows = [...metaRows, ...txnRows];
+
+    // 4️⃣ Convert to worksheet
+    const ws = XLSX.utils.aoa_to_sheet(allRows);
+
+    // 5️⃣ Optional: Auto-width columns
+    const colCount = allRows[0]?.length || 1;
+    ws['!cols'] = Array(colCount).fill({ wch: 15 });
+
+    // 6️⃣ Create workbook and append sheet
+    const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Transactions');
 
-    // Auto-width (simple heuristic)
-    const setColumnWidths = (sheet: any, jsonRows: any[]) => {
-      const cols = Object.keys(jsonRows[0] || {}).map((k) => ({ wch: Math.max(10, k.length + 4) }));
-      sheet['!cols'] = cols;
-    };
-    if (rows.length) setColumnWidths(ws, rows);
-
+    // 7️⃣ Write & save
     const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
     const blob = new Blob([buf], { type: 'application/octet-stream' });
     saveAs(blob, `${fileTitleBase}.xlsx`);
-  };
+    };
 
   return (
-    <Box display="flex" gap={2}>
-      <Button variant="contained" onClick={generatePDF}>Download PDF</Button>
-      <Button variant="outlined" onClick={generateExcel}>Download Excel</Button>
+    <Box display="flex" gap={1}>
+      <IconButton onClick={generatePDF} color="primary">
+        <PictureAsPdf />  {/* MUI icon */}
+      </IconButton>
+      <IconButton onClick={generateExcel} color="primary">
+        <GridOn />  {/* Or any Excel icon */}
+      </IconButton>
     </Box>
   );
 };

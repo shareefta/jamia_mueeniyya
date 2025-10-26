@@ -420,135 +420,132 @@ const TransactionList = () => {
   return (
     <Box p={4}>
       {/* Header */}
-      <Box
-        display="flex"
-        flexDirection={{ xs: "column", sm: "row" }}
-        justifyContent="space-between"
-        alignItems={{ xs: "flex-start", sm: "center" }}
-        mb={3}
-        gap={2}
-      >
-        {/* ===== Left side: Campus + Cash Book ===== */}
+      <Box display="flex" flexDirection="column" gap={2} mb={3}>
+        {/* ===== First Row: Campus + Cash Book + Download Buttons ===== */}
         <Box
           display="flex"
           flexDirection={{ xs: "column", sm: "row" }}
+          justifyContent="space-between"
           alignItems={{ xs: "flex-start", sm: "center" }}
-          gap={1.5}
+          gap={2}
         >
-          {/* Cash Book Info */}
-          {selectedCashBook ? (
-            <Box display="flex" alignItems="center" flexWrap="wrap" gap={0.5}>
-              <Chip
-                label={selectedCashBook.campus_name}
-                color="info"
-                size="small"
-                clickable
-                onClick={() =>
-                  navigate(`/cash-books-lists?campus=${selectedCashBook.campus_id}`)
-                }
-                sx={{
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  "&:hover": { opacity: 0.8 },
-                }}
-              />
-              <Chip
-                label={selectedCashBook.name}
-                color="success"
-                size="small"
-                sx={{ fontWeight: 600 }}
-              />
-            </Box>
-          ) : (
-            filters.cash_book === "All" && (
-              <Chip
-                label="All Cash Books"
-                color="default"
-                size="small"
-                sx={{
-                  fontWeight: 600,
-                  bgcolor: "grey.100",
-                  color: "text.primary",
-                }}
-              />
-            )
-          )}
+          {/* Left Side: Campus + Cash Book */}
+          <Box display="flex" flexWrap="wrap" gap={0.5} alignItems="center">
+            {selectedCashBook ? (
+              <>
+                <Chip
+                  label={selectedCashBook.campus_name}
+                  color="info"
+                  size="small"
+                  clickable
+                  onClick={() =>
+                    navigate(`/cash-books-lists?campus=${selectedCashBook.campus_id}`)
+                  }
+                  sx={{
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    "&:hover": { opacity: 0.8 },
+                  }}
+                />
+                <Chip
+                  label={selectedCashBook.name}
+                  color="success"
+                  size="small"
+                  sx={{ fontWeight: 600 }}
+                />
+              </>
+            ) : (
+              filters.cash_book === "All" && (
+                <Chip
+                  label="All Cash Books"
+                  color="default"
+                  size="small"
+                  sx={{
+                    fontWeight: 600,
+                    bgcolor: "grey.100",
+                    color: "text.primary",
+                  }}
+                />
+              )
+            )}
+          </Box>
 
-          {/* 📤 Export Buttons */}
-          <ExportReports
-            transactions={computedTxns}
-            filters={filters}
-            openingBalances={openingBalances}
-            cashBooks={cashBooks}
-            campusName={
-              selectedCashBook?.campus_name || "Mueeniyya Campus"
-            }
-          />
+          {/* Right Side: Download Buttons (icons only) */}
+          <Box display="flex" gap={1}>
+            <ExportReports
+              transactions={computedTxns}
+              filters={filters}
+              openingBalances={openingBalances}
+              cashBooks={cashBooks}
+              campusName={selectedCashBook?.campus_name || "Mueeniyya Campus"}
+            />
+          </Box>
         </Box>
 
-        {/* ===== Right side: Heading + Date Label ===== */}
-        <Box display="flex" alignItems="center" flexWrap="wrap" gap={1}>
-          <Typography variant="h4" fontWeight="bold">
-            Transactions
-          </Typography>
-
-          {selectedDateLabel && (
-            <Box
-              onClick={() => setOpenCustomDate(true)}
-              sx={{
-                px: 2,
-                py: 0.5,
-                borderRadius: "16px",
-                backgroundColor: "primary.light",
-                color: "primary.contrastText",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                cursor: "pointer",
-                "&:hover": {
-                  backgroundColor: "primary.main",
-                  color: "white",
-                },
-              }}
-            >
-              {selectedDateLabel()}
-            </Box>
-          )}
-        </Box>
-
-        {/* Right side: Buttons */}
+        {/* ===== Second Row: Transactions Heading + Date Range + Add In/Out (desktop) ===== */}
         <Box
           display="flex"
-          gap={1}
-          flexWrap="wrap"
-          width={{ xs: "100%", sm: "auto" }}
+          flexDirection={{ xs: "column", sm: "row" }}
+          justifyContent="space-between"
+          alignItems={{ xs: "flex-start", sm: "center" }}
+          gap={2}
         >
-          <Button
-            variant="contained"
-            color="success"
-            onClick={() => handleClickOpen("IN")}
-            startIcon={<Add />}
-            fullWidth
-            sx={{
-              flex: { xs: 1, sm: "none" },
-              fontSize: { xs: "0.9rem", sm: "1rem" },
-            }}
-          >
-            Cash In
-          </Button>
+          {/* Left Side: Heading + Date Range */}
+          <Box display="flex" flexDirection={{ xs: "column", sm: "row" }} gap={1} alignItems="center">
+            <Typography variant="h4" fontWeight="bold">
+              Transactions
+            </Typography>
 
-          <Button
-            variant="contained"
-            color="error"
-            onClick={() => handleClickOpen("OUT")}
-            startIcon={<Add />}
-            fullWidth
-            sx={{
-              flex: { xs: 1, sm: "none" },
-              fontSize: { xs: "0.9rem", sm: "1rem" },
-            }}
+            {selectedDateLabel && (
+              <Box
+                onClick={() => setOpenCustomDate(true)}
+                sx={{
+                  px: 2,
+                  py: 0.5,
+                  borderRadius: "16px",
+                  backgroundColor: "primary.light",
+                  color: "primary.contrastText",
+                  fontSize: "0.875rem",
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  "&:hover": {
+                    backgroundColor: "primary.main",
+                    color: "white",
+                  },
+                }}
+              >
+                {selectedDateLabel()}
+              </Box>
+            )}
+          </Box>
+
+          {/* Right Side: Add In / Out buttons */}
+          <Box
+            display="flex"
+            gap={1}
+            flexDirection={{ xs: "column", sm: "row" }}
+            width="100%"
           >
-            Cash Out
-          </Button>
+            <Button
+              variant="contained"
+              color="success"
+              onClick={() => handleClickOpen("IN")}
+              startIcon={<Add />}
+              sx={{ width: { xs: "100%", sm: "auto" }, fontSize: { xs: "0.9rem", sm: "1rem" } }}
+            >
+              Cash In
+            </Button>
+
+            <Button
+              variant="contained"
+              color="error"
+              onClick={() => handleClickOpen("OUT")}
+              startIcon={<Add />}
+              sx={{ width: { xs: "100%", sm: "auto" }, fontSize: { xs: "0.9rem", sm: "1rem" } }}
+            >
+              Cash Out
+            </Button>
+          </Box>
         </Box>
       </Box>
 
