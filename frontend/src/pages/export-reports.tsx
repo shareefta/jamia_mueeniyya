@@ -10,11 +10,12 @@ import { PictureAsPdf, GridOn } from '@mui/icons-material';
 type Txn = any;
 
 interface Props {
-  transactions: Txn[]; // should be the computedTxns (includes running_balance)
+  transactions: Txn[];
   filters: any;
   openingBalances: any[];
   cashBooks: any[];
-  campusName?: string; // optional: if you have campus info
+  campusName?: string;
+  displayedOB: number;
 }
 
 const currency = (n: number) => {
@@ -22,7 +23,7 @@ const currency = (n: number) => {
   return Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
-const ExportReports: React.FC<Props> = ({ transactions, filters, openingBalances, cashBooks, campusName }) => {
+const ExportReports: React.FC<Props> = ({ transactions, filters, openingBalances, cashBooks, campusName, displayedOB}) => {
   const fileTitleBase = `Transactions_Report_${(new Date()).toISOString().slice(0,10)}`;
 
   const getCashBookLabel = () => {
@@ -41,18 +42,19 @@ const ExportReports: React.FC<Props> = ({ transactions, filters, openingBalances
 
   // Calculate summary cards from the passed transactions (should be running-balance included)
   const calcSummaries = () => {
-    const totalIn = transactions.filter((t: any) => t.transaction_type === 'IN').reduce((acc: number, t: any) => acc + Number(t.amount || 0), 0);
-    const totalOut = transactions.filter((t: any) => t.transaction_type === 'OUT').reduce((acc: number, t: any) => acc + Number(t.amount || 0), 0);
-    const ob = (() => {
-      if (!filters.includeOB) return 0;
-      if (!filters.cash_book || filters.cash_book === 'All') return openingBalances.reduce((a,b) => a + Number(b.amount || 0), 0);
-      const obItem = openingBalances.find(o => Number(o.cash_book) === Number(filters.cash_book));
-      return obItem ? Number(obItem.amount) : 0;
-    })();
+  const totalIn = transactions
+    .filter((t: any) => t.transaction_type === 'IN')
+    .reduce((acc: number, t: any) => acc + Number(t.amount || 0), 0);
 
-    const net = ob + totalIn - totalOut;
-    return { totalIn, totalOut, ob, net };
-  };
+  const totalOut = transactions
+    .filter((t: any) => t.transaction_type === 'OUT')
+    .reduce((acc: number, t: any) => acc + Number(t.amount || 0), 0);
+
+  const ob = filters.includeOB ? displayedOB : 0; // ✅ Use dynamic OB
+  const net = ob + totalIn - totalOut;
+
+  return { totalIn, totalOut, ob, net };
+};
 
   // Build table rows for PDF/XLSX
   const buildRows = () => transactions.map((t: any, idx: number) => ([

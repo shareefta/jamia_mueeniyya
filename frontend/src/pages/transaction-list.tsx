@@ -241,9 +241,9 @@ const TransactionList = () => {
 
   // --- Refactored computeBalance to include opening balance ---
   const computeBalanceOptimized = (
-    txnList: any[],         // renamed from list
-    activeFilters: any,     // renamed from filters
-    obList: any[],          // renamed from openingBalances
+    txnList: any[],
+    activeFilters: any,
+    obList: any[],
     allTxns: any[]
   ) => {
     if (!txnList?.length) return [];
@@ -474,7 +474,8 @@ const TransactionList = () => {
               filters={filters}
               openingBalances={openingBalances}
               cashBooks={cashBooks}
-              campusName={selectedCashBook?.campus_name || "Mueeniyya Campus"}
+              displayedOB={displayedOB}
+              campusName={selectedCashBook?.campus_name || "Jamia Mueeniyya"}
             />
           </Box>
         </Box>
