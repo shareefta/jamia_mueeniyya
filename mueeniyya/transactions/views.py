@@ -107,14 +107,23 @@ class TransactionViewSet(viewsets.ModelViewSet):
         ).order_by('-date', '-time')
 
     def perform_create(self, serializer):
+        import datetime
+        from rest_framework.exceptions import PermissionDenied
+
         user = self.request.user
         cash_book = serializer.validated_data.get("cash_book")
+        date = serializer.validated_data.get("date")
 
-        # Staff → cannot create transactions outside their campuses
         if not (user.is_superuser or (user.role and user.role.name.lower() == "admin")):
+            # Check campus access
             if not cash_book or cash_book.campus not in user.off_campuses.all():
-                raise PermissionError("You are not allowed to add transactions for this campus.")
+                raise PermissionDenied("You are not allowed to add transactions for this campus.")
 
+            # Prevent staff from adding past transactions
+            if date < datetime.date.today():
+                raise PermissionDenied("Staff members cannot add transactions for previous dates.")
+
+        # Save with current user
         serializer.save(user=user)
     
     def create(self, request, *args, **kwargs):
