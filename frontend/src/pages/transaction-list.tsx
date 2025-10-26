@@ -420,16 +420,18 @@ const TransactionList = () => {
   return (
     <Box p={4}>
       {/* Header */}
-      <Box display="flex" flexDirection="column" gap={2} mb={3}>
+      <Box display="flex" flexDirection="column" gap={2} mb={3} width="100%">
+
         {/* ===== First Row: Campus + Cash Book + Download Buttons ===== */}
         <Box
           display="flex"
-          flexDirection={{ xs: "column", sm: "row" }}
           justifyContent="space-between"
-          alignItems={{ xs: "flex-start", sm: "center" }}
-          gap={2}
+          alignItems="center"
+          flexWrap="wrap"
+          gap={1}
+          width="100%"
         >
-          {/* Left Side: Campus + Cash Book */}
+          {/* Left: Campus + Cash Book */}
           <Box display="flex" flexWrap="wrap" gap={0.5} alignItems="center">
             {selectedCashBook ? (
               <>
@@ -441,11 +443,7 @@ const TransactionList = () => {
                   onClick={() =>
                     navigate(`/cash-books-lists?campus=${selectedCashBook.campus_id}`)
                   }
-                  sx={{
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    "&:hover": { opacity: 0.8 },
-                  }}
+                  sx={{ fontWeight: 600, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
                 />
                 <Chip
                   label={selectedCashBook.name}
@@ -460,17 +458,13 @@ const TransactionList = () => {
                   label="All Cash Books"
                   color="default"
                   size="small"
-                  sx={{
-                    fontWeight: 600,
-                    bgcolor: "grey.100",
-                    color: "text.primary",
-                  }}
+                  sx={{ fontWeight: 600, bgcolor: "grey.100", color: "text.primary" }}
                 />
               )
             )}
           </Box>
 
-          {/* Right Side: Download Buttons (icons only) */}
+          {/* Right: Download Buttons (icons only) */}
           <Box display="flex" gap={1}>
             <ExportReports
               transactions={computedTxns}
@@ -482,17 +476,24 @@ const TransactionList = () => {
           </Box>
         </Box>
 
-        {/* ===== Second Row: Transactions Heading + Date Range + Add In/Out (desktop) ===== */}
+        {/* ===== Second Row: Transactions Heading + Date Range ===== */}
         <Box
           display="flex"
           flexDirection={{ xs: "column", sm: "row" }}
-          justifyContent="space-between"
-          alignItems={{ xs: "flex-start", sm: "center" }}
-          gap={2}
+          justifyContent={{ xs: "center", sm: "space-between" }}
+          alignItems="center"
+          flexWrap="wrap"
+          gap={1}
+          width="100%"
         >
-          {/* Left Side: Heading + Date Range */}
-          <Box display="flex" flexDirection={{ xs: "column", sm: "row" }} gap={1} alignItems="center">
-            <Typography variant="h4" fontWeight="bold">
+          {/* Left (desktop) / Center (mobile): Heading + Date */}
+          <Box
+            display="flex"
+            flexDirection={{ xs: "column", sm: "row" }}
+            gap={1}
+            alignItems="center"
+          >
+            <Typography variant="h4" fontWeight="bold" textAlign={{ xs: "center", sm: "left" }}>
               Transactions
             </Typography>
 
@@ -508,10 +509,7 @@ const TransactionList = () => {
                   fontSize: "0.875rem",
                   fontWeight: 500,
                   cursor: "pointer",
-                  "&:hover": {
-                    backgroundColor: "primary.main",
-                    color: "white",
-                  },
+                  "&:hover": { backgroundColor: "primary.main", color: "white" },
                 }}
               >
                 {selectedDateLabel()}
@@ -519,19 +517,18 @@ const TransactionList = () => {
             )}
           </Box>
 
-          {/* Right Side: Add In / Out buttons */}
+          {/* Right side: Cash In / Out buttons (desktop) */}
           <Box
-            display="flex"
+            display={{ xs: "none", sm: "flex" }}
             gap={1}
-            flexDirection={{ xs: "column", sm: "row" }}
-            width="100%"
+            flexDirection="row"
           >
             <Button
               variant="contained"
               color="success"
               onClick={() => handleClickOpen("IN")}
               startIcon={<Add />}
-              sx={{ width: { xs: "100%", sm: "auto" }, fontSize: { xs: "0.9rem", sm: "1rem" } }}
+              sx={{ fontSize: "1rem" }}
             >
               Cash In
             </Button>
@@ -541,11 +538,36 @@ const TransactionList = () => {
               color="error"
               onClick={() => handleClickOpen("OUT")}
               startIcon={<Add />}
-              sx={{ width: { xs: "100%", sm: "auto" }, fontSize: { xs: "0.9rem", sm: "1rem" } }}
+              sx={{ fontSize: "1rem" }}
             >
               Cash Out
             </Button>
           </Box>
+        </Box>
+
+        {/* Third Row: Cash In / Out buttons only for mobile */}
+        <Box display={{ xs: "flex", sm: "none" }} gap={1} flexWrap="wrap">
+          <Button
+            variant="contained"
+            color="success"
+            onClick={() => handleClickOpen("IN")}
+            startIcon={<Add />}
+            fullWidth
+            sx={{ fontSize: "0.9rem" }}
+          >
+            Cash In
+          </Button>
+
+          <Button
+            variant="contained"
+            color="error"
+            onClick={() => handleClickOpen("OUT")}
+            startIcon={<Add />}
+            fullWidth
+            sx={{ fontSize: "0.9rem" }}
+          >
+            Cash Out
+          </Button>
         </Box>
       </Box>
 

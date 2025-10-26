@@ -58,7 +58,7 @@ const ExportReports: React.FC<Props> = ({ transactions, filters, openingBalances
   const buildRows = () => transactions.map((t: any, idx: number) => ([
     idx + 1,
     `${t.date}\n${t.time}`,
-    `${t.remarks || ''}\n${t.user_name || t.user || ''}`,
+    `${t.remarks || ''}\n Created by: ${t.user_name || t.user || ''}`,
     `${t.party_name || ''}\n${t.party_mobile_number || ''}`,
     t.category_name || t.category || '',
     t.payment_mode_name || t.payment_mode || '',
@@ -69,10 +69,9 @@ const ExportReports: React.FC<Props> = ({ transactions, filters, openingBalances
   // PDF generator
   const generatePDF = () => {
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-
     const pageWidth = doc.internal.pageSize.getWidth();
 
-    // Header: campus and cashbook centered with some decoration
+    // --- Header ---
     const campusLabel = campusName || 'Campus';
     const cashbookLabel = getCashBookLabel();
 
@@ -88,7 +87,7 @@ const ExportReports: React.FC<Props> = ({ transactions, filters, openingBalances
     doc.setFontSize(10);
     doc.text(`Date: ${getDateLabel()}`, 40, 90);
 
-    // Summary cards - we draw small rounded boxes
+    // --- Summary Cards ---
     const sums = calcSummaries();
     const cardW = (pageWidth - 80) / 4;
     const cardH = 40;
@@ -104,7 +103,6 @@ const ExportReports: React.FC<Props> = ({ transactions, filters, openingBalances
 
     cardData.forEach((c, i) => {
       const x = cardXStart + i * cardW;
-      // rounded rect (simple)
       doc.setDrawColor(200);
       doc.roundedRect(x, cardY, cardW - 10, cardH, 6, 6);
       doc.setFontSize(9);
@@ -115,47 +113,48 @@ const ExportReports: React.FC<Props> = ({ transactions, filters, openingBalances
       doc.setFont('helvetica', 'normal');
     });
 
-    // Table using autotable
+    // --- Table ---
     const startY = cardY + cardH + 20;
-
-    // Build columns with headers and data
-    // We'll use autoTable to handle multi-line cells (\n)
-    // Column headers as requested
     const head = [[
       'Sl. No.', 'Date & Time', 'Remarks & User', 'Party & Mobile', 'Category', 'Mode', 'Amount', 'Balance'
     ]];
 
     const body = buildRows();
 
-    // autoTable with styles to make it attractive
     autoTable(doc, {
       startY,
       head,
       body,
-      headStyles: { fillColor: [41, 98, 255], textColor: 255, halign: 'center' },
-      styles: { fontSize: 9, cellPadding: 6 },
+      styles: {
+        fontSize: 8,
+        cellPadding: 4,
+        overflow: 'linebreak', // wrap text in long columns
+      },
+      headStyles: {
+        fillColor: [41, 98, 255],
+        textColor: 255,
+        halign: 'center',
+      },
       columnStyles: {
-        0: { cellWidth: 30 },
-        1: { cellWidth: 80 },
-        2: { cellWidth: 150 },
-        3: { cellWidth: 120 },
-        4: { cellWidth: 70 },
-        5: { cellWidth: 60 },
-        6: { cellWidth: 70, halign: 'right' },
-        7: { cellWidth: 70, halign: 'right' },
+        0: { cellWidth: 30, halign: 'center' }, // Sl. No
+        1: { cellWidth: 70 },  // Date & Time
+        2: { cellWidth: 100 }, // Remarks & User
+        3: { cellWidth: 100 }, // Party & Mobile
+        4: { cellWidth: 60 },  // Category
+        5: { cellWidth: 50 },  // Mode
+        6: { cellWidth: 50, halign: 'right' }, // Amount
+        7: { cellWidth: 50, halign: 'right' }, // Balance
       },
-      didParseCell: function (data: any) {
-        // center serial numbers
-        if (data.section === 'body' && data.column.index === 0) {
-          data.cell.styles.halign = 'center';
-        }
-      },
-      didDrawPage: function (data: any) {
-        // footer with page number
-        const page = doc.getNumberOfPages();
+      tableWidth: 'auto', // fit page width
+      didDrawPage: (data: any) => {
         doc.setFontSize(8);
-        doc.text(`Page ${data.pageNumber}`, pageWidth - 40, doc.internal.pageSize.getHeight() - 20, { align: 'right' });
-      }
+        doc.text(
+          `Page ${doc.getNumberOfPages()}`,
+          pageWidth - 40,
+          doc.internal.pageSize.getHeight() - 20,
+          { align: 'right' }
+        );
+      },
     });
 
     doc.save(`${fileTitleBase}.pdf`);
