@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions, filters
+from rest_framework import viewsets, permissions, filters, status
 from .models import Category, PaymentMode, Transaction, OpeningBalance, CashBook
 from .serializers import CategorySerializer, PaymentModeSerializer, TransactionSerializer, OpeningBalanceSerializer, CashBookSerializer
 from django_filters.rest_framework import DjangoFilterBackend
@@ -25,48 +25,97 @@ class PaymentModeViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
 class CashBookViewSet(viewsets.ModelViewSet):
-    queryset = CashBook.objects.all().order_by('name')
     serializer_class = CashBookSerializer
     permission_classes = [permissions.IsAuthenticated]
-
-    # Optional filtering, searching, and ordering
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['campus', 'is_active']  # filter by campus or active status
-    search_fields = ['name']  # search by cash book name
-    ordering_fields = ['name', 'created_at']  # allow ordering by name or creation time
-    
+    filterset_fields = ['campus', 'is_active']
+    search_fields = ['name']
+    ordering_fields = ['name', 'created_at']
+
+    def get_queryset(self):
+        user = self.request.user
+
+        # Admin → full access
+        if user.is_superuser or (user.role and user.role.name.lower() == "admin"):
+            return CashBook.objects.all().order_by('name')
+
+        # Staff → only their assigned campuses
+        return CashBook.objects.filter(campus__in=user.off_campuses.all()).order_by('name')
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        campus = serializer.validated_data.get("campus")
+
+        # Staff → only allowed to create CashBooks within their campuses
+        if not (user.is_superuser or (user.role and user.role.name.lower() == "admin")):
+            if campus not in user.off_campuses.all():
+                return Response(
+                    {"error": "You are not allowed to add CashBooks for this campus."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+        serializer.save()
+
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        # Check for related OpeningBalances
+
+        # Prevent deletion if linked with balances/transactions
         if instance.openingbalance_set.exists():
             return Response(
                 {"error": "Cannot delete this Cash Book. There are existing Opening Balances."},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        # Optional: Check for related Transactions
+
         if instance.transaction_set.exists():
             return Response(
                 {"error": "Cannot delete this Cash Book. There are existing Transactions."},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+        # Staff → ensure only within assigned campuses
+        user = request.user
+        if not (user.is_superuser or (user.role and user.role.name.lower() == "admin")):
+            if instance.campus not in user.off_campuses.all():
+                return Response(
+                    {"error": "You are not allowed to delete this CashBook."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
         instance.delete()
         return Response({"success": "Cash Book deleted successfully"}, status=status.HTTP_200_OK)
 
 class TransactionViewSet(viewsets.ModelViewSet):
-    queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    
     filterset_fields = [
         'transaction_type', 'category', 'payment_mode', 'cash_book', 'user', 'date'
     ]
     search_fields = ['remarks']
     ordering_fields = ['date', 'amount']
 
+    def get_queryset(self):
+        user = self.request.user
+
+        # Admin → full access
+        if user.is_superuser or (user.role and user.role.name.lower() == "admin"):
+            return Transaction.objects.all().order_by('-date', '-time')
+
+        # Staff → filter transactions by assigned campuses
+        return Transaction.objects.filter(
+            cash_book__campus__in=user.off_campuses.all()
+        ).order_by('-date', '-time')
+
     def perform_create(self, serializer):
-        # set the logged-in user as creator
-        serializer.save(user=self.request.user)
+        user = self.request.user
+        cash_book = serializer.validated_data.get("cash_book")
+
+        # Staff → cannot create transactions outside their campuses
+        if not (user.is_superuser or (user.role and user.role.name.lower() == "admin")):
+            if not cash_book or cash_book.campus not in user.off_campuses.all():
+                raise PermissionError("You are not allowed to add transactions for this campus.")
+
+        serializer.save(user=user)
     
     def create(self, request, *args, **kwargs):
         print("Incoming data:", request.data)

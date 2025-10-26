@@ -72,7 +72,6 @@ class OffCampusViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         user = self.request.user
-        if user.is_superuser or user.role.name.lower() == "admin":
+        if user.is_superuser or (hasattr(user, "role") and user.role and user.role.name.lower() == "admin"):
             return OffCampus.objects.all().order_by('name')
-        # Staff users see only assigned campuses
         return user.off_campuses.all().order_by('name')
