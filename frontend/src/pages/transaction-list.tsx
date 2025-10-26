@@ -25,6 +25,7 @@ import { getPaymentModes } from "src/api/payment-modes";
 import { getOpeningBalances } from "src/api/opening-balances"
 import { getCategories, createCategory } from "src/api/categories";
 
+import ExportReports from "./export-reports";
 import { createTransaction, getTransactions, updateTransaction, deleteTransaction, TransactionProps } from "../api/transactions";
 
 const TransactionList = () => {
@@ -427,23 +428,24 @@ const TransactionList = () => {
         mb={3}
         gap={2}
       >
-        {/* Left side: Cash Book Name + Heading + Date Label */}
-        <Box display="flex" flexDirection="column" gap={0.5}>
-          {/* Cash Book Name */}
+        {/* ===== Left side: Campus + Cash Book ===== */}
+        <Box
+          display="flex"
+          flexDirection={{ xs: "column", sm: "row" }}
+          alignItems={{ xs: "flex-start", sm: "center" }}
+          gap={1.5}
+        >
+          {/* Cash Book Info */}
           {selectedCashBook ? (
-            <Box
-              display="flex"
-              alignItems="center"
-              flexWrap="wrap"
-              gap={0.5}
-              sx={{ mb: 0.5 }}
-            >
+            <Box display="flex" alignItems="center" flexWrap="wrap" gap={0.5}>
               <Chip
                 label={selectedCashBook.campus_name}
                 color="info"
                 size="small"
                 clickable
-                onClick={() => navigate(`/cash-books-lists?campus=${selectedCashBook.campus_id}`)}
+                onClick={() =>
+                  navigate(`/cash-books-lists?campus=${selectedCashBook.campus_id}`)
+                }
                 sx={{
                   fontWeight: 600,
                   cursor: "pointer",
@@ -467,40 +469,50 @@ const TransactionList = () => {
                   fontWeight: 600,
                   bgcolor: "grey.100",
                   color: "text.primary",
-                  mb: 0.5,
                 }}
               />
             )
           )}
 
-          {/* Heading + Date Label */}
-          <Box display="flex" alignItems="center" flexWrap="wrap" gap={1}>
-            <Typography variant="h4" fontWeight="bold">
-              Transactions
-            </Typography>
+          {/* 📤 Export Buttons */}
+          <ExportReports
+            transactions={computedTxns}
+            filters={filters}
+            openingBalances={openingBalances}
+            cashBooks={cashBooks}
+            campusName={
+              selectedCashBook?.campus_name || "Mueeniyya Campus"
+            }
+          />
+        </Box>
 
-            {selectedDateLabel && (
-              <Box
-                onClick={() => setOpenCustomDate(true)}
-                sx={{
-                  px: 2,
-                  py: 0.5,
-                  borderRadius: "16px",
-                  backgroundColor: "primary.light",
-                  color: "primary.contrastText",
-                  fontSize: "0.875rem",
-                  fontWeight: 500,
-                  cursor: "pointer",
-                  "&:hover": {
-                    backgroundColor: "primary.main",
-                    color: "white",
-                  },
-                }}
-              >
-                {selectedDateLabel()}
-              </Box>
-            )}
-          </Box>
+        {/* ===== Right side: Heading + Date Label ===== */}
+        <Box display="flex" alignItems="center" flexWrap="wrap" gap={1}>
+          <Typography variant="h4" fontWeight="bold">
+            Transactions
+          </Typography>
+
+          {selectedDateLabel && (
+            <Box
+              onClick={() => setOpenCustomDate(true)}
+              sx={{
+                px: 2,
+                py: 0.5,
+                borderRadius: "16px",
+                backgroundColor: "primary.light",
+                color: "primary.contrastText",
+                fontSize: "0.875rem",
+                fontWeight: 500,
+                cursor: "pointer",
+                "&:hover": {
+                  backgroundColor: "primary.main",
+                  color: "white",
+                },
+              }}
+            >
+              {selectedDateLabel()}
+            </Box>
+          )}
         </Box>
 
         {/* Right side: Buttons */}
