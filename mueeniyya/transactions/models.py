@@ -4,6 +4,12 @@ from accounts.models import OffCampus
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
+    cash_book = models.ForeignKey(
+        'CashBook',
+        on_delete=models.CASCADE,
+        null=True, blank=True,
+        related_name='categories'
+    )
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
