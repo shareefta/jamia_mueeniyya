@@ -3,21 +3,13 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
-  Breadcrumbs,
-  Link,
-  Typography,
-  Box,
-  Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  TextField,
+  Breadcrumbs, Link, Typography, Box,
+  Button, Table, TableBody, TableCell,
+  TableContainer, TableHead, TableRow, Paper, TextField,
+  MenuItem, Select, InputLabel, FormControl
 } from "@mui/material";
 
+import { getCashBooks } from "src/api/cash-book";
 import {
     CategoryProps,
     getCategories,
@@ -31,13 +23,16 @@ export default function CategoriesPage() {
   const { enqueueSnackbar } = useSnackbar();
 
   const [categories, setCategories] = useState<CategoryProps[]>([]);
+  const [cashBooks, setCashBooks] = useState<{ id: number; name: string }[]>([]);
 
   // New Category states
   const [newCategoryName, setNewCategoryName] = useState("");
+  const [selectedCashBooks, setSelectedCashBooks] = useState<number[]>([]);
 
   // Edit states
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingCategoryName, setEditingCategoryName] = useState("");
+  const [editingCashBooks, setEditingCashBooks] = useState<number[]>([]);
 
   // Fetchers
   const fetchCategories = async () => {
@@ -51,11 +46,11 @@ export default function CategoriesPage() {
 
   useEffect(() => {
     fetchCategories();
+    getCashBooks().then(setCashBooks);
 
     // ✅ Listen for category updates
     const handleUpdateEvent = () => fetchCategories();
     window.addEventListener('category-update', handleUpdateEvent);
-
     return () => {
       window.removeEventListener('category-update', handleUpdateEvent);
     };
@@ -70,6 +65,7 @@ export default function CategoriesPage() {
     try {
       await createCategory({
         name: newCategoryName,
+        cash_books: selectedCashBooks,
       });
       enqueueSnackbar("Category added successfully!", { variant: "success" });
       // reset
@@ -88,6 +84,7 @@ export default function CategoriesPage() {
     try {
       await updateCategory(id, {
         name: editingCategoryName,
+        cash_books: editingCashBooks,
       });
       enqueueSnackbar("Category updated successfully!", { variant: "success" });
       setEditingId(null);
@@ -143,6 +140,21 @@ export default function CategoriesPage() {
             size="small"
             sx={{ backgroundColor: "white" }}
           />
+
+          <FormControl sx={{ minWidth: 200 }}>
+            <InputLabel>Cash Books</InputLabel>
+            <Select
+              multiple
+              value={selectedCashBooks}
+              onChange={(e) => setSelectedCashBooks(e.target.value as number[])}
+              size="small"
+            >
+              {cashBooks.map(cb => (
+                <MenuItem key={cb.id} value={cb.id}>{cb.name}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
           <Button variant="contained" onClick={handleAdd}>
             Add Category
           </Button>
@@ -156,6 +168,7 @@ export default function CategoriesPage() {
             <TableRow>
               <TableCell sx={{ textAlign: "center" }}>SL. No.</TableCell>
               <TableCell sx={{ textAlign: "center" }}>Category Name</TableCell>
+              <TableCell sx={{ textAlign: "center" }}>Cash Books</TableCell>
               <TableCell sx={{ textAlign: "center" }}>Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -164,18 +177,41 @@ export default function CategoriesPage() {
               <TableRow key={category.id}>
                 <TableCell sx={{ textAlign: "center" }}>{index + 1}</TableCell>
 
-                {/* Name */}
+                {/* Name & Edit */}
                 <TableCell>
                   {editingId === category.id ? (
-                    <TextField
-                      value={editingCategoryName}
-                      onChange={(e) => setEditingCategoryName(e.target.value)}
-                      size="small"
-                      sx={{ backgroundColor: "white", minWidth: 200 }}
-                    />
+                    <>
+                      <TextField
+                        label="Name"
+                        value={editingCategoryName}
+                        onChange={(e) => setEditingCategoryName(e.target.value)}
+                        size="small"
+                        sx={{ mb: 1, backgroundColor: "white", minWidth: 200 }}
+                      />
+                      <Select
+                        label="Cash Books"
+                        multiple
+                        value={editingCashBooks}
+                        onChange={(e) => setEditingCashBooks(e.target.value as number[])}
+                        size="small"
+                        sx={{ minWidth: 200, backgroundColor: "white" }}
+                      >
+                        {cashBooks.map(cb => (
+                          <MenuItem key={cb.id} value={cb.id}>{cb.name}</MenuItem>
+                        ))}
+                      </Select>
+                    </>
                   ) : (
                     category.name
                   )}
+                </TableCell>
+
+                {/* Cash Books */}
+                <TableCell sx={{ textAlign: "center" }}>
+                  {editingId === category.id
+                    ? "Editing..."
+                    : (category.cash_books_details ?? []).map(cb => cb.name).join(", ")
+                  }
                 </TableCell>
 
                 {/* Actions */}
@@ -196,6 +232,7 @@ export default function CategoriesPage() {
                         onClick={() => {
                           setEditingId(category.id);
                           setEditingCategoryName(category.name);
+                          setEditingCashBooks(category.cash_books ?? []);
                         }}
                       >
                         Edit

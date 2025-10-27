@@ -1,16 +1,6 @@
 from rest_framework import serializers
 from .models import Category, PaymentMode, CashBook, Transaction, OpeningBalance
 
-
-# ----------------------------------------------------------------------
-# CATEGORY SERIALIZER
-# ----------------------------------------------------------------------
-class CategorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Category
-        fields = ['id', 'name', 'is_active', 'created_at']
-
-
 # ----------------------------------------------------------------------
 # PAYMENT MODE SERIALIZER
 # ----------------------------------------------------------------------
@@ -30,6 +20,21 @@ class CashBookSerializer(serializers.ModelSerializer):
         model = CashBook
         fields = ['id', 'name', 'campus', 'campus_name', 'is_active', 'created_at']
 
+# ----------------------------------------------------------------------
+# CATEGORY SERIALIZER
+# ----------------------------------------------------------------------
+class CategorySerializer(serializers.ModelSerializer):
+    cash_books = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=CashBook.objects.all(),
+        required=False
+    )
+
+    cash_books_details = CashBookSerializer(source='cash_books', many=True, read_only=True)
+
+    class Meta:
+        model = Category
+        fields = ['id', 'name', 'is_active', 'created_at', 'cash_books', 'cash_books_details']
 
 # ----------------------------------------------------------------------
 # TRANSACTION SERIALIZER

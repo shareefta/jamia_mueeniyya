@@ -5,6 +5,9 @@ const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}transactions/categories/`;
 export interface CategoryProps {
   id: number;
   name: string;
+  is_active?: boolean;
+  cash_books?: number[];
+  cash_books_details?: { id: number; name: string }[];
 }
 
 const getAuthHeaders = () => ({
