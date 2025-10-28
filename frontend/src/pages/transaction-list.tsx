@@ -1279,6 +1279,7 @@ const TransactionList = () => {
             value={formData.party_mobile_number}
             onChange={handleChange}
           />
+          
           <TextField
             select
             label="Category"
@@ -1288,16 +1289,35 @@ const TransactionList = () => {
             onChange={(e) => {
               const value = e.target.value;
               if (value === "__new__") {
-                setAddCatOpen(true); // Open dialog
+                setAddCatOpen(true);
                 return;
               }
               setFormData((prev) => ({ ...prev, category: value }));
             }}
           >
-            {categories.map((cat) => (
-              <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>
-            ))}
-            <MenuItem value="__new__" sx={{ fontStyle: "italic", color: "primary.main" }}>
+            {categories
+              .filter(cat => {
+                // Case 1: No cash books linked → show in all cash books
+                if (!cat.cash_books || cat.cash_books.length === 0) return true;
+
+                // Case 2: Linked → show only if current cash book is linked
+                if (selectedCashBook) {
+                  return cat.cash_books.includes(selectedCashBook.id);
+                }
+
+                // Case 3: No cash book selected (e.g. "All" view)
+                return true;
+              })
+              .map(cat => (
+                <MenuItem key={cat.id} value={cat.id}>
+                  {cat.name}
+                </MenuItem>
+              ))}
+
+            <MenuItem
+              value="__new__"
+              sx={{ fontStyle: "italic", color: "primary.main" }}
+            >
               + New Category
             </MenuItem>
           </TextField>
