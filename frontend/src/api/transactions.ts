@@ -1,10 +1,6 @@
-import axios from "axios";
+import api from "src/utils/api";
 
-const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}transactions/transactions/`;
-
-const getAuthHeaders = () => ({
-  Authorization: `Bearer ${localStorage.getItem("token")}`,
-});
+const BASE_PATH = "transactions/transactions/";
 
 export interface TransactionProps {
   id?: number;
@@ -28,27 +24,27 @@ export interface TransactionProps {
 
 // get all transactions
 export const getTransactions = async () => {
-  const res = await axios.get(BASE_URL, { headers: getAuthHeaders() });
+  const res = await api.get(BASE_PATH);
   return res.data;
 };
 
 // Create transaction
 export const createTransaction = async (data: TransactionProps) => {
-  const res = await axios.post(BASE_URL, data, { headers: getAuthHeaders() });
+  const res = await api.post(BASE_PATH, data);
   window.dispatchEvent(new Event("transaction-update"));
   return res.data;
 };
 
 // Edit transaction
 export const updateTransaction = async (id: number, data: TransactionProps) => {
-  const res = await axios.put(`${BASE_URL}${id}/`, data, { headers: getAuthHeaders() });
+  const res = await api.put(`${BASE_PATH}${id}/`, data);
   window.dispatchEvent(new Event("transaction-update"));
   return res.data;
 };
 
 // Delete transaction
 export const deleteTransaction = async (id: number) => {
-  const res = await axios.delete(`${BASE_URL}${id}/`, { headers: getAuthHeaders() });
+  const res = await api.delete(`${BASE_PATH}${id}/`);
   window.dispatchEvent(new Event("transaction-update"));
   return res.data;
 };

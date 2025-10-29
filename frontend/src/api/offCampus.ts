@@ -1,7 +1,6 @@
-import axios from 'axios';
+import api from "src/utils/api";
 
-const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}accounts/offcampuses/`;
-
+const BASE_PATH = "accounts/offcampuses/";
 export interface OffCampus {
     id: number;
     name: string;
@@ -12,29 +11,24 @@ export interface OffCampus {
     created_at: string;
 }
 
-function authHeaders() {
-  const token = localStorage.getItem('token');
-  return { Authorization: `Bearer ${token}` };
-}
-
 export async function getOffCampuses() {
-  const response = await axios.get(BASE_URL, { headers: authHeaders() });
+  const response = await api.get(BASE_PATH);
   return response.data;
 }
 
 export async function createOffCampus(data: any) {
-  const response = await axios.post(BASE_URL, data, { headers: authHeaders() });
+  const response = await api.post(BASE_PATH, data);
   window.dispatchEvent(new Event('offcampus-update'));
   return response.data;
 }
 
 export async function updateOffCampus(id: number, data: any) {
-  const response = await axios.put(`${BASE_URL}${id}/`, data, { headers: authHeaders() });
+  const response = await api.put(`${BASE_PATH}${id}/`, data);
   window.dispatchEvent(new Event('offcampus-update'));
   return response.data;
 }
 
 export async function deleteOffCampus(id: number) {
-  await axios.delete(`${BASE_URL}${id}/`, { headers: authHeaders() });
+  await api.delete(`${BASE_PATH}${id}/`);
   window.dispatchEvent(new Event('offcampus-update'));
 }

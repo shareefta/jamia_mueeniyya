@@ -1,6 +1,7 @@
-import axios from "axios";
+import api from "src/utils/api";
 
-const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}transactions/categories/`;
+// const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}transactions/categories/`;
+const BASE_PATH = "transactions/categories/";
 
 export interface CategoryProps {
   id: number;
@@ -10,28 +11,28 @@ export interface CategoryProps {
   cash_books_details?: { id: number; name: string }[];
 }
 
-const getAuthHeaders = () => ({
-  Authorization: `Bearer ${localStorage.getItem("token")}`,
-});
+// const getAuthHeaders = () => ({
+//   Authorization: `Bearer ${localStorage.getItem("token")}`,
+// });
 
 export const getCategories = async () => {
-  const res = await axios.get(BASE_URL, { headers: getAuthHeaders() });
+  const res = await api.get(BASE_PATH);
   return res.data;
 };
 
 export const createCategory = async (data: any) => {
-  const res = await axios.post(BASE_URL, data, { headers: getAuthHeaders() });
+  const res = await api.post(BASE_PATH, data);
   window.dispatchEvent(new Event("category-update"));
   return res.data;
 };
 
 export const updateCategory = async (id: number, data: any) => {
-  const res = await axios.put(`${BASE_URL}${id}/`, data, { headers: getAuthHeaders() });
+  const res = await api.put(`${BASE_PATH}${id}/`, data);
   window.dispatchEvent(new Event("category-update"));
   return res.data;
 };
 
 export const deleteCategory = async (id: number) => {
-  await axios.delete(`${BASE_URL}${id}/`, { headers: getAuthHeaders() });
+  await api.delete(`${BASE_PATH}${id}/`);
   window.dispatchEvent(new Event("category-update"));
 };

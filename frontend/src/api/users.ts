@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from "src/utils/api";
 
 import { OffCampus } from './offCampus';
 
@@ -14,30 +14,26 @@ export interface UserProps {
   password?: string;
 }
 
-const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}accounts/users/`;
-
-const getAuthHeaders = () => ({
-  Authorization: `Bearer ${localStorage.getItem("token")}`,
-});
+const BASE_PATH = "accounts/users/";
 
 export const getUsers = async () => {
-  const res = await axios.get(BASE_URL, { headers: getAuthHeaders() });
+  const res = await api.get(BASE_PATH);
   return res.data;
 };
 
 export const createUser = async (data: any) => {
-  const res = await axios.post(BASE_URL, data, { headers: getAuthHeaders() });
+  const res = await api.post(BASE_PATH, data);
   window.dispatchEvent(new Event("user-update"));
   return res.data;
 };
 
 export const updateUser = async (id: number, data: any) => {
-  const res = await axios.put(`${BASE_URL}${id}/`, data, { headers: getAuthHeaders() });
+  const res = await api.put(`${BASE_PATH}${id}/`, data);
   window.dispatchEvent(new Event("user-update"));
   return res.data;
 };
 
 export const deleteUser = async (id: number) => {
-  await axios.delete(`${BASE_URL}${id}/`, { headers: getAuthHeaders() });
+  await api.delete(`${BASE_PATH}${id}/`);
   window.dispatchEvent(new Event("user-update"));
 };

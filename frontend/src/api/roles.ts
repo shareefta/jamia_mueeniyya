@@ -1,12 +1,8 @@
-import axios from 'axios';
+import api from "src/utils/api";
 
-const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}accounts/`;
-
-const getAuthHeaders = () => ({
-  Authorization: `Bearer ${localStorage.getItem("token")}`,
-});
+const BASE_PATH = "accounts/";
 
 export const getRoles = async () => {
-  const res = await axios.get(`${BASE_URL}roles/`, { headers: getAuthHeaders() });
+  const res = await api.get(`${BASE_PATH}roles/`);
   return res.data;
 };

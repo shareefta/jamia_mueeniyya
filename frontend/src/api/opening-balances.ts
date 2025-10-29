@@ -1,11 +1,6 @@
-import axios from "axios";
+import api from "src/utils/api";
 
-const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}transactions/opening_balances/`;
-
-const getAuthHeaders = () => ({
-  Authorization: `Bearer ${localStorage.getItem("token")}`,
-});
-
+const BASE_PATH = "transactions/opening_balances/";
 export interface OpeningBalanceProps {
   id?: number;
   cash_book: number;
@@ -13,23 +8,23 @@ export interface OpeningBalanceProps {
 }
 
 export const getOpeningBalances = async () => {
-  const res = await axios.get(BASE_URL, { headers: getAuthHeaders() });
+  const res = await api.get(BASE_PATH);
   return res.data;
 };
 
 export const createOpeningBalance = async (data: OpeningBalanceProps) => {
-  const res = await axios.post(BASE_URL, data, { headers: getAuthHeaders() });
+  const res = await api.post(BASE_PATH, data);
   window.dispatchEvent(new Event("openingbalance-update"));
   return res.data;
 };
 
 export const updateOpeningBalance = async (id: number, data: OpeningBalanceProps) => {
-  const res = await axios.put(`${BASE_URL}${id}/`, data, { headers: getAuthHeaders() });
+  const res = await api.put(`${BASE_PATH}${id}/`, data);
   window.dispatchEvent(new Event("openingbalance-update"));
   return res.data;
 };
 
 export const deleteOpeningBalance = async (id: number) => {
-  await axios.delete(`${BASE_URL}${id}/`, { headers: getAuthHeaders() });
+  await api.delete(`${BASE_PATH}${id}/`);
   window.dispatchEvent(new Event("openingbalance-update"));
 };
