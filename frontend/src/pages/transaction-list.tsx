@@ -6,18 +6,21 @@ import isBetween from "dayjs/plugin/isBetween";
 import { useParams, useNavigate } from 'react-router-dom';
 import customParseFormat from "dayjs/plugin/customParseFormat";
 
-import { Add, Edit, Delete } from "@mui/icons-material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { Add, Edit, Delete, ExpandMore, ExpandLess } from "@mui/icons-material";
 import { useTheme, useMediaQuery, Accordion, AccordionSummary, AccordionDetails } from "@mui/material";
 import {
   Chip, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Box, Button, Card, CardContent,
   Typography, Grid, FormControl, InputLabel, Select, MenuItem, Table, TableHead, TableBody,
-  TableCell, TableRow, TableContainer, Paper, IconButton, FormControlLabel, RadioGroup, Radio
+  TableCell, TableRow, TableContainer, Paper, IconButton, FormControlLabel, RadioGroup, Radio,
+  Collapse, Divider
 } from "@mui/material";
 
 dayjs.extend(isBetween);
 dayjs.extend(minMax);
 dayjs.extend(customParseFormat);
+
+import TxnActionButtons from "src/utils/edit-delete-helper";
 
 import { getUsers } from "src/api/users";
 import { getCashBooks } from "src/api/cash-book";
@@ -67,6 +70,12 @@ const TransactionList = () => {
   const [cashBooks, setCashBooks] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [openingBalances, setOpeningBalances] = useState<any[]>([]);
+
+  const [expandedTxnId, setExpandedTxnId] = useState<number | null>(null);
+
+  const handleToggleExpand = (id: number) => {
+    setExpandedTxnId((prev) => (prev === id ? null : id));
+  };
 
   // Custom date modal states
   const [openCustomDate, setOpenCustomDate] = useState(false);
@@ -1026,91 +1035,103 @@ const TransactionList = () => {
       {isMobile ? (        
         <Box display="flex" flexDirection="column" gap={2}>
           {computedTxns.length > 0 ? (
-            computedTxns.map((txn) => (
-              <Card
-                key={txn.id}
-                onClick={() => navigate(`/transaction/${txn.id}`)}
-                sx={{
-                  mb: 1.5,
-                  p: 1.5,
-                  borderLeft: `5px solid ${
-                    txn.transaction_type === "IN" ? "#2e7d32" : "#c62828"
-                  }`,
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-                  borderRadius: 2,
-                  "&:hover": { backgroundColor: "#f9f9f9" },
-                }}
-              >
-                <Box
-                  display="flex"
-                  justifyContent="space-between"
-                  alignItems="flex-start"
-                  gap={2}
+            computedTxns.map((txn) => {
+              const isExpanded = expandedTxnId === txn.id;
+              const userRole = localStorage.getItem("userRole");
+              const isAdmin = userRole?.toLowerCase() === "admin";
+              const isStaff = userRole?.toLowerCase() === "staff";
+
+              return (
+                <Card
+                  key={txn.id}
+                  onClick={() => handleToggleExpand(txn.id)}
+                  sx={{
+                    mb: 1.5,
+                    p: 1.5,
+                    borderLeft: `5px solid ${
+                      txn.transaction_type === "IN" ? "#2e7d32" : "#c62828"
+                    }`,
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
+                    borderRadius: 2,
+                    transition: "all 0.3s ease",
+                    cursor: "pointer",
+                    "&:hover": { backgroundColor: "#f9f9f9" },
+                  }}
                 >
-                  {/* LEFT SIDE — Details */}
-                  <Box flex={1}>
-                    {/* Remarks */}
-                    <Typography
-                      variant="subtitle1"
-                      fontWeight={600}
-                      sx={{ wordBreak: "break-word" }}
-                    >
-                      {txn.remarks || "-"}
-                    </Typography>
-
-                    {/* Category - Mode */}
-                    <Typography variant="body2" color="text.secondary">
-                      {txn.category_name || "—"}{" "}
-                      {txn.payment_mode_name ? `- ${txn.payment_mode_name}` : ""}
-                    </Typography>
-
-                    {/* Party Name */}
-                    {txn.party_name && (
-                      <Typography variant="body2" color="text.secondary">
-                        {txn.party_name}
+                  <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="flex-start"
+                    gap={2}
+                  >
+                    {/* LEFT SIDE — Details */}
+                    <Box flex={1}>
+                      <Typography
+                        variant="subtitle1"
+                        fontWeight={600}
+                        sx={{ wordBreak: "break-word" }}
+                      >
+                        {txn.remarks || "-"}
                       </Typography>
-                    )}
 
-                    {/* Party Mobile Number */}
-                    {txn.party_mobile_number && (
                       <Typography variant="body2" color="text.secondary">
-                        {txn.party_mobile_number}
+                        {txn.category_name || "—"}{" "}
+                        {txn.payment_mode_name ? `- ${txn.payment_mode_name}` : ""}
                       </Typography>
-                    )}
+
+                      {txn.party_name && (
+                        <Typography variant="body2" color="text.secondary">
+                          {txn.party_name}
+                        </Typography>
+                      )}
+
+                      {txn.party_mobile_number && (
+                        <Typography variant="body2" color="text.secondary">
+                          {txn.party_mobile_number}
+                        </Typography>
+                      )}
+                    </Box>
+
+                    {/* RIGHT SIDE — Amount / Balance / Created by / Date */}
+                    <Box textAlign="right">
+                      <Typography
+                        variant="subtitle1"
+                        fontWeight={700}
+                        color={txn.transaction_type === "IN" ? "success.main" : "error.main"}
+                      >
+                        ₹{parseFloat(txn.amount).toLocaleString("en-IN")}
+                      </Typography>
+
+                      {txn.running_balance !== undefined && (
+                        <Typography variant="body2" color="text.secondary">
+                          Bal: ₹{parseFloat(txn.running_balance).toLocaleString("en-IN")}
+                        </Typography>
+                      )}
+
+                      <Typography variant="caption" color="text.secondary">
+                        User: {txn.user_name || "-"}
+                      </Typography>
+
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        {dayjs(txn.date).format("DD MMM YYYY")},{" "}
+                        {dayjs(txn.time, "HH:mm:ss").format("hh:mm A")}
+                      </Typography>
+
+                      {/* Expand Icon */}
+                      <IconButton size="small">
+                        {isExpanded ? <ExpandLess /> : <ExpandMore />}
+                      </IconButton>
+                    </Box>
                   </Box>
 
-                  {/* RIGHT SIDE — Amount / Balance / Created by / Date */}
-                  <Box textAlign="right">
-                    {/* Amount */}
-                    <Typography
-                      variant="subtitle1"
-                      fontWeight={700}
-                      color={txn.transaction_type === "IN" ? "success.main" : "error.main"}
-                    >
-                      ₹{parseFloat(txn.amount).toLocaleString("en-IN")}
-                    </Typography>
-
-                    {/* Balance */}
-                    {txn.running_balance !== undefined && (
-                      <Typography variant="body2" color="text.secondary">
-                        Bal: ₹{parseFloat(txn.running_balance).toLocaleString("en-IN")}
-                      </Typography>
-                    )}
-
-                    {/* Created by */}
-                    <Typography variant="caption" color="text.secondary">
-                      User:{txn.user_name || "-"}
-                    </Typography>
-
-                    {/* Date & Time */}
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      {dayjs(txn.date).format("DD MMM YYYY")},{" "}
-                      {dayjs(txn.time, "HH:mm:ss").format("hh:mm A")}
-                    </Typography>
-                  </Box>
-                </Box>                
-              </Card>
-            ))
+                  {/* EXPANDED SECTION */}
+                  <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                    <Divider sx={{ my: 1 }} />
+                    <TxnActionButtons txn={txn} onEdit={handleEditClick} onDelete={handleDeleteClick} />
+                  </Collapse>
+                </Card>
+              );
+            })
           ) : (
             <Typography align="center" sx={{ py: 4, color: "text.secondary" }}>
               No transactions found.
@@ -1211,12 +1232,7 @@ const TransactionList = () => {
                     </TableCell>
                     <TableCell align="right">₹ {txn.running_balance.toFixed(2)}</TableCell>
                     <TableCell align="center">
-                      <IconButton onClick={() => handleEditClick(txn)} color="primary">
-                        <Edit fontSize="small" />
-                      </IconButton>
-                      <IconButton onClick={() => handleDeleteClick(txn.id!)} color="error">
-                        <Delete fontSize="small" />
-                      </IconButton>
+                      <TxnActionButtons txn={txn} onEdit={handleEditClick} onDelete={handleDeleteClick} />
                     </TableCell>
                   </TableRow>
                 ))
