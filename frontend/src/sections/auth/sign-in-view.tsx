@@ -54,6 +54,7 @@ export function SignInView() {
       const user = meRes.data;
       setUser(user);
       localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('userRole', user.role);
 
       enqueueSnackbar(`Welcome, ${user.name || 'User'}!`, { variant: 'info' });
 

@@ -450,9 +450,12 @@ const TransactionList = () => {
                   color="info"
                   size="small"
                   clickable
-                  onClick={() =>
-                    navigate(`/cash-books?campus=${selectedCashBook.campus_id}`)
-                  }
+                  onClick={() => {
+                    const userRole = localStorage.getItem('userRole');
+                    const prefix = userRole?.toLowerCase() === 'staff' ? '/staff' : '';
+                    navigate(`${prefix}/cash-books?campus=${selectedCashBook.campus_id}`);
+                    // navigate(`/cash-books?campus=${selectedCashBook.campus_id}`)
+                  }}
                   sx={{ fontWeight: 600, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
                 />
                 <Chip
