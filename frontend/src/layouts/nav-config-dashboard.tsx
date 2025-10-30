@@ -25,7 +25,7 @@ export const navData: NavItem[] = [
   },
   {
     title: 'Cash Books',
-    path: '/cash-books-lists',
+    path: '/cash-books',
     icon: icon('ic-books'),
   },
   {
