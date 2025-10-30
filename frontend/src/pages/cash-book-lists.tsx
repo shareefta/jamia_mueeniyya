@@ -30,6 +30,11 @@ export default function CashBookListPage() {
   const [cashBookName, setCashBookName] = useState("");
   const [selectedCashBookId, setSelectedCashBookId] = useState<number | null>(null);
 
+  const getRolePrefix = () => {
+    const role = localStorage.getItem('userRole');
+    return role?.toLowerCase() === 'staff' ? '/staff' : '';
+  };
+
   // Extract campusId from URL query params
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -206,7 +211,7 @@ export default function CashBookListPage() {
 
                     <TableCell sx={{ py: 0.8, px: 1.5 }}>
                       <Link
-                        to={`/transaction-list/${cb.id}`}
+                        to={`${getRolePrefix()}/transaction-list/${cb.id}`}
                         style={{
                           textDecoration: "none",
                           color: "#1b5e20",
