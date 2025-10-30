@@ -451,7 +451,7 @@ const TransactionList = () => {
                   size="small"
                   clickable
                   onClick={() =>
-                    navigate(`/cash-books-lists?campus=${selectedCashBook.campus_id}`)
+                    navigate(`/cash-books?campus=${selectedCashBook.campus_id}`)
                   }
                   sx={{ fontWeight: 600, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
                 />
