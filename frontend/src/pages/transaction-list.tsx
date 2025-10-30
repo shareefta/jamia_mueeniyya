@@ -1029,6 +1029,7 @@ const TransactionList = () => {
             computedTxns.map((txn) => (
               <Card
                 key={txn.id}
+                onClick={() => navigate(`/transaction/${txn.id}`)}
                 sx={{
                   mb: 1.5,
                   p: 1.5,
@@ -1037,6 +1038,7 @@ const TransactionList = () => {
                   }`,
                   boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
                   borderRadius: 2,
+                  "&:hover": { backgroundColor: "#f9f9f9" },
                 }}
               >
                 <Box
