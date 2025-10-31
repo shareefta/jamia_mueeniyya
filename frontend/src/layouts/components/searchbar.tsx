@@ -1,7 +1,7 @@
 import type { BoxProps } from '@mui/material/Box';
 
-import { useState, useCallback } from 'react';
 import { varAlpha } from 'minimal-shared/utils';
+import { useState, useCallback, useEffect } from 'react';
 
 import Box from '@mui/material/Box';
 import Slide from '@mui/material/Slide';
@@ -12,12 +12,15 @@ import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
 
+import { useSearchStore } from 'src/store/use-search-store';
+
 import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
 export function Searchbar({ sx, ...other }: BoxProps) {
   const theme = useTheme();
+  const { keyword, setKeyword, clearKeyword } = useSearchStore();
 
   const [open, setOpen] = useState(false);
 
@@ -28,6 +31,11 @@ export function Searchbar({ sx, ...other }: BoxProps) {
   const handleClose = useCallback(() => {
     setOpen(false);
   }, []);
+
+  // Optional: Clear search when searchbar closes
+  useEffect(() => {
+    if (!open) clearKeyword();
+  }, [open, clearKeyword]);
 
   return (
     <ClickAwayListener onClickAway={handleClose}>
@@ -66,6 +74,8 @@ export function Searchbar({ sx, ...other }: BoxProps) {
               fullWidth
               disableUnderline
               placeholder="Search…"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
               startAdornment={
                 <InputAdornment position="start">
                   <Iconify width={20} icon="eva:search-fill" sx={{ color: 'text.disabled' }} />

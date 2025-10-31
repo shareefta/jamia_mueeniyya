@@ -26,6 +26,7 @@ import { getUsers } from "src/api/users";
 import { getCashBooks } from "src/api/cash-book";
 import { useAuthStore } from 'src/store/use-auth-store';
 import { getPaymentModes } from "src/api/payment-modes";
+import { useSearchStore } from 'src/store/use-search-store';
 import { getOpeningBalances } from "src/api/opening-balances"
 import { getCategories, createCategory } from "src/api/categories";
 
@@ -34,6 +35,7 @@ import { createTransaction, getTransactions, updateTransaction, deleteTransactio
 
 const TransactionList = () => {
   const navigate = useNavigate();
+  const { keyword } = useSearchStore();
   const { cashBookId } = useParams<{ cashBookId: string }>();
   const { enqueueSnackbar } = useSnackbar();
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -171,8 +173,26 @@ const TransactionList = () => {
     if (filters.cash_book !== "All") temp = temp.filter(t => t.cash_book === parseInt(filters.cash_book));
     if (filters.user !== "All") temp = temp.filter(t => t.user_id === parseInt(filters.user));    
 
+    // ✅ Keyword search (new)
+    if (keyword && keyword.trim() !== "") {
+      const lower = keyword.toLowerCase();
+      temp = temp.filter((txn) =>
+        [
+          txn.remarks,
+          txn.party_name,
+          txn.party_mobile_number,
+          txn.category_name,
+          txn.payment_mode_name,
+          txn.amount,
+        ]
+          .some((field) =>
+            field?.toString().toLowerCase().includes(lower)
+          )
+      );
+    }
+
     setFiltered(temp);
-  }, [filters, transactions]);
+  }, [filters, transactions, keyword]);
 
   // --- Utility to calculate opening balance dynamically ---
   const getOpeningBalance = (

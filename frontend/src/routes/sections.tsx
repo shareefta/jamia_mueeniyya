@@ -20,7 +20,6 @@ export const StaffDashboardPage = lazy( () => import ('src/pages/dashboard-staff
 export const SignInPage = lazy(() => import('src/pages/sign-in'));
 
 export const TransactionListPage = lazy(() => import('src/pages/transaction-list'));
-export const TransactionDetailPage = lazy(() => import('src/pages/transaction-detail'));
 
 export const SettingsView = lazy(() => import('src/pages/settings'));
 export const SettingsLayout = lazy(() => import('src/pages/settings/settings-layout'));
@@ -72,7 +71,6 @@ export const routesSection: RouteObject[] = [
       { index: true, element: <DashboardPage /> },
       { path: 'transaction-list', element: <TransactionListPage /> },
       { path: 'transaction-list/:cashBookId', element: <TransactionListPage /> },
-      { path: 'transaction/:id', element: <TransactionDetailPage /> },
       { path: 'cash-books', element: <CashBookListsPage /> },
       { path: 'reports-generator', element: <ReportsGeneratorPage /> },
       {
@@ -105,7 +103,6 @@ export const routesSection: RouteObject[] = [
       { index: true, element: <StaffDashboardPage /> },
       { path: 'transaction-list', element: <TransactionListPage /> },
       { path: 'transaction-list/:cashBookId', element: <TransactionListPage /> },
-      { path: 'transaction/:id', element: <TransactionDetailPage /> },
       { path: 'cash-books', element: <CashBookListsPage /> },
       { path: 'reports-generator', element: <ReportsGeneratorPage /> },
     ],
