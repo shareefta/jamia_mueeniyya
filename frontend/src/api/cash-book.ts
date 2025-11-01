@@ -17,7 +17,7 @@ export const getCashBooks = async () => {
 
 // Create a new Cash Book
 export const createCashBook = async (data: CashBookProps) => {
-  const res = await api.post(BASE_PATH);
+  const res = await api.post(BASE_PATH, data);
   window.dispatchEvent(new Event("cashbook-update"));
   return res.data;
 };
