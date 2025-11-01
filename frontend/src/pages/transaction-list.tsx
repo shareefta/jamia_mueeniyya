@@ -152,8 +152,17 @@ const TransactionList = () => {
     // --- Date filtering ---
     if (filters.dateRange === "Today") temp = temp.filter(t => t.date === today);
     else if (filters.dateRange === "Yesterday") temp = temp.filter(t => t.date === yesterday);
-    else if (filters.dateRange === "This Month") temp = temp.filter(t => dayjs(t.date).isAfter(firstOfMonth));
-    else if (filters.dateRange === "Last Month") temp = temp.filter(t => dayjs(t.date).isBetween(lastMonthStart, lastMonthEnd));
+    else if (filters.dateRange === "This Month")
+    // ✅ Include the first day of this month
+    temp = temp.filter(t => 
+      dayjs(t.date).isSame(firstOfMonth, "day") || 
+      dayjs(t.date).isAfter(firstOfMonth, "day")
+    );    
+    else if (filters.dateRange === "Last Month")
+      // ✅ Inclusive of both start and end
+      temp = temp.filter(t => 
+        dayjs(t.date).isBetween(lastMonthStart, lastMonthEnd, "day", "[]")
+      );
     else if (filters.dateRange === "Custom") {
       if (filters.customStartDate && filters.customEndDate) {
         const start = dayjs(filters.customStartDate).startOf("day");
@@ -184,6 +193,7 @@ const TransactionList = () => {
           txn.category_name,
           txn.payment_mode_name,
           txn.amount,
+          txn.user,
         ]
           .some((field) =>
             field?.toString().toLowerCase().includes(lower)
