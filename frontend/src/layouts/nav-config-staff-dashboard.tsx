@@ -15,7 +15,7 @@ export type StaffNavItem = {
 export const StaffNavData = [
   {
     title: 'Cash Books',
-    path: '/',
+    path: '/staff',
     icon: icon('ic-books'),
   },
   // {
