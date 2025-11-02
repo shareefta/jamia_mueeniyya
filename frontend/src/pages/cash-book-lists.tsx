@@ -2,11 +2,11 @@ import { useSnackbar } from "notistack";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
-import { Add, Edit, Delete } from "@mui/icons-material";
+import { Add, Edit, Delete, Search, } from "@mui/icons-material";
 import {
   Box, Button, Card, Paper, Grid, IconButton, MenuItem, Select, Table, TableBody,
   TableCell, TableContainer, TableHead, TableRow, Typography, Dialog, DialogTitle,
-  DialogContent, DialogActions, TextField, Tooltip,} from "@mui/material";
+  DialogContent, DialogActions, TextField, Tooltip, InputAdornment,} from "@mui/material";
 
 import { getOffCampuses } from "../api/offCampus";
 import {
@@ -24,6 +24,8 @@ export default function CashBookListPage() {
   const [cashBooks, setCashBooks] = useState<CashBookProps[]>([]);
   const [campuses, setCampuses] = useState<any[]>([]);
   const [selectedCampus, setSelectedCampus] = useState<number | null>(null);
+  const [filteredCashBooks, setFilteredCashBooks] = useState<CashBookProps[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [openDialog, setOpenDialog] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -52,6 +54,17 @@ export default function CashBookListPage() {
   useEffect(() => {
     if (selectedCampus) fetchCashBooks();
   }, [selectedCampus]);
+
+  useEffect(() => {
+    if (!searchTerm) {
+      setFilteredCashBooks(cashBooks);
+    } else {
+      const term = searchTerm.toLowerCase();
+      setFilteredCashBooks(
+        cashBooks.filter((cb) => cb.name.toLowerCase().includes(term))
+      );
+    }
+  }, [searchTerm, cashBooks]);
 
   const fetchCampuses = async () => {
     try {
@@ -137,20 +150,77 @@ export default function CashBookListPage() {
   };
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Card sx={{ borderRadius: 3, boxShadow: 4, p: 2 }}>
-        <Grid container alignItems="center" justifyContent="space-between" sx={{ mb: 2 }} spacing={2}>
-          <Grid size={{ xs: 12, md: 6 }} sx={{ display: "flex", gap: 2, alignItems: "center" }}>
-            <Typography variant="h6" fontWeight={600}>
-              Cash Books
+    <Box sx={{ p: { xs: 1.5, sm: 3 } }}>
+      <Card sx={{ borderRadius: 4, boxShadow: 5, p: { xs: 2, sm: 3 } }}>
+        {/* Row 1: Heading + Search */}
+        <Grid container spacing={2} alignItems="center" justifyContent="center">
+          <Grid size={{ xs: 12, sm:6, md:4 }}>
+            <TextField
+              fullWidth
+              size="small"
+              variant="outlined"
+              placeholder="Search Cash Books..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search sx={{ color: "text.secondary" }} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                backgroundColor: "#fff",
+                borderRadius: 2,
+                boxShadow: 1,
+              }}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm:6, md:8 }} textAlign="center">
+            <Typography
+              variant="h5"
+              sx={{
+                fontWeight: 700,
+                background: "linear-gradient(90deg, #6a11cb 0%, #2575fc 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+              }}
+            >
+              Cash Books – Jamia Mueeniyya
             </Typography>
+          </Grid>
+        </Grid>
+
+        {/* Row 2: Campus selector + Add button */}
+        <Grid
+          container
+          alignItems="center"
+          spacing={1}
+          sx={{ width: { xs: "100%", sm: "auto" } }}
+        >
+          <Grid>
+            <Typography
+              variant="subtitle2"
+              sx={{ fontWeight: 600, color: "text.secondary", mr: 1 }}
+            >
+              Select Campus:
+            </Typography>
+          </Grid>
+          <Grid sx={{ flex: 1 }}>
             <Select
               value={selectedCampus || ""}
-              onChange={e => setSelectedCampus(Number(e.target.value))}
+              onChange={(e) => setSelectedCampus(Number(e.target.value))}
               size="small"
-              sx={{ minWidth: 200, backgroundColor: "white", borderRadius: 2 }}
+              fullWidth
+              sx={{
+                backgroundColor: "#fff",
+                borderRadius: 2,
+                boxShadow: 1,
+                minWidth: 220,
+              }}
             >
-              {campuses.map(campus => (
+              {campuses.map((campus) => (
                 <MenuItem key={campus.id} value={campus.id}>
                   {campus.name}
                 </MenuItem>
@@ -158,64 +228,70 @@ export default function CashBookListPage() {
             </Select>
           </Grid>
 
-          <Grid size={{ xs: "auto" }}>
+          <Grid size={{ xs: 12, sm:'auto' }} textAlign="right">
             <Button
               variant="contained"
               startIcon={<Add />}
               onClick={() => handleOpenDialog()}
               sx={{
-                background: "linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)",
-                color: "white",
-                textTransform: "none",
                 borderRadius: 2,
+                px: 3,
+                py: 1,
+                background: "linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)",
                 "&:hover": { background: "linear-gradient(135deg, #5b0db5 0%, #1f60d6 100%)" },
               }}
             >
-              New Cash Book
+              Cash Book
             </Button>
           </Grid>
         </Grid>
 
-        <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 2 }}>
+        {/* Row 3: Table */}
+        <TableContainer
+          component={Paper}
+          sx={{
+            borderRadius: 3,
+            boxShadow: 3,
+            overflowX: "auto",
+          }}
+        >
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: "#f5f6fa" }}>
-                <TableCell sx={{ fontWeight: 600 }}>Sl. No.</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Cash Book</TableCell>
-                <TableCell sx={{ textAlign: "center", fontWeight: 600 }}>Edit</TableCell>
-                <TableCell sx={{ textAlign: "center", fontWeight: 600 }}>Delete</TableCell>
+              <TableRow sx={{ backgroundColor: "#f8f9fa" }}>
+                <TableCell sx={{ fontWeight: 700 }}>#</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Cash Book Name</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 700 }}>
+                  Edit
+                </TableCell>
+                <TableCell align="center" sx={{ fontWeight: 700 }}>
+                  Delete
+                </TableCell>
               </TableRow>
             </TableHead>
 
             <TableBody>
-              {cashBooks.length > 0 ? (
-                cashBooks.map((cb, index) => (
+              {filteredCashBooks.length > 0 ? (
+                filteredCashBooks.map((cb, index) => (
                   <TableRow
                     key={cb.id}
                     sx={{
                       "&:hover": {
-                        backgroundColor: "#f1f8e9",
+                        backgroundColor: "#f1f8ff",
                         transform: "scale(1.01)",
-                        boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-                        "& .action-icons": { visibility: "visible" }, // show icons on hover
+                        boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                       },
                       transition: "all 0.25s ease-in-out",
-                      height: "50px",
                     }}
                   >
-                    <TableCell
-                      sx={{ fontWeight: 500, color: "#424242", py: 0.8, px: 1.5, width: "60px" }}
-                    >
-                      {index + 1}
-                    </TableCell>
+                    <TableCell>{index + 1}</TableCell>
 
-                    <TableCell sx={{ py: 0.8, px: 1.5 }}>
+                    <TableCell>
                       <Link
                         to={`${getRolePrefix()}/transaction-list/${cb.id}`}
                         style={{
                           textDecoration: "none",
                           color: "#1b5e20",
-                          fontWeight: 700,
+                          fontWeight: 600,
                           fontSize: "1rem",
                         }}
                       >
@@ -223,18 +299,14 @@ export default function CashBookListPage() {
                       </Link>
                     </TableCell>
 
-                    <TableCell align="center" sx={{ py: 0.8, px: 1, width: "60px" }}>
+                    <TableCell align="center">
                       <Tooltip title="Edit Cash Book">
                         <IconButton
-                          onClick={() => handleOpenDialog(cb)}
                           color="primary"
-                          size="small"
-                          className="action-icons"
+                          onClick={() => handleOpenDialog(cb)}
                           sx={{
                             backgroundColor: "#e3f2fd",
                             "&:hover": { backgroundColor: "#bbdefb" },
-                            transition: "0.2s",
-                            visibility: "hidden", // hidden by default
                           }}
                         >
                           <Edit fontSize="small" />
@@ -242,18 +314,14 @@ export default function CashBookListPage() {
                       </Tooltip>
                     </TableCell>
 
-                    <TableCell align="center" sx={{ py: 0.8, px: 1, width: "60px" }}>
+                    <TableCell align="center">
                       <Tooltip title="Delete Cash Book">
                         <IconButton
-                          onClick={() => handleDelete(cb.id!)}
                           color="error"
-                          size="small"
-                          className="action-icons"
+                          onClick={() => handleDelete(cb.id!)}
                           sx={{
                             backgroundColor: "#ffebee",
                             "&:hover": { backgroundColor: "#ffcdd2" },
-                            transition: "0.2s",
-                            visibility: "hidden", // hidden by default
                           }}
                         >
                           <Delete fontSize="small" />
@@ -264,7 +332,7 @@ export default function CashBookListPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={4} align="center" sx={{ py: 3, color: "#757575" }}>
+                  <TableCell colSpan={4} align="center" sx={{ py: 3, color: "#777" }}>
                     No Cash Books found.
                   </TableCell>
                 </TableRow>
@@ -274,7 +342,7 @@ export default function CashBookListPage() {
         </TableContainer>
       </Card>
 
-      {/* Dialog for Create/Edit */}
+      {/* Dialog */}
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)} fullWidth maxWidth="xs">
         <DialogTitle>{editMode ? "Edit Cash Book" : "Add New Cash Book"}</DialogTitle>
         <DialogContent>
@@ -282,7 +350,7 @@ export default function CashBookListPage() {
             fullWidth
             label="Cash Book Name"
             value={cashBookName}
-            onChange={e => setCashBookName(e.target.value)}
+            onChange={(e) => setCashBookName(e.target.value)}
             sx={{ mt: 2 }}
           />
         </DialogContent>
@@ -291,7 +359,10 @@ export default function CashBookListPage() {
           <Button
             onClick={editMode ? handleUpdate : handleCreate}
             variant="contained"
-            sx={{ background: "linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)", color: "white" }}
+            sx={{
+              background: "linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)",
+              color: "white",
+            }}
           >
             {editMode ? "Update" : "Create"}
           </Button>
