@@ -1,4 +1,3 @@
-import { Label } from 'src/components/label';
 import { SvgColor } from 'src/components/svg-color';
 
 // ----------------------------------------------------------------------
@@ -18,9 +17,4 @@ export const StaffNavData = [
     path: '/staff',
     icon: icon('ic-books'),
   },
-  // {
-  //   title: 'Transactions',
-  //   path: '/staff/transaction-list',
-  //   icon: icon('ic-transaction'),
-  // },
 ];
