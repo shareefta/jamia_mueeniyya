@@ -477,125 +477,162 @@ const TransactionList = () => {
     };
 
   return (
-    <Box p={4}>
+    <Box p={3}>
     {loading ? (
       <TransactionSkeleton isMobile={isMobile} />
     ) : (
       <>
-        {/* Header */}
-        <Box display="flex" flexDirection="column" gap={2} mb={3} width="100%">
-          {/* ===== First Row: Campus + Cash Book + Download Buttons ===== */}
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-            flexWrap="wrap"
-            gap={1}
-            width="100%"
-          >
-            {/* Left: Campus + Cash Book */}
-            <Box display="flex" flexWrap="wrap" gap={0.5} alignItems="center">
-              {selectedCashBook ? (
-                <>
-                  <Chip
-                    label={selectedCashBook.campus_name}
-                    color="info"
-                    size="small"
-                    clickable
-                    onClick={() => {
-                      const userRole = localStorage.getItem('userRole');
-                      const prefix = userRole?.toLowerCase() === 'staff' ? '/staff' : '';
-                      navigate(`${prefix}/?campus=${selectedCashBook.campus_id}`);
-                    }}
-                    sx={{ fontWeight: 600, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
-                  />
-                  <Chip
-                    label={selectedCashBook.name}
-                    color="success"
-                    size="small"
-                    sx={{ fontWeight: 600 }}
-                  />
-                </>
-              ) : (
-                filters.cash_book === "All" && (
-                  <Chip
-                    label="All Cash Books"
-                    color="default"
-                    size="small"
-                    sx={{
-                      fontWeight: 600,
-                      bgcolor: "grey.100",
-                      color: "text.primary",
-                    }}
-                  />
-                )
-              )}
-            </Box>
-
-            {/* Right: Download Buttons (icons only) */}
-            <Box display="flex" gap={1}>
-              <ExportReports
-                transactions={computedTxns}
-                filters={filters}
-                openingBalances={openingBalances}
-                cashBooks={cashBooks}
-                displayedOB={displayedOB}
-                campusName={selectedCashBook?.campus_name || "Jamia Mueeniyya"}
-              />
-            </Box>
-          </Box>
-
-          {/* ===== Second Row ===== */}
-          <Box
-            display="flex"
-            flexDirection={{ xs: "column", sm: "row" }}
-            justifyContent={{ xs: "center", sm: "space-between" }}
-            alignItems={{ xs: "center", sm: "center" }}
-            gap={2}
-            width="100%"
-          >
-            {/* Left side (Transactions + Date Range) */}
+        <Box
+          sx={{
+            position: { xs: "sticky", sm: "static" }, // sticky only on mobile
+            top: 0,
+            zIndex: 10,
+            backgroundColor: "background.paper",
+            boxShadow: { xs: 1, sm: "none" },
+            pb: { xs: 1, sm: 0 },
+          }}
+        >
+          {/* Header */}
+          <Box display="flex" flexDirection="column" gap={2} mb={3} width="100%">
+            {/* ===== First Row: Campus + Cash Book + Download Buttons ===== */}
             <Box
               display="flex"
-              flexDirection="row"
-              gap={1}
+              justifyContent="space-between"
               alignItems="center"
-              justifyContent={{ xs: "center", sm: "flex-start" }}
               flexWrap="wrap"
+              gap={1}
+              width="100%"
             >
-              <Typography variant="h4" fontWeight="bold">
-                Transactions
-              </Typography>
+              {/* Left: Campus + Cash Book */}
+              <Box display="flex" flexWrap="wrap" gap={0.5} alignItems="center">
+                {selectedCashBook ? (
+                  <>
+                    <Chip
+                      label={selectedCashBook.campus_name}
+                      color="info"
+                      size="small"
+                      clickable
+                      onClick={() => {
+                        const userRole = localStorage.getItem('userRole');
+                        const prefix = userRole?.toLowerCase() === 'staff' ? '/staff' : '';
+                        navigate(`${prefix}/?campus=${selectedCashBook.campus_id}`);
+                      }}
+                      sx={{ fontWeight: 600, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
+                    />
+                    <Chip
+                      label={selectedCashBook.name}
+                      color="success"
+                      size="small"
+                      sx={{ fontWeight: 600 }}
+                    />
+                  </>
+                ) : (
+                  filters.cash_book === "All" && (
+                    <Chip
+                      label="All Cash Books"
+                      color="default"
+                      size="small"
+                      sx={{
+                        fontWeight: 600,
+                        bgcolor: "grey.100",
+                        color: "text.primary",
+                      }}
+                    />
+                  )
+                )}
+              </Box>
 
-              {selectedDateLabel && (
-                <Box
-                  onClick={() => setOpenCustomDate(true)}
-                  sx={{
-                    px: 2,
-                    py: 0.5,
-                    borderRadius: "16px",
-                    backgroundColor: "primary.light",
-                    color: "primary.contrastText",
-                    fontSize: "0.875rem",
-                    fontWeight: 500,
-                    cursor: "pointer",
-                    "&:hover": { backgroundColor: "primary.main", color: "white" },
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {selectedDateLabel()}
-                </Box>
-              )}
+              {/* Right: Download Buttons (icons only) */}
+              <Box display="flex" gap={1}>
+                <ExportReports
+                  transactions={computedTxns}
+                  filters={filters}
+                  openingBalances={openingBalances}
+                  cashBooks={cashBooks}
+                  displayedOB={displayedOB}
+                  campusName={selectedCashBook?.campus_name || "Jamia Mueeniyya"}
+                />
+              </Box>
             </Box>
 
-            {/* Right side (Cash In / Out) - shown only on desktop */}
-            <Box display={{ xs: "none", sm: "flex" }} gap={1}>
+            {/* ===== Second Row ===== */}
+            <Box
+              display="flex"
+              flexDirection={{ xs: "column", sm: "row" }}
+              justifyContent={{ xs: "center", sm: "space-between" }}
+              alignItems={{ xs: "center", sm: "center" }}
+              gap={2}
+              width="100%"
+            >
+              {/* Left side (Transactions + Date Range) */}
+              <Box
+                display="flex"
+                flexDirection="row"
+                gap={1}
+                alignItems="center"
+                justifyContent={{ xs: "center", sm: "flex-start" }}
+                flexWrap="wrap"
+              >
+                <Typography variant="h4" fontWeight="bold">
+                  Transactions
+                </Typography>
+
+                {selectedDateLabel && (
+                  <Box
+                    onClick={() => setOpenCustomDate(true)}
+                    sx={{
+                      px: 2,
+                      py: 0.5,
+                      borderRadius: "16px",
+                      backgroundColor: "primary.light",
+                      color: "primary.contrastText",
+                      fontSize: "0.875rem",
+                      fontWeight: 500,
+                      cursor: "pointer",
+                      "&:hover": { backgroundColor: "primary.main", color: "white" },
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {selectedDateLabel()}
+                  </Box>
+                )}
+              </Box>
+
+              {/* Right side (Cash In / Out) - shown only on desktop */}
+              <Box display={{ xs: "none", sm: "flex" }} gap={1}>
+                <Button
+                  variant="contained"
+                  color="success"
+                  onClick={() => handleClickOpen("IN")}
+                  startIcon={<Add />}
+                  sx={{ fontSize: "1rem" }}
+                >
+                  Cash In
+                </Button>
+
+                <Button
+                  variant="contained"
+                  color="error"
+                  onClick={() => handleClickOpen("OUT")}
+                  startIcon={<Add />}
+                  sx={{ fontSize: "1rem" }}
+                >
+                  Cash Out
+                </Button>
+              </Box>
+            </Box>
+
+            {/* ===== Third Row (mobile only): Cash In / Out ===== */}
+            <Box display={{ xs: "flex", sm: "none" }} gap={1} justifyContent="center" width="100%">
               <Button
                 variant="contained"
                 color="success"
                 onClick={() => handleClickOpen("IN")}
                 startIcon={<Add />}
-                sx={{ fontSize: "1rem" }}
+                sx={{
+                  flex: 1,
+                  fontSize: "0.9rem",
+                }}
               >
                 Cash In
               </Button>
@@ -605,40 +642,14 @@ const TransactionList = () => {
                 color="error"
                 onClick={() => handleClickOpen("OUT")}
                 startIcon={<Add />}
-                sx={{ fontSize: "1rem" }}
+                sx={{
+                  flex: 1,
+                  fontSize: "0.9rem",
+                }}
               >
                 Cash Out
               </Button>
             </Box>
-          </Box>
-
-          {/* ===== Third Row (mobile only): Cash In / Out ===== */}
-          <Box display={{ xs: "flex", sm: "none" }} gap={1} justifyContent="center" width="100%">
-            <Button
-              variant="contained"
-              color="success"
-              onClick={() => handleClickOpen("IN")}
-              startIcon={<Add />}
-              sx={{
-                flex: 1,
-                fontSize: "0.9rem",
-              }}
-            >
-              Cash In
-            </Button>
-
-            <Button
-              variant="contained"
-              color="error"
-              onClick={() => handleClickOpen("OUT")}
-              startIcon={<Add />}
-              sx={{
-                flex: 1,
-                fontSize: "0.9rem",
-              }}
-            >
-              Cash Out
-            </Button>
           </Box>
         </Box>
 
@@ -675,7 +686,7 @@ const TransactionList = () => {
                           onChange={(e) => {
                             if (e.target.value === "Custom") {
                               setOpenCustomDate(true);
-                              return; // just stop execution, not return a value
+                              return;
                             }
                             handleFilterChange("dateRange", e.target.value);
                           }}
@@ -1292,130 +1303,208 @@ const TransactionList = () => {
 
         {/* Transaction Dialog */}
         <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-          <DialogTitle>{transactionType === "IN" ? "Add Cash In" : "Add Cash Out"}</DialogTitle>
-          <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
-            <TextField
-              label="Date"
-              name="date"
-              type="date"
-              value={formData.date}
-              onChange={handleChange}
-              InputLabelProps={{ shrink: true }}
-              inputProps={{
-                min: user?.role?.toLowerCase() === "staff" ? dayjs().format("YYYY-MM-DD") : undefined,
-              }}
-            />
-            <TextField
-              label="Time"
-              name="time"
-              type="time"
-              value={formData.time}
-              onChange={handleChange}
-              InputLabelProps={{ shrink: true }}
-            />
-            <TextField
-              label="Amount"
-              name="amount"
-              type="number"
-              value={formData.amount}
-              onChange={handleChange}
-              required
-            />
-            <TextField
-              label="Remarks"
-              name="remarks"
-              multiline
-              rows={2}
-              value={formData.remarks}
-              onChange={handleChange}
-              required
-            />
-            <TextField
-              label="Party Name"
-              name="party_name"
-              value={formData.party_name}
-              onChange={handleChange}
-            />
-            <TextField
-              label="Mobile Number"
-              name="party_mobile_number"
-              value={formData.party_mobile_number}
-              onChange={handleChange}
-            />
-            
-            <TextField
-              select
-              label="Category"
-              name="category"
-              required
-              value={formData.category}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (value === "__new__") {
-                  setAddCatOpen(true);
-                  return;
-                }
-                setFormData((prev) => ({ ...prev, category: value }));
-              }}
-            >
-              {categories
-                .filter(cat => {
-                  // Case 1: No cash books linked → show in all cash books
-                  if (!cat.cash_books || cat.cash_books.length === 0) return true;
+          <DialogTitle
+            sx={{
+              fontWeight: 700,
+              textAlign: "center",
+              bgcolor: "primary.main",
+              color: "white",
+              py: 1.5,
+            }}
+          >
+            {transactionType === "IN" ? "💰 Add Cash In" : "💸 Add Cash Out"}
+          </DialogTitle>
 
-                  // Case 2: Linked → show only if current cash book is linked
-                  if (selectedCashBook) {
-                    return cat.cash_books.includes(selectedCashBook.id);
-                  }
+          <DialogContent
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+              mt: 2,
+              pb: 1,
+            }}
+          >
+            <Grid container spacing={2}>
+              {/* Date + Time */}
+              <Grid size={{ xs: 6, sm: 6}}>
+                <TextField
+                  fullWidth
+                  label="Date"
+                  name="date"
+                  type="date"
+                  value={formData.date}
+                  onChange={handleChange}
+                  InputLabelProps={{ shrink: true }}
+                  inputProps={{
+                    min:
+                      user?.role?.toLowerCase() === "staff"
+                        ? dayjs().format("YYYY-MM-DD")
+                        : undefined,
+                  }}
+                />
+              </Grid>
+              <Grid size={{ xs: 6, sm: 6}}>
+                <TextField
+                  fullWidth
+                  label="Time"
+                  name="time"
+                  type="time"
+                  value={formData.time}
+                  onChange={handleChange}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
 
-                  // Case 3: No cash book selected (e.g. "All" view)
-                  return true;
-                })
-                .map(cat => (
-                  <MenuItem key={cat.id} value={cat.id}>
-                    {cat.name}
+              {/* Amount */}
+              <Grid size={{ xs: 12}}>
+                <TextField
+                  fullWidth
+                  label="Amount"
+                  name="amount"
+                  type="number"
+                  value={formData.amount}
+                  onChange={handleChange}
+                  required
+                />
+              </Grid>
+
+              {/* Remarks */}
+              <Grid size={{ xs: 12}}>
+                <TextField
+                  fullWidth
+                  label="Remarks"
+                  name="remarks"
+                  multiline
+                  rows={2}
+                  value={formData.remarks}
+                  onChange={handleChange}
+                  required
+                />
+              </Grid>
+
+              {/* Party Info */}
+              <Grid size={{ xs: 12, sm: 6}}>
+                <TextField
+                  fullWidth
+                  label="Party Name"
+                  name="party_name"
+                  value={formData.party_name}
+                  onChange={handleChange}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6}}>
+                <TextField
+                  fullWidth
+                  label="Mobile Number"
+                  name="party_mobile_number"
+                  value={formData.party_mobile_number}
+                  onChange={handleChange}
+                />
+              </Grid>
+
+              {/* Category + Payment Mode + Cash Book */}
+              <Grid size={{ xs: 4, sm: 4}}>
+                <TextField
+                  select
+                  fullWidth
+                  label="Category"
+                  name="category"
+                  required
+                  value={formData.category}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === "__new__") {
+                      setAddCatOpen(true);
+                      return;
+                    }
+                    setFormData((prev) => ({ ...prev, category: value }));
+                  }}
+                >
+                  {categories
+                    .filter((cat) => {
+                      if (!cat.cash_books || cat.cash_books.length === 0) return true;
+                      if (selectedCashBook)
+                        return cat.cash_books.includes(selectedCashBook.id);
+                      return true;
+                    })
+                    .map((cat) => (
+                      <MenuItem key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </MenuItem>
+                    ))}
+
+                  <MenuItem
+                    value="__new__"
+                    sx={{ fontStyle: "italic", color: "primary.main" }}
+                  >
+                    + New Category
                   </MenuItem>
-                ))}
+                </TextField>
+              </Grid>
 
-              <MenuItem
-                value="__new__"
-                sx={{ fontStyle: "italic", color: "primary.main" }}
-              >
-                + New Category
-              </MenuItem>
-            </TextField>
+              <Grid size={{ xs: 4, sm: 4}}>
+                <TextField
+                  select
+                  fullWidth
+                  label="Payment Mode"
+                  name="payment_mode"
+                  value={formData.payment_mode}
+                  onChange={handleChange}
+                >
+                  {paymentModes.map((mode) => (
+                    <MenuItem key={mode.id} value={mode.id}>
+                      {mode.name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
 
-            <TextField
-              select
-              label="Payment Mode"
-              name="payment_mode"
-              value={formData.payment_mode}
-              onChange={handleChange}
-            >
-              {paymentModes.map((mode) => (
-                <MenuItem key={mode.id} value={mode.id}>{mode.name}</MenuItem>
-              ))}
-            </TextField>
-
-            {!cashBookId && (
-              <TextField
-                select
-                label="Cash Book"
-                name="cash_book"
-                value={formData.cash_book}
-                onChange={handleChange}
-              >
-                {cashBooks.map((book) => (
-                  <MenuItem key={book.id} value={book.id}>{book.name}</MenuItem>
-                ))}
-              </TextField>
-            )}
+              {!cashBookId && (
+                <Grid size={{ xs: 4, sm: 4}}>
+                  <TextField
+                    select
+                    fullWidth
+                    label="Cash Book"
+                    name="cash_book"
+                    value={formData.cash_book}
+                    onChange={handleChange}
+                  >
+                    {cashBooks.map((book) => (
+                      <MenuItem key={book.id} value={book.id}>
+                        {book.name}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Grid>
+              )}
+            </Grid>
           </DialogContent>
 
-          <DialogActions>
-            <Button onClick={() => handleSave(false)} variant="contained">Save</Button>
-            <Button onClick={() => handleSave(true)} variant="outlined">Save & Add More</Button>
-            <Button onClick={handleClose}>Cancel</Button>
+          <DialogActions
+            sx={{
+              justifyContent: "center",
+              gap: 2,
+              pb: 2,
+            }}
+          >
+            <Button
+              onClick={() => handleSave(false)}
+              variant="contained"
+              color="primary"
+              sx={{ px: 3, fontWeight: 600 }}
+            >
+              Save
+            </Button>
+            <Button
+              onClick={() => handleSave(true)}
+              variant="outlined"
+              sx={{ px: 3, fontWeight: 600 }}
+            >
+              Save & Add More
+            </Button>
+            <Button onClick={handleClose} color="inherit">
+              Cancel
+            </Button>
           </DialogActions>
         </Dialog>
 
