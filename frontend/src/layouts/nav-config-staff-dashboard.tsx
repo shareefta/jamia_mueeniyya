@@ -14,18 +14,13 @@ export type StaffNavItem = {
 
 export const StaffNavData = [
   {
-    title: 'Dashboard',
-    path: '/staff',
-    icon: icon('ic-analytics'),
-  },
-  {
-    title: 'Transactions',
-    path: '/staff/transaction-list',
-    icon: icon('ic-transaction'),
-  },
-  {
     title: 'Cash Books',
-    path: '/staff/cash-books',
+    path: '/',
     icon: icon('ic-books'),
   },
+  // {
+  //   title: 'Transactions',
+  //   path: '/staff/transaction-list',
+  //   icon: icon('ic-transaction'),
+  // },
 ];

@@ -14,19 +14,14 @@ export type NavItem = {
 
 export const navData: NavItem[] = [
   {
-    title: 'Dashboard',
+    title: 'Cash Books',
     path: '/',
-    icon: icon('ic-analytics'),
+    icon: icon('ic-books'),
   },
   {
     title: 'Transactions',
     path: '/transaction-list',
     icon: icon('ic-transaction'),
-  },
-  {
-    title: 'Cash Books',
-    path: '/cash-books',
-    icon: icon('ic-books'),
   },
   {
     title: 'Settings',

@@ -15,11 +15,11 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 // ----------------------------------------------------------------------
 
-export const DashboardPage = lazy(() => import('src/pages/dashboard'));
-export const StaffDashboardPage = lazy( () => import ('src/pages/dashboard-staff'))
 export const SignInPage = lazy(() => import('src/pages/sign-in'));
 
 export const TransactionListPage = lazy(() => import('src/pages/transaction-list'));
+export const CashBookPage = lazy(() => import('src/pages/settings/cash-book'));
+export const CashBookListsPage = lazy(() => import('src/pages//cash-book-lists'));
 
 export const SettingsView = lazy(() => import('src/pages/settings'));
 export const SettingsLayout = lazy(() => import('src/pages/settings/settings-layout'));
@@ -29,10 +29,6 @@ export const UsersPage = lazy(() => import('src/pages/settings/users'));
 export const PaymentModesPage = lazy(() => import('src/pages/settings/payment-modes'));
 export const CategoriesPage = lazy(() => import('src/pages/settings/categories'));
 export const OpeningBalancesPage = lazy(() => import('src/pages/settings/opening-balances'));
-export const CashBookPage = lazy(() => import('src/pages/settings/cash-book'));
-export const CashBookListsPage = lazy(() => import('src/pages//cash-book-lists'));
-export const ReportsGeneratorPage = lazy(() => import('src/pages/reports-generator'));
-
 
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
 
@@ -68,11 +64,9 @@ export const routesSection: RouteObject[] = [
       </ProtectedRoute>
     ),
     children: [
-      { index: true, element: <DashboardPage /> },
+      { index: true, element: <CashBookListsPage /> },
       { path: 'transaction-list', element: <TransactionListPage /> },
       { path: 'transaction-list/:cashBookId', element: <TransactionListPage /> },
-      { path: 'cash-books', element: <CashBookListsPage /> },
-      { path: 'reports-generator', element: <ReportsGeneratorPage /> },
       {
         path: 'settings',
         element: <SettingsLayout />,
@@ -100,11 +94,9 @@ export const routesSection: RouteObject[] = [
       </ProtectedRoute>
     ),
     children: [
-      { index: true, element: <StaffDashboardPage /> },
+      { index: true, element: <CashBookListsPage /> },
       { path: 'transaction-list', element: <TransactionListPage /> },
       { path: 'transaction-list/:cashBookId', element: <TransactionListPage /> },
-      { path: 'cash-books', element: <CashBookListsPage /> },
-      { path: 'reports-generator', element: <ReportsGeneratorPage /> },
     ],
   },
   {
