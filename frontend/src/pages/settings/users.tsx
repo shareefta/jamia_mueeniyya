@@ -193,14 +193,14 @@ export default function UsersPage() {
 
             <Grid size={{ xs: 6, sm: 6, md:4 }}>
               <FormControl fullWidth size="small">
-                <InputLabel>Off Campuses</InputLabel>
+                <InputLabel>Sections</InputLabel>
                 <Select
                   multiple
                   value={newUserOffCampuses}
                   onChange={(e) =>
                     setNewUserOffCampuses(e.target.value as number[])
                   }
-                  input={<OutlinedInput label="Off Campuses" />}
+                  input={<OutlinedInput label="Sections" />}
                   renderValue={(selected) =>
                     offCampuses
                       .filter((oc) => selected.includes(oc.id))
@@ -274,7 +274,7 @@ export default function UsersPage() {
                 "Mobile",
                 "Email",
                 "Role",
-                "Off Campuses",
+                "Sections",
                 "Password",
                 "Active",
                 "Actions",
@@ -379,9 +379,9 @@ export default function UsersPage() {
                             setEditingUserOffCampuses(value);
                           }
                         }}
-                        input={<OutlinedInput label="Off Campuses" />}
+                        input={<OutlinedInput label="Sections" />}
                         renderValue={(selected) => {
-                          if (selected.length === offCampuses.length) return "All Campuses";
+                          if (selected.length === offCampuses.length) return "All Sections";
                           return offCampuses
                             .filter((oc) => selected.includes(oc.id))
                             .map((oc) => oc.name)
@@ -408,7 +408,7 @@ export default function UsersPage() {
                               editingUserOffCampuses.length < offCampuses.length
                             }
                           />
-                          <ListItemText primary="All Campuses" />
+                          <ListItemText primary="All Sections" />
                         </MenuItem>
 
                         {/* Regular Off-Campuses */}

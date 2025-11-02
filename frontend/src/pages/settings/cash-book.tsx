@@ -150,7 +150,7 @@ export default function CashBooksPage() {
         >
           <TextField
             select
-            label="Campus Name"
+            label="Section Name"
             value={offCampus}
             onChange={(e) => setOffCampus(e.target.value)}
             size="small"
@@ -184,7 +184,7 @@ export default function CashBooksPage() {
           <TableHead>
             <TableRow>
               <TableCell sx={{ textAlign: "center" }}>SL. No.</TableCell>
-              <TableCell sx={{ textAlign: "center" }}>Campus Name</TableCell>
+              <TableCell sx={{ textAlign: "center" }}>Section Name</TableCell>
               <TableCell sx={{ textAlign: "center" }}>Cash Book Name</TableCell>
               <TableCell sx={{ textAlign: "center" }}>Actions</TableCell>
             </TableRow>

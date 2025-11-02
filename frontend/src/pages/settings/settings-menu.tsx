@@ -18,7 +18,7 @@ export default function SettingsMenuPage() {
 
   const menus = [
     { title: 'Users', path: 'users', icon: <PeopleIcon />, gradient: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)' },
-    { title: 'Campus', path: 'off-campus', icon: <BusinessIcon />, gradient: 'linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%)' },
+    { title: 'Sections', path: 'off-campus', icon: <BusinessIcon />, gradient: 'linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%)' },
     { title: 'Cash Books', path: 'manage-cash-books', icon: <AccountBalanceIcon />, gradient: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)' },
     { title: 'Categories', path: 'categories', icon: <CategoryIcon />, gradient: 'linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)' },
     { title: 'Opening Balances', path: 'opening-balances', icon: <AccountBalanceWalletIcon />, gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' },
@@ -28,7 +28,7 @@ export default function SettingsMenuPage() {
   return (
     <Grid container spacing={4} sx={{ mt: 2 }}>
       {menus.map((menu) => (
-        <Grid size={{ xs: 12, sm: 6, md: 4 }} key={menu.title}>
+        <Grid size={{ xs: 6, sm: 6, md: 4 }} key={menu.title}>
           <Card
             sx={{
               borderRadius: 3,

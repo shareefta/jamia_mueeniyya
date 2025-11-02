@@ -175,7 +175,7 @@ export default function CashBookListPage() {
           />
         </Box>
         
-        {/* Header with Campus Name and Dropdown */}
+        {/* Header with Section Name and Dropdown */}
         <Box
           display="flex"
           justifyContent="center"

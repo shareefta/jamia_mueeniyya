@@ -51,7 +51,7 @@ export default function OffCampusPage() {
       const offCampusData = await getOffCampuses();
       setOffCampuses(offCampusData);
     } catch {
-      enqueueSnackbar("Failed to fetch off-campuses", { variant: "error" });
+      enqueueSnackbar("Failed to fetch Section", { variant: "error" });
     }
   };
 
@@ -80,14 +80,14 @@ export default function OffCampusPage() {
         contact_number: newOffCampusContactNumber,
         email: newOffCampusEmail,
       });
-      enqueueSnackbar("Off-campus added successfully!", { variant: "success" });
+      enqueueSnackbar("Section added successfully!", { variant: "success" });
       // reset
       setNewOffCampusName("");
       setNewOffCampusAddress("");
       setNewOffCampusContactNumber("");
       setNewOffCampusEmail("");
     } catch {
-      enqueueSnackbar("Failed to add off-campus", { variant: "error" });
+      enqueueSnackbar("Failed to add Section", { variant: "error" });
     }
   };
 
@@ -103,25 +103,25 @@ export default function OffCampusPage() {
         contact_number: editingOffCampusContactNumber,
         email: editingOffCampusEmail,
       });
-      enqueueSnackbar("Off-campus updated successfully!", { variant: "success" });
+      enqueueSnackbar("Section updated successfully!", { variant: "success" });
       setEditingId(null);
       setEditingOffCampusName("");
       setEditingOffCampusAddress("");
       setEditingOffCampusContactNumber("");
       setEditingOffCampusEmail("");
     } catch {
-      enqueueSnackbar("Failed to update off-campus", { variant: "error" });
+      enqueueSnackbar("Failed to update Section", { variant: "error" });
     }
   }; 
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm("Are you sure you want to delete this Off-Campus?")) return;
+    if (!window.confirm("Are you sure you want to delete this Section?")) return;
     try {
       await deleteOffCampus(id);
-      enqueueSnackbar("Off-Campus deleted successfully!", { variant: "success" });
+      enqueueSnackbar("Section deleted successfully!", { variant: "success" });
       fetchOffCampuses();
     } catch {
-      enqueueSnackbar("Failed to delete Off-Campus", { variant: "error" });
+      enqueueSnackbar("Failed to delete Sections", { variant: "error" });
     }
   };
 
@@ -132,11 +132,11 @@ export default function OffCampusPage() {
         <Link component="button" onClick={() => navigate("/settings")}>
           Settings
         </Link>
-        <Typography>Off-Campus</Typography>
+        <Typography>Sections</Typography>
       </Breadcrumbs>
 
       <Typography variant="h6" gutterBottom>
-        Off-Campus
+        Sections
       </Typography>
       
       <Box sx={{ maxWidth: 1400, mb: 3 }}>
@@ -153,7 +153,7 @@ export default function OffCampusPage() {
           }}
         >
           <TextField
-            label="Off-Campus Name"
+            label="Section Name"
             value={newOffCampusName}
             onChange={(e) => setNewOffCampusName(e.target.value)}
             size="small"
@@ -181,7 +181,7 @@ export default function OffCampusPage() {
             sx={{ backgroundColor: "white" }}
           />          
           <Button variant="contained" onClick={handleAdd}>
-            Add Off-Campus
+            Add Section
           </Button>
         </Box>
       </Box>
@@ -192,7 +192,7 @@ export default function OffCampusPage() {
           <TableHead>
             <TableRow>
               <TableCell sx={{ textAlign: "center" }}>SL No</TableCell>
-              <TableCell sx={{ textAlign: "center" }}>Off-Campus Name</TableCell>
+              <TableCell sx={{ textAlign: "center" }}>Section Name</TableCell>
               <TableCell sx={{ textAlign: "center" }}>Address</TableCell>
               <TableCell sx={{ textAlign: "center" }}>Contact Number</TableCell>
               <TableCell sx={{ textAlign: "center" }}>Email</TableCell>
