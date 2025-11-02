@@ -149,104 +149,70 @@ export default function CashBookListPage() {
     setOpenDialog(true);
   };
 
+  const selectedCampusName =
+    campuses.find((c) => c.id === selectedCampus)?.name || "Campus";
+
   return (
     <Box sx={{ p: { xs: 1.5, sm: 3 } }}>
       <Card sx={{ borderRadius: 4, boxShadow: 5, p: { xs: 2, sm: 3 } }}>
-        {/* Row 1: Heading + Search */}
-        <Grid container spacing={2} alignItems="center" justifyContent="center">
-          <Grid size={{ xs: 12, sm:6, md:4 }}>
-            <TextField
-              fullWidth
-              size="small"
-              variant="outlined"
-              placeholder="Search Cash Books..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search sx={{ color: "text.secondary" }} />
-                  </InputAdornment>
-                ),
-              }}
-              sx={{
-                backgroundColor: "#fff",
-                borderRadius: 2,
-                boxShadow: 1,
-              }}
-            />
-          </Grid>
-
-          <Grid size={{ xs: 12, sm:6, md:8 }} textAlign="center">
-            <Typography
-              variant="h5"
-              sx={{
-                fontWeight: 700,
-                background: "linear-gradient(90deg, #6a11cb 0%, #2575fc 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}
-            >
-              Cash Books – Jamia Mueeniyya
-            </Typography>
-          </Grid>
-        </Grid>
-
-        {/* Row 2: Campus selector + Add button */}
-        <Grid
-          container
+        {/* Search Bar */}
+        <Box sx={{ mb: 2, maxWidth: 350 }}>
+          <TextField
+            fullWidth
+            size="small"
+            variant="outlined"
+            placeholder="Search Cash Books..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search sx={{ color: "text.secondary" }} />
+                </InputAdornment>
+              ),
+            }}
+            sx={{ backgroundColor: "#fff", borderRadius: 2, boxShadow: 1 }}
+          />
+        </Box>
+        
+        {/* Header with Campus Name and Dropdown */}
+        <Box
+          display="flex"
+          justifyContent="center"
           alignItems="center"
-          spacing={1}
-          sx={{ width: { xs: "100%", sm: "auto" } }}
+          flexWrap="wrap"
+          mb={2}
         >
-          <Grid>
-            <Typography
-              variant="subtitle2"
-              sx={{ fontWeight: 600, color: "text.secondary", mr: 1 }}
-            >
-              Select Campus:
-            </Typography>
-          </Grid>
-          <Grid sx={{ flex: 1 }}>
-            <Select
-              value={selectedCampus || ""}
-              onChange={(e) => setSelectedCampus(Number(e.target.value))}
-              size="small"
-              fullWidth
-              sx={{
-                backgroundColor: "#fff",
-                borderRadius: 2,
-                boxShadow: 1,
-                minWidth: 220,
-              }}
-            >
-              {campuses.map((campus) => (
-                <MenuItem key={campus.id} value={campus.id}>
-                  {campus.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </Grid>
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: 700,
+              mr: 1,
+            }}
+          >
+            Cash Books –
+          </Typography>
+          <Select
+            value={selectedCampus || ""}
+            onChange={(e) => setSelectedCampus(Number(e.target.value))}
+            size="small"
+            sx={{
+              backgroundColor: "#fff",
+              borderRadius: 2,
+              boxShadow: 1,
+              minWidth: 180,
+              fontWeight: 600,
+            }}
+          >
+            {campuses.map((campus) => (
+              <MenuItem key={campus.id} value={campus.id}>
+                {campus.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </Box>
 
-          <Grid size={{ xs: 12, sm:'auto' }} textAlign="right">
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={() => handleOpenDialog()}
-              sx={{
-                borderRadius: 2,
-                px: 3,
-                py: 1,
-                background: "linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)",
-                "&:hover": { background: "linear-gradient(135deg, #5b0db5 0%, #1f60d6 100%)" },
-              }}
-            >
-              Cash Book
-            </Button>
-          </Grid>
-        </Grid>
-
-        {/* Row 3: Table */}
+        {/* Table (without head row) */}
         <TableContainer
           component={Paper}
           sx={{
@@ -256,19 +222,6 @@ export default function CashBookListPage() {
           }}
         >
           <Table>
-            <TableHead>
-              <TableRow sx={{ backgroundColor: "#f8f9fa" }}>
-                <TableCell sx={{ fontWeight: 700 }}>#</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Cash Book Name</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 700 }}>
-                  Edit
-                </TableCell>
-                <TableCell align="center" sx={{ fontWeight: 700 }}>
-                  Delete
-                </TableCell>
-              </TableRow>
-            </TableHead>
-
             <TableBody>
               {filteredCashBooks.length > 0 ? (
                 filteredCashBooks.map((cb, index) => (
@@ -277,62 +230,82 @@ export default function CashBookListPage() {
                     sx={{
                       "&:hover": {
                         backgroundColor: "#f1f8ff",
-                        transform: "scale(1.01)",
-                        boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                       },
-                      transition: "all 0.25s ease-in-out",
+                      transition: "all 0.2s ease-in-out",
                     }}
                   >
-                    <TableCell>{index + 1}</TableCell>
+                    <TableCell sx={{ width: 50, fontWeight: 600 }}>
+                      {index + 1}
+                    </TableCell>
 
-                    <TableCell>
-                      <Link
-                        to={`${getRolePrefix()}/transaction-list/${cb.id}`}
-                        style={{
-                          textDecoration: "none",
-                          color: "#1b5e20",
-                          fontWeight: 600,
-                          fontSize: "1rem",
+                    <TableCell
+                      sx={{
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        fontWeight: 600,
+                        position: "relative",
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
                         }}
                       >
-                        {cb.name}
-                      </Link>
-                    </TableCell>
-
-                    <TableCell align="center">
-                      <Tooltip title="Edit Cash Book">
-                        <IconButton
-                          color="primary"
-                          onClick={() => handleOpenDialog(cb)}
-                          sx={{
-                            backgroundColor: "#e3f2fd",
-                            "&:hover": { backgroundColor: "#bbdefb" },
+                        <Link
+                          to={`${getRolePrefix()}/transaction-list/${cb.id}`}
+                          style={{
+                            textDecoration: "none",
+                            color: "#1b5e20",
+                            fontWeight: 600,
                           }}
                         >
-                          <Edit fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
+                          {cb.name}
+                        </Link>
 
-                    <TableCell align="center">
-                      <Tooltip title="Delete Cash Book">
-                        <IconButton
-                          color="error"
-                          onClick={() => handleDelete(cb.id!)}
+                        {/* Edit/Delete appear only on hover */}
+                        <Box
                           sx={{
-                            backgroundColor: "#ffebee",
-                            "&:hover": { backgroundColor: "#ffcdd2" },
+                            opacity: 0,
+                            transition: "opacity 0.2s ease-in-out",
+                            "&:hover": { opacity: 1 },
+                            ml: 2,
                           }}
                         >
-                          <Delete fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
+                          <Tooltip title="Edit">
+                            <IconButton
+                              color="primary"
+                              size="small"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleOpenDialog(cb);
+                              }}
+                            >
+                              <Edit fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Delete">
+                            <IconButton
+                              color="error"
+                              size="small"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleDelete(cb.id!);
+                              }}
+                            >
+                              <Delete fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
+                      </Box>
                     </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={4} align="center" sx={{ py: 3, color: "#777" }}>
+                  <TableCell colSpan={2} align="center" sx={{ py: 3, color: "#777" }}>
                     No Cash Books found.
                   </TableCell>
                 </TableRow>
@@ -340,6 +313,26 @@ export default function CashBookListPage() {
             </TableBody>
           </Table>
         </TableContainer>
+
+        {/* + Cash Book Button (Bottom Right) */}
+        <Box textAlign="right" mt={2}>
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={() => handleOpenDialog()}
+            sx={{
+              borderRadius: 2,
+              px: 3,
+              py: 1,
+              background: "linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)",
+              "&:hover": {
+                background: "linear-gradient(135deg, #5b0db5 0%, #1f60d6 100%)",
+              },
+            }}
+          >
+            Cash Book
+          </Button>
+        </Box>
       </Card>
 
       {/* Dialog */}

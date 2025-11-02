@@ -30,6 +30,8 @@ import { useSearchStore } from 'src/store/use-search-store';
 import { getOpeningBalances } from "src/api/opening-balances"
 import { getCategories, createCategory } from "src/api/categories";
 
+import TransactionSkeleton from "src/components/skeleton/transaction-skeleton";
+
 import ExportReports from "./export-reports";
 import { createTransaction, getTransactions, updateTransaction, deleteTransaction, TransactionProps } from "../api/transactions";
 
@@ -40,6 +42,7 @@ const TransactionList = () => {
   const { enqueueSnackbar } = useSnackbar();
   const [transactions, setTransactions] = useState<any[]>([]);
   const [filtered, setFiltered] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     dateRange: "All",
     type: "All",
@@ -117,7 +120,8 @@ const TransactionList = () => {
 
   // Fetch data
   useEffect(() => {
-    (async () => {
+    const fetchData = async () => {
+      setLoading(true);
       try {
         const [txns, cats, modes, books, usrs, obs] = await Promise.all([
           getTransactions(),
@@ -127,6 +131,7 @@ const TransactionList = () => {
           getUsers(),
           getOpeningBalances(),
         ]);
+
         setTransactions(txns);
         setFiltered(txns);
         setCategories(cats);
@@ -136,8 +141,12 @@ const TransactionList = () => {
         setOpeningBalances(obs);
       } catch (err) {
         enqueueSnackbar("Failed to fetch data", { variant: "error" });
+      } finally {
+        setTimeout(() => setLoading(false), 400);
       }
-    })();
+    };
+
+    fetchData();
   }, []);
 
   // Filters
@@ -469,1204 +478,1211 @@ const TransactionList = () => {
 
   return (
     <Box p={4}>
-      {/* Header */}
-      <Box display="flex" flexDirection="column" gap={2} mb={3} width="100%">
-        {/* ===== First Row: Campus + Cash Book + Download Buttons ===== */}
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          flexWrap="wrap"
-          gap={1}
-          width="100%"
-        >
-          {/* Left: Campus + Cash Book */}
-          <Box display="flex" flexWrap="wrap" gap={0.5} alignItems="center">
-            {selectedCashBook ? (
-              <>
-                <Chip
-                  label={selectedCashBook.campus_name}
-                  color="info"
-                  size="small"
-                  clickable
-                  onClick={() => {
-                    const userRole = localStorage.getItem('userRole');
-                    const prefix = userRole?.toLowerCase() === 'staff' ? '/staff' : '';
-                    navigate(`${prefix}/cash-books?campus=${selectedCashBook.campus_id}`);
-                    // navigate(`/cash-books?campus=${selectedCashBook.campus_id}`)
-                  }}
-                  sx={{ fontWeight: 600, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
-                />
-                <Chip
-                  label={selectedCashBook.name}
-                  color="success"
-                  size="small"
-                  sx={{ fontWeight: 600 }}
-                />
-              </>
-            ) : (
-              filters.cash_book === "All" && (
-                <Chip
-                  label="All Cash Books"
-                  color="default"
-                  size="small"
-                  sx={{
-                    fontWeight: 600,
-                    bgcolor: "grey.100",
-                    color: "text.primary",
-                  }}
-                />
-              )
-            )}
-          </Box>
-
-          {/* Right: Download Buttons (icons only) */}
-          <Box display="flex" gap={1}>
-            <ExportReports
-              transactions={computedTxns}
-              filters={filters}
-              openingBalances={openingBalances}
-              cashBooks={cashBooks}
-              displayedOB={displayedOB}
-              campusName={selectedCashBook?.campus_name || "Jamia Mueeniyya"}
-            />
-          </Box>
-        </Box>
-
-        {/* ===== Second Row ===== */}
-        <Box
-          display="flex"
-          flexDirection={{ xs: "column", sm: "row" }}
-          justifyContent={{ xs: "center", sm: "space-between" }}
-          alignItems={{ xs: "center", sm: "center" }}
-          gap={2}
-          width="100%"
-        >
-          {/* Left side (Transactions + Date Range) */}
-          <Box
-            display="flex"
-            flexDirection="row"
-            gap={1}
-            alignItems="center"
-            justifyContent={{ xs: "center", sm: "flex-start" }}
-            flexWrap="wrap"
-          >
-            <Typography variant="h4" fontWeight="bold">
-              Transactions
-            </Typography>
-
-            {selectedDateLabel && (
+    {loading ? (
+      <TransactionSkeleton isMobile={isMobile} />
+    ) : (
+      <>
+        <Box p={4}>
+            {/* Header */}
+            <Box display="flex" flexDirection="column" gap={2} mb={3} width="100%">
+              {/* ===== First Row: Campus + Cash Book + Download Buttons ===== */}
               <Box
-                onClick={() => setOpenCustomDate(true)}
-                sx={{
-                  px: 2,
-                  py: 0.5,
-                  borderRadius: "16px",
-                  backgroundColor: "primary.light",
-                  color: "primary.contrastText",
-                  fontSize: "0.875rem",
-                  fontWeight: 500,
-                  cursor: "pointer",
-                  "&:hover": { backgroundColor: "primary.main", color: "white" },
-                  whiteSpace: "nowrap",
-                }}
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+                flexWrap="wrap"
+                gap={1}
+                width="100%"
               >
-                {selectedDateLabel()}
+                {/* Left: Campus + Cash Book */}
+                <Box display="flex" flexWrap="wrap" gap={0.5} alignItems="center">
+                  {selectedCashBook ? (
+                    <>
+                      <Chip
+                        label={selectedCashBook.campus_name}
+                        color="info"
+                        size="small"
+                        clickable
+                        onClick={() => {
+                          const userRole = localStorage.getItem('userRole');
+                          const prefix = userRole?.toLowerCase() === 'staff' ? '/staff' : '';
+                          navigate(`${prefix}/?campus=${selectedCashBook.campus_id}`);
+                        }}
+                        sx={{ fontWeight: 600, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
+                      />
+                      <Chip
+                        label={selectedCashBook.name}
+                        color="success"
+                        size="small"
+                        sx={{ fontWeight: 600 }}
+                      />
+                    </>
+                  ) : (
+                    filters.cash_book === "All" && (
+                      <Chip
+                        label="All Cash Books"
+                        color="default"
+                        size="small"
+                        sx={{
+                          fontWeight: 600,
+                          bgcolor: "grey.100",
+                          color: "text.primary",
+                        }}
+                      />
+                    )
+                  )}
+                </Box>
+
+                {/* Right: Download Buttons (icons only) */}
+                <Box display="flex" gap={1}>
+                  <ExportReports
+                    transactions={computedTxns}
+                    filters={filters}
+                    openingBalances={openingBalances}
+                    cashBooks={cashBooks}
+                    displayedOB={displayedOB}
+                    campusName={selectedCashBook?.campus_name || "Jamia Mueeniyya"}
+                  />
+                </Box>
               </Box>
+
+              {/* ===== Second Row ===== */}
+              <Box
+                display="flex"
+                flexDirection={{ xs: "column", sm: "row" }}
+                justifyContent={{ xs: "center", sm: "space-between" }}
+                alignItems={{ xs: "center", sm: "center" }}
+                gap={2}
+                width="100%"
+              >
+                {/* Left side (Transactions + Date Range) */}
+                <Box
+                  display="flex"
+                  flexDirection="row"
+                  gap={1}
+                  alignItems="center"
+                  justifyContent={{ xs: "center", sm: "flex-start" }}
+                  flexWrap="wrap"
+                >
+                  <Typography variant="h4" fontWeight="bold">
+                    Transactions
+                  </Typography>
+
+                  {selectedDateLabel && (
+                    <Box
+                      onClick={() => setOpenCustomDate(true)}
+                      sx={{
+                        px: 2,
+                        py: 0.5,
+                        borderRadius: "16px",
+                        backgroundColor: "primary.light",
+                        color: "primary.contrastText",
+                        fontSize: "0.875rem",
+                        fontWeight: 500,
+                        cursor: "pointer",
+                        "&:hover": { backgroundColor: "primary.main", color: "white" },
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {selectedDateLabel()}
+                    </Box>
+                  )}
+                </Box>
+
+                {/* Right side (Cash In / Out) - shown only on desktop */}
+                <Box display={{ xs: "none", sm: "flex" }} gap={1}>
+                  <Button
+                    variant="contained"
+                    color="success"
+                    onClick={() => handleClickOpen("IN")}
+                    startIcon={<Add />}
+                    sx={{ fontSize: "1rem" }}
+                  >
+                    Cash In
+                  </Button>
+
+                  <Button
+                    variant="contained"
+                    color="error"
+                    onClick={() => handleClickOpen("OUT")}
+                    startIcon={<Add />}
+                    sx={{ fontSize: "1rem" }}
+                  >
+                    Cash Out
+                  </Button>
+                </Box>
+              </Box>
+
+              {/* ===== Third Row (mobile only): Cash In / Out ===== */}
+              <Box display={{ xs: "flex", sm: "none" }} gap={1} justifyContent="center" width="100%">
+                <Button
+                  variant="contained"
+                  color="success"
+                  onClick={() => handleClickOpen("IN")}
+                  startIcon={<Add />}
+                  sx={{
+                    flex: 1,
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  Cash In
+                </Button>
+
+                <Button
+                  variant="contained"
+                  color="error"
+                  onClick={() => handleClickOpen("OUT")}
+                  startIcon={<Add />}
+                  sx={{
+                    flex: 1,
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  Cash Out
+                </Button>
+              </Box>
+            </Box>
+
+            {/* Filters */}
+            {isMobile ? (
+              // --- Mobile View: Filters inside Accordion ---
+              <Accordion sx={{ mb: 2 }}>
+                <AccordionSummary
+                  expandIcon={<ExpandMoreIcon />}
+                  aria-controls="filter-content"
+                  id="filter-header"
+                  sx={{
+                    backgroundColor: "primary.main",
+                    color: "white",
+                    borderRadius: "8px",
+                  }}
+                >
+                  <Typography variant="subtitle1" fontWeight="bold">
+                    Filters
+                  </Typography>
+                </AccordionSummary>
+
+                <AccordionDetails>
+                  <Card elevation={0}>
+                    <CardContent>
+                      <Grid container spacing={2}>
+                        {/* First Row: Date, Type, Category */}
+                        <Grid size={{ xs: 4, sm: 6, md: 1.5 }}>
+                          <FormControl fullWidth size="small">
+                            <InputLabel>Date</InputLabel>
+                            <Select
+                              value={filters.dateRange}
+                              label="Date"
+                              onChange={(e) => {
+                                if (e.target.value === "Custom") {
+                                  setOpenCustomDate(true);
+                                  return; // just stop execution, not return a value
+                                }
+                                handleFilterChange("dateRange", e.target.value);
+                              }}
+                            >
+                              <MenuItem value="All">All</MenuItem>
+                              {["Today", "Yesterday", "This Month", "Last Month", "Custom"].map(opt => (
+                                <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        </Grid>
+
+                        <Grid size={{ xs: 4, sm: 6, md: 1.5 }}>
+                          <FormControl fullWidth size="small">
+                            <InputLabel>Type</InputLabel>
+                            <Select
+                              value={filters.type}
+                              label="Type"
+                              onChange={(e) => handleFilterChange("type", e.target.value)}
+                            >
+                              <MenuItem value="All">All</MenuItem>
+                              <MenuItem value="IN">IN</MenuItem>
+                              <MenuItem value="OUT">OUT</MenuItem>
+                            </Select>
+                          </FormControl>
+                        </Grid>
+
+                        <Grid size={{ xs: 4, sm: 6, md: 1.5 }}>
+                          <FormControl fullWidth size="small">
+                            <InputLabel>Category</InputLabel>
+                            <Select
+                              value={filters.category}
+                              label="Category"
+                              onChange={(e) => handleFilterChange("category", e.target.value)}
+                            >
+                              <MenuItem value="All">All</MenuItem>
+                              {categories.map(c => (
+                                <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        </Grid>
+
+                        {/* Second Row: Payment Mode, Cash Book, User */}
+                        <Grid size={{ xs: 4, sm: 6, md: 1.5 }}>
+                          <FormControl fullWidth size="small">
+                            <InputLabel>Payment Mode</InputLabel>
+                            <Select
+                              value={filters.paymentMode}
+                              label="Payment Mode"
+                              onChange={(e) => handleFilterChange("paymentMode", e.target.value)}
+                            >
+                              <MenuItem value="All">All</MenuItem>
+                              {paymentModes.map(p => (
+                                <MenuItem key={p.id} value={p.id}>{p.name}</MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        </Grid>
+
+                        <Grid size={{ xs: 4, sm: 6, md: 1.5 }}>
+                          <FormControl fullWidth size="small">
+                            <InputLabel>Cash Book</InputLabel>
+                            <Select
+                              value={filters.cash_book}
+                              label="Cash Book"
+                              onChange={(e) => handleFilterChange("cash_book", e.target.value)}
+                            >
+                              <MenuItem value="All">All</MenuItem>
+                              {cashBooks.map(c => (
+                                <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        </Grid>
+
+                        <Grid size={{ xs: 4, sm: 6, md: 1.5 }}>
+                          <FormControl fullWidth size="small">
+                            <InputLabel>User</InputLabel>
+                            <Select
+                              value={filters.user}
+                              label="User"
+                              onChange={(e) => handleFilterChange("user", e.target.value)}
+                            >
+                              <MenuItem value="All">All</MenuItem>
+                              {users.map(u => (
+                                <MenuItem key={u.id} value={u.id}>{u.name}</MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        </Grid>
+
+                        {/* Third Row: Clear & Include OB */}
+                        <Grid size={{ xs: 4, sm: 3, md: 1 }}>
+                          <Button
+                            variant="outlined"
+                            color="secondary"
+                            fullWidth
+                            onClick={() => setFilters(prev => ({
+                              ...prev,
+                              dateRange: "All",
+                              type: "All",
+                              category: "All",
+                              paymentMode: "All",
+                              cash_book: "All",
+                              user: "All",
+                              customStartDate: "",
+                              customEndDate: "",
+                            }))}
+                          >
+                            Clear
+                          </Button>
+                        </Grid>
+
+                        <Grid size={{ xs: 8, sm: 3, md: 2 }}>
+                          <Box display="flex" alignItems="center" gap={2}>
+                            <Typography variant="body2">Include OB</Typography>
+                            <Button
+                              variant={filters.includeOB ? "outlined" : "contained"}
+                              color={filters.includeOB ? "inherit" : "success"}
+                              size="small"
+                              onClick={() => handleFilterChange("includeOB", !filters.includeOB)}
+                            >
+                              {filters.includeOB ? "No" : "Yes"}
+                            </Button>
+                          </Box>
+                        </Grid>
+                      </Grid>
+                    </CardContent>
+                  </Card>
+                </AccordionDetails>
+              </Accordion>
+            ) : (
+              // --- Desktop View: Normal Card layout ---
+              <Card sx={{ mb: 4 }}>
+                <CardContent>
+                  <Grid container spacing={2}>
+                    {/* First Row: Date, Type, Category */}
+                    <Grid size={{ xs: 4, sm: 6, md: 1.5 }}>
+                      <FormControl fullWidth size="small">
+                        <InputLabel>Date</InputLabel>
+                        <Select
+                          value={filters.dateRange}
+                          label="Date"
+                          onChange={(e) => {
+                            if (e.target.value === "Custom") {
+                              setOpenCustomDate(true);
+                              return; // just stop execution, not return a value
+                            }
+                            handleFilterChange("dateRange", e.target.value);
+                          }}
+                        >
+                          <MenuItem value="All">All</MenuItem>
+                          {["Today", "Yesterday", "This Month", "Last Month", "Custom"].map(opt => (
+                            <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+
+                    <Grid size={{ xs: 4, sm: 6, md: 1.5 }}>
+                      <FormControl fullWidth size="small">
+                        <InputLabel>Type</InputLabel>
+                        <Select
+                          value={filters.type}
+                          label="Type"
+                          onChange={(e) => handleFilterChange("type", e.target.value)}
+                        >
+                          <MenuItem value="All">All</MenuItem>
+                          <MenuItem value="IN">IN</MenuItem>
+                          <MenuItem value="OUT">OUT</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+
+                    <Grid size={{ xs: 4, sm: 6, md: 1.5 }}>
+                      <FormControl fullWidth size="small">
+                        <InputLabel>Category</InputLabel>
+                        <Select
+                          value={filters.category}
+                          label="Category"
+                          onChange={(e) => handleFilterChange("category", e.target.value)}
+                        >
+                          <MenuItem value="All">All</MenuItem>
+                          {categories.map(c => (
+                            <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+
+                    {/* Second Row: Payment Mode, Cash Book, User */}
+                    <Grid size={{ xs: 4, sm: 6, md: 1.5 }}>
+                      <FormControl fullWidth size="small">
+                        <InputLabel>Payment Mode</InputLabel>
+                        <Select
+                          value={filters.paymentMode}
+                          label="Payment Mode"
+                          onChange={(e) => handleFilterChange("paymentMode", e.target.value)}
+                        >
+                          <MenuItem value="All">All</MenuItem>
+                          {paymentModes.map(p => (
+                            <MenuItem key={p.id} value={p.id}>{p.name}</MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+
+                    <Grid size={{ xs: 4, sm: 6, md: 1.5 }}>
+                      <FormControl fullWidth size="small">
+                        <InputLabel>Cash Book</InputLabel>
+                        <Select
+                          value={filters.cash_book}
+                          label="Cash Book"
+                          onChange={(e) => handleFilterChange("cash_book", e.target.value)}
+                        >
+                          <MenuItem value="All">All</MenuItem>
+                          {cashBooks.map(c => (
+                            <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+
+                    <Grid size={{ xs: 4, sm: 6, md: 1.5 }}>
+                      <FormControl fullWidth size="small">
+                        <InputLabel>User</InputLabel>
+                        <Select
+                          value={filters.user}
+                          label="User"
+                          onChange={(e) => handleFilterChange("user", e.target.value)}
+                        >
+                          <MenuItem value="All">All</MenuItem>
+                          {users.map(u => (
+                            <MenuItem key={u.id} value={u.id}>{u.name}</MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+
+                    {/* Third Row: Clear & Include OB */}
+                    <Grid size={{ xs: 4, sm: 3, md: 1 }}>
+                      <Button
+                        variant="outlined"
+                        color="secondary"
+                        fullWidth
+                        onClick={() => setFilters(prev => ({
+                          ...prev,
+                          dateRange: "All",
+                          type: "All",
+                          category: "All",
+                          paymentMode: "All",
+                          cash_book: "All",
+                          user: "All",
+                          customStartDate: "",
+                          customEndDate: "",
+                        }))}
+                      >
+                        Clear
+                      </Button>
+                    </Grid>
+
+                    <Grid size={{ xs: 8, sm: 3, md: 2 }}>
+                      <Box display="flex" alignItems="center" gap={2}>
+                        <Typography variant="body2">Include OB</Typography>
+                        <Button
+                          variant={filters.includeOB ? "outlined" : "contained"}
+                          color={filters.includeOB ? "inherit" : "success"}
+                          size="small"
+                          onClick={() => handleFilterChange("includeOB", !filters.includeOB)}
+                        >
+                          {filters.includeOB ? "No" : "Yes"}
+                        </Button>
+                      </Box>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
             )}
-          </Box>
 
-          {/* Right side (Cash In / Out) - shown only on desktop */}
-          <Box display={{ xs: "none", sm: "flex" }} gap={1}>
-            <Button
-              variant="contained"
-              color="success"
-              onClick={() => handleClickOpen("IN")}
-              startIcon={<Add />}
-              sx={{ fontSize: "1rem" }}
-            >
-              Cash In
-            </Button>
+            {/* Summary Cards */}
+            {isMobile ? (
+              // --- MOBILE VIEW: Compact single card layout ---
+              <Card sx={{ mb: 3, p: 1, boxShadow: 3 }}>
+                <CardContent>
+                  <Box display="flex" flexDirection="column" gap={1}>
+                    {/* Include OB Section if enabled */}
+                    {filters.includeOB && (
+                      <Box display="flex" justifyContent="space-between" alignItems="center">
+                        <Typography variant="body2" color="textSecondary">
+                          Opening Balance
+                        </Typography>
+                        <Typography variant="subtitle1" fontWeight="bold" color="warning.main">
+                          ₹ {displayedOB.toLocaleString()}
+                        </Typography>
+                      </Box>
+                    )}
 
-            <Button
-              variant="contained"
-              color="error"
-              onClick={() => handleClickOpen("OUT")}
-              startIcon={<Add />}
-              sx={{ fontSize: "1rem" }}
-            >
-              Cash Out
-            </Button>
-          </Box>
-        </Box>
+                    {/* Total In */}
+                    <Box display="flex" justifyContent="space-between" alignItems="center">
+                      <Typography variant="body2" color="textSecondary">
+                        Total In
+                      </Typography>
+                      <Typography variant="subtitle1" fontWeight="bold" color="success.main">
+                        ₹ {totalIn.toLocaleString()}
+                      </Typography>
+                    </Box>
 
-        {/* ===== Third Row (mobile only): Cash In / Out ===== */}
-        <Box display={{ xs: "flex", sm: "none" }} gap={1} justifyContent="center" width="100%">
-          <Button
-            variant="contained"
-            color="success"
-            onClick={() => handleClickOpen("IN")}
-            startIcon={<Add />}
-            sx={{
-              flex: 1,
-              fontSize: "0.9rem",
-            }}
-          >
-            Cash In
-          </Button>
+                    {/* Total Out */}
+                    <Box display="flex" justifyContent="space-between" alignItems="center">
+                      <Typography variant="body2" color="textSecondary">
+                        Total Out
+                      </Typography>
+                      <Typography variant="subtitle1" fontWeight="bold" color="error.main">
+                        ₹ {totalOut.toLocaleString()}
+                      </Typography>
+                    </Box>
 
-          <Button
-            variant="contained"
-            color="error"
-            onClick={() => handleClickOpen("OUT")}
-            startIcon={<Add />}
-            sx={{
-              flex: 1,
-              fontSize: "0.9rem",
-            }}
-          >
-            Cash Out
-          </Button>
-        </Box>
-      </Box>
+                    {/* Net Balance */}
+                    <Box display="flex" justifyContent="space-between" alignItems="center">
+                      <Typography variant="body2" color="textSecondary">
+                        Net Balance
+                      </Typography>
+                      <Typography
+                        variant="subtitle1"
+                        fontWeight="bold"
+                        color={netBalance >= 0 ? "success.main" : "error.main"}
+                      >
+                        ₹ {netBalance.toLocaleString()}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            ) : (
+              // --- DESKTOP VIEW: Grid of 4 summary cards ---
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                {filters.includeOB && (
+                  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                    <Card sx={{ bgcolor: "#fff8e1", boxShadow: 3, borderLeft: "6px solid #fbc02d" }}>
+                      <CardContent>
+                        <Typography variant="subtitle2" color="textSecondary">Opening Balance</Typography>
+                        <Typography variant="h6" fontWeight="bold" color="warning.main">
+                          ₹ {displayedOB.toLocaleString()}
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                )}
 
-      {/* Filters */}
-      {isMobile ? (
-        // --- Mobile View: Filters inside Accordion ---
-        <Accordion sx={{ mb: 2 }}>
-          <AccordionSummary
-            expandIcon={<ExpandMoreIcon />}
-            aria-controls="filter-content"
-            id="filter-header"
-            sx={{
-              backgroundColor: "primary.main",
-              color: "white",
-              borderRadius: "8px",
-            }}
-          >
-            <Typography variant="subtitle1" fontWeight="bold">
-              Filters
-            </Typography>
-          </AccordionSummary>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                  <Card sx={{ bgcolor: "#e8f5e9", boxShadow: 3, borderLeft: "6px solid #2e7d32" }}>
+                    <CardContent>
+                      <Typography variant="subtitle2" color="textSecondary">Total In</Typography>
+                      <Typography variant="h6" fontWeight="bold" color="success.main">
+                        ₹ {totalIn.toLocaleString()}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
 
-          <AccordionDetails>
-            <Card elevation={0}>
-              <CardContent>
-                <Grid container spacing={2}>
-                  {/* First Row: Date, Type, Category */}
-                  <Grid size={{ xs: 4, sm: 6, md: 1.5 }}>
-                    <FormControl fullWidth size="small">
-                      <InputLabel>Date</InputLabel>
-                      <Select
-                        value={filters.dateRange}
-                        label="Date"
-                        onChange={(e) => {
-                          if (e.target.value === "Custom") {
-                            setOpenCustomDate(true);
-                            return; // just stop execution, not return a value
-                          }
-                          handleFilterChange("dateRange", e.target.value);
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                  <Card sx={{ bgcolor: "#ffebee", boxShadow: 3, borderLeft: "6px solid #c62828" }}>
+                    <CardContent>
+                      <Typography variant="subtitle2" color="textSecondary">Total Out</Typography>
+                      <Typography variant="h6" fontWeight="bold" color="error.main">
+                        ₹ {totalOut.toLocaleString()}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                  <Card sx={{ bgcolor: "#e3f2fd", boxShadow: 3, borderLeft: "6px solid #1565c0" }}>
+                    <CardContent>
+                      <Typography variant="subtitle2" color="textSecondary">Net Balance</Typography>
+                      <Typography
+                        variant="h6"
+                        fontWeight="bold"
+                        color={netBalance >= 0 ? "success.main" : "error.main"}
+                      >
+                        ₹ {netBalance.toLocaleString()}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+            )}
+
+            {/* Total Transactions */}
+            <Box sx={{ mb: 2 }}>        
+              <Typography variant="subtitle1" fontWeight={600}>
+                Total Transactions: {computedTxns.length}
+              </Typography>
+            </Box>
+            
+            {/* Transaction List */}
+            {/* Mobile view - Cards */}
+            {isMobile ? (        
+              <Box display="flex" flexDirection="column" gap={2}>
+                {computedTxns.length > 0 ? (
+                  computedTxns.map((txn) => {
+                    const isExpanded = expandedTxnId === txn.id;
+                    const userRole = localStorage.getItem("userRole");
+                    const isAdmin = userRole?.toLowerCase() === "admin";
+                    const isStaff = userRole?.toLowerCase() === "staff";
+
+                    return (
+                      <Card
+                        key={txn.id}
+                        onClick={() => handleToggleExpand(txn.id)}
+                        sx={{
+                          mb: 1.5,
+                          p: 1.5,
+                          borderLeft: `5px solid ${
+                            txn.transaction_type === "IN" ? "#2e7d32" : "#c62828"
+                          }`,
+                          boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
+                          borderRadius: 2,
+                          transition: "all 0.3s ease",
+                          cursor: "pointer",
+                          "&:hover": { backgroundColor: "#f9f9f9" },
                         }}
                       >
-                        <MenuItem value="All">All</MenuItem>
-                        {["Today", "Yesterday", "This Month", "Last Month", "Custom"].map(opt => (
-                          <MenuItem key={opt} value={opt}>{opt}</MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
+                        <Box
+                          display="flex"
+                          justifyContent="space-between"
+                          alignItems="flex-start"
+                          gap={2}
+                        >
+                          {/* LEFT SIDE — Details */}
+                          <Box flex={1}>
+                            <Typography
+                              variant="subtitle1"
+                              fontWeight={600}
+                              sx={{ wordBreak: "break-word" }}
+                            >
+                              {txn.remarks || "-"}
+                            </Typography>
 
-                  <Grid size={{ xs: 4, sm: 6, md: 1.5 }}>
-                    <FormControl fullWidth size="small">
-                      <InputLabel>Type</InputLabel>
-                      <Select
-                        value={filters.type}
-                        label="Type"
-                        onChange={(e) => handleFilterChange("type", e.target.value)}
-                      >
-                        <MenuItem value="All">All</MenuItem>
-                        <MenuItem value="IN">IN</MenuItem>
-                        <MenuItem value="OUT">OUT</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Grid>
+                            <Typography variant="body2" color="text.secondary">
+                              {txn.category_name || "—"}{" "}
+                              {txn.payment_mode_name ? `- ${txn.payment_mode_name}` : ""}
+                            </Typography>
 
-                  <Grid size={{ xs: 4, sm: 6, md: 1.5 }}>
-                    <FormControl fullWidth size="small">
-                      <InputLabel>Category</InputLabel>
-                      <Select
-                        value={filters.category}
-                        label="Category"
-                        onChange={(e) => handleFilterChange("category", e.target.value)}
-                      >
-                        <MenuItem value="All">All</MenuItem>
-                        {categories.map(c => (
-                          <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
+                            {txn.party_name && (
+                              <Typography variant="body2" color="text.secondary">
+                                {txn.party_name}
+                              </Typography>
+                            )}
 
-                  {/* Second Row: Payment Mode, Cash Book, User */}
-                  <Grid size={{ xs: 4, sm: 6, md: 1.5 }}>
-                    <FormControl fullWidth size="small">
-                      <InputLabel>Payment Mode</InputLabel>
-                      <Select
-                        value={filters.paymentMode}
-                        label="Payment Mode"
-                        onChange={(e) => handleFilterChange("paymentMode", e.target.value)}
-                      >
-                        <MenuItem value="All">All</MenuItem>
-                        {paymentModes.map(p => (
-                          <MenuItem key={p.id} value={p.id}>{p.name}</MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
+                            {txn.party_mobile_number && (
+                              <Typography variant="body2" color="text.secondary">
+                                {txn.party_mobile_number}
+                              </Typography>
+                            )}
+                          </Box>
 
-                  <Grid size={{ xs: 4, sm: 6, md: 1.5 }}>
-                    <FormControl fullWidth size="small">
-                      <InputLabel>Cash Book</InputLabel>
-                      <Select
-                        value={filters.cash_book}
-                        label="Cash Book"
-                        onChange={(e) => handleFilterChange("cash_book", e.target.value)}
-                      >
-                        <MenuItem value="All">All</MenuItem>
-                        {cashBooks.map(c => (
-                          <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
+                          {/* RIGHT SIDE — Amount / Balance / Created by / Date */}
+                          <Box textAlign="right">
+                            <Typography
+                              variant="subtitle1"
+                              fontWeight={700}
+                              color={txn.transaction_type === "IN" ? "success.main" : "error.main"}
+                            >
+                              ₹{parseFloat(txn.amount).toLocaleString("en-IN")}
+                            </Typography>
 
-                  <Grid size={{ xs: 4, sm: 6, md: 1.5 }}>
-                    <FormControl fullWidth size="small">
-                      <InputLabel>User</InputLabel>
-                      <Select
-                        value={filters.user}
-                        label="User"
-                        onChange={(e) => handleFilterChange("user", e.target.value)}
-                      >
-                        <MenuItem value="All">All</MenuItem>
-                        {users.map(u => (
-                          <MenuItem key={u.id} value={u.id}>{u.name}</MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
+                            {txn.running_balance !== undefined && (
+                              <Typography variant="body2" color="text.secondary">
+                                Bal: ₹{parseFloat(txn.running_balance).toLocaleString("en-IN")}
+                              </Typography>
+                            )}
 
-                  {/* Third Row: Clear & Include OB */}
-                  <Grid size={{ xs: 4, sm: 3, md: 1 }}>
-                    <Button
-                      variant="outlined"
-                      color="secondary"
-                      fullWidth
-                      onClick={() => setFilters(prev => ({
-                        ...prev,
-                        dateRange: "All",
-                        type: "All",
-                        category: "All",
-                        paymentMode: "All",
-                        cash_book: "All",
-                        user: "All",
-                        customStartDate: "",
-                        customEndDate: "",
-                      }))}
-                    >
-                      Clear
-                    </Button>
-                  </Grid>
+                            <Typography variant="caption" color="text.secondary">
+                              User: {txn.user_name || "-"}
+                            </Typography>
 
-                  <Grid size={{ xs: 8, sm: 3, md: 2 }}>
-                    <Box display="flex" alignItems="center" gap={2}>
-                      <Typography variant="body2">Include OB</Typography>
-                      <Button
-                        variant={filters.includeOB ? "outlined" : "contained"}
-                        color={filters.includeOB ? "inherit" : "success"}
-                        size="small"
-                        onClick={() => handleFilterChange("includeOB", !filters.includeOB)}
-                      >
-                        {filters.includeOB ? "No" : "Yes"}
-                      </Button>
-                    </Box>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </AccordionDetails>
-        </Accordion>
-      ) : (
-        // --- Desktop View: Normal Card layout ---
-        <Card sx={{ mb: 4 }}>
-          <CardContent>
-            <Grid container spacing={2}>
-              {/* First Row: Date, Type, Category */}
-              <Grid size={{ xs: 4, sm: 6, md: 1.5 }}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Date</InputLabel>
-                  <Select
-                    value={filters.dateRange}
-                    label="Date"
-                    onChange={(e) => {
-                      if (e.target.value === "Custom") {
-                        setOpenCustomDate(true);
-                        return; // just stop execution, not return a value
+                            <Typography variant="caption" color="text.secondary" display="block">
+                              {dayjs(txn.date).format("DD MMM YYYY")},{" "}
+                              {dayjs(txn.time, "HH:mm:ss").format("hh:mm A")}
+                            </Typography>
+
+                            {/* Expand Icon */}
+                            <IconButton size="small">
+                              {isExpanded ? <ExpandLess /> : <ExpandMore />}
+                            </IconButton>
+                          </Box>
+                        </Box>
+
+                        {/* EXPANDED SECTION */}
+                        <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                          <Divider sx={{ my: 1 }} />
+                          <TxnActionButtons txn={txn} onEdit={handleEditClick} onDelete={handleDeleteClick} />
+                        </Collapse>
+                      </Card>
+                    );
+                  })
+                ) : (
+                  <Typography align="center" sx={{ py: 4, color: "text.secondary" }}>
+                    No transactions found.
+                  </Typography>
+                )}
+              </Box>
+            ) : (
+              // Desktop view: Table (existing)
+              <TableContainer
+                component={Paper}
+                sx={{
+                  borderRadius: 2,
+                  boxShadow: 3,
+                  maxHeight: 600,
+                  border: "1px solid #ddd",
+                }}
+              >
+                <Table stickyHeader sx={{ minWidth: 650, borderCollapse: "collapse" }}>
+                  {/* Table Head */}
+                  <TableHead>
+                    <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+                      {[
+                        { label: "#", width: "5%" },
+                        { label: "Date & Time", width: "15%" },
+                        { label: "Details", width: "15%" },
+                        { label: "Party Details", width: "15%" },
+                        { label: "Category", width: "10%" },
+                        { label: "Mode", width: "10%" },
+                        { label: "Amount", width: "10%" },
+                        { label: "Balance", width: "10%" },
+                        { label: "Action", width: "10%" },
+                      ].map((h) => (
+                        <TableCell
+                          key={h.label}
+                          align={["Amount", "Balance"].includes(h.label) ? "right" : "center"}
+                          sx={{
+                            fontWeight: "bold",
+                            borderBottom: "2px solid #ccc",
+                            width: h.width,
+                          }}
+                        >
+                          {h.label}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  </TableHead>
+
+                  {/* Table Body */}
+                  <TableBody>
+                    {computedTxns.length > 0 ? (
+                      computedTxns.map((txn, idx) => (
+                        <TableRow
+                          key={txn.id}
+                          hover
+                          sx={{
+                            backgroundColor: "#ffffff",
+                            transition: "0.2s",
+                            "&:hover": { backgroundColor: "#e3f2fd" },
+                          }}
+                        >
+                          <TableCell align="center">{idx + 1}</TableCell>
+                          <TableCell align="center">
+                            <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+                              {dayjs(txn.date).format("DD-MM-YYYY")}
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              sx={{ fontWeight: "bold", color: "text.secondary" }}
+                            >
+                              {txn.time ? dayjs(`1970-01-01T${txn.time}`).format("hh:mm A") : "-"}
+                            </Typography>
+                          </TableCell>
+                          <TableCell align="left">{txn.remarks || "-"}</TableCell>
+                          <TableCell align="center">
+                            {txn.party_name ? (
+                              <Box lineHeight={1.2}>
+                                <Typography variant="body2" fontWeight={600}>
+                                  {txn.party_name}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {txn.party_mobile_number || "-"}
+                                </Typography>
+                              </Box>
+                            ) : (
+                              "-"
+                            )}
+                          </TableCell>
+                          <TableCell align="center">{txn.category_name}</TableCell>
+                          <TableCell align="center">{txn.payment_mode_name}</TableCell>
+                          <TableCell
+                            align="right"
+                            sx={{
+                              color: txn.transaction_type === "IN" ? "green" : "red",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            ₹ {Number(txn.amount).toLocaleString()}
+                          </TableCell>
+                          <TableCell align="right">₹ {txn.running_balance.toFixed(2)}</TableCell>
+                          <TableCell align="center">
+                            <TxnActionButtons txn={txn} onEdit={handleEditClick} onDelete={handleDeleteClick} />
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+                          No transactions found.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+
+            {/* Transaction Dialog */}
+            <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+              <DialogTitle>{transactionType === "IN" ? "Add Cash In" : "Add Cash Out"}</DialogTitle>
+              <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
+                <TextField
+                  label="Date"
+                  name="date"
+                  type="date"
+                  value={formData.date}
+                  onChange={handleChange}
+                  InputLabelProps={{ shrink: true }}
+                  inputProps={{
+                    min: user?.role?.toLowerCase() === "staff" ? dayjs().format("YYYY-MM-DD") : undefined,
+                  }}
+                />
+                <TextField
+                  label="Time"
+                  name="time"
+                  type="time"
+                  value={formData.time}
+                  onChange={handleChange}
+                  InputLabelProps={{ shrink: true }}
+                />
+                <TextField
+                  label="Amount"
+                  name="amount"
+                  type="number"
+                  value={formData.amount}
+                  onChange={handleChange}
+                  required
+                />
+                <TextField
+                  label="Remarks"
+                  name="remarks"
+                  multiline
+                  rows={2}
+                  value={formData.remarks}
+                  onChange={handleChange}
+                  required
+                />
+                <TextField
+                  label="Party Name"
+                  name="party_name"
+                  value={formData.party_name}
+                  onChange={handleChange}
+                />
+                <TextField
+                  label="Mobile Number"
+                  name="party_mobile_number"
+                  value={formData.party_mobile_number}
+                  onChange={handleChange}
+                />
+                
+                <TextField
+                  select
+                  label="Category"
+                  name="category"
+                  required
+                  value={formData.category}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === "__new__") {
+                      setAddCatOpen(true);
+                      return;
+                    }
+                    setFormData((prev) => ({ ...prev, category: value }));
+                  }}
+                >
+                  {categories
+                    .filter(cat => {
+                      // Case 1: No cash books linked → show in all cash books
+                      if (!cat.cash_books || cat.cash_books.length === 0) return true;
+
+                      // Case 2: Linked → show only if current cash book is linked
+                      if (selectedCashBook) {
+                        return cat.cash_books.includes(selectedCashBook.id);
                       }
-                      handleFilterChange("dateRange", e.target.value);
-                    }}
-                  >
-                    <MenuItem value="All">All</MenuItem>
-                    {["Today", "Yesterday", "This Month", "Last Month", "Custom"].map(opt => (
-                      <MenuItem key={opt} value={opt}>{opt}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
 
-              <Grid size={{ xs: 4, sm: 6, md: 1.5 }}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Type</InputLabel>
-                  <Select
-                    value={filters.type}
-                    label="Type"
-                    onChange={(e) => handleFilterChange("type", e.target.value)}
+                      // Case 3: No cash book selected (e.g. "All" view)
+                      return true;
+                    })
+                    .map(cat => (
+                      <MenuItem key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </MenuItem>
+                    ))}
+
+                  <MenuItem
+                    value="__new__"
+                    sx={{ fontStyle: "italic", color: "primary.main" }}
                   >
-                    <MenuItem value="All">All</MenuItem>
+                    + New Category
+                  </MenuItem>
+                </TextField>
+
+                <TextField
+                  select
+                  label="Payment Mode"
+                  name="payment_mode"
+                  value={formData.payment_mode}
+                  onChange={handleChange}
+                >
+                  {paymentModes.map((mode) => (
+                    <MenuItem key={mode.id} value={mode.id}>{mode.name}</MenuItem>
+                  ))}
+                </TextField>
+
+                {!cashBookId && (
+                  <TextField
+                    select
+                    label="Cash Book"
+                    name="cash_book"
+                    value={formData.cash_book}
+                    onChange={handleChange}
+                  >
+                    {cashBooks.map((book) => (
+                      <MenuItem key={book.id} value={book.id}>{book.name}</MenuItem>
+                    ))}
+                  </TextField>
+                )}
+              </DialogContent>
+
+              <DialogActions>
+                <Button onClick={() => handleSave(false)} variant="contained">Save</Button>
+                <Button onClick={() => handleSave(true)} variant="outlined">Save & Add More</Button>
+                <Button onClick={handleClose}>Cancel</Button>
+              </DialogActions>
+            </Dialog>
+
+            {/* Custom Date Dialog */}
+            <Dialog open={openCustomDate} onClose={() => setOpenCustomDate(false)}>
+              <DialogTitle>Select Custom Date</DialogTitle>
+              <DialogContent dividers>
+                <RadioGroup
+                  row
+                  value={customDateType}
+                  onChange={(e) => setCustomDateType(e.target.value)}
+                >
+                  <FormControlLabel value="range" control={<Radio />} label="Date Range" />
+                  <FormControlLabel value="single" control={<Radio />} label="Single Date" />
+                </RadioGroup>
+
+                {customDateType === "range" ? (
+                  <Box display="flex" gap={2} mt={2}>
+                    <TextField
+                      label="Start Date"
+                      type="date"
+                      InputLabelProps={{ shrink: true }}
+                      value={customStartDate}
+                      onChange={(e) => setCustomStartDate(e.target.value)}
+                      fullWidth
+                    />
+                    <TextField
+                      label="End Date"
+                      type="date"
+                      InputLabelProps={{ shrink: true }}
+                      value={customEndDate}
+                      onChange={(e) => setCustomEndDate(e.target.value)}
+                      fullWidth
+                    />
+                  </Box>
+                ) : (
+                  <Box mt={2}>
+                    <TextField
+                      label="Date"
+                      type="date"
+                      InputLabelProps={{ shrink: true }}
+                      value={customStartDate}
+                      onChange={(e) => setCustomStartDate(e.target.value)}
+                      fullWidth
+                    />
+                  </Box>
+                )}
+              </DialogContent>
+
+              <DialogActions>
+                <Button
+                  onClick={() => {
+                    let label = "";
+                    if (customDateType === "range") {
+                      label = `${customStartDate} → ${customEndDate}`;
+                    } else {
+                      label = customStartDate; // single date
+                    }
+                    
+                    setFilters({
+                      ...filters,
+                      dateRange: "Custom",
+                      customDateType: customDateType,
+                      customStartDate,
+                      customEndDate: customDateType === "range" ? customEndDate : customStartDate,
+                      customLabel: label,
+                    });
+                    setOpenCustomDate(false);
+
+                    // Reset the temporary states so next open works
+                    setCustomStartDate("");
+                    setCustomEndDate("");
+                    setCustomDateType("range");
+                  }}
+                  color="primary"
+                  variant="contained"
+                >
+                  Apply
+                </Button>
+                <Button
+                  onClick={() => {
+                    setCustomStartDate("");
+                    setCustomEndDate("");
+                    setCustomDateType("range");
+                    setOpenCustomDate(false);
+                  }}
+                  color="secondary"
+                  variant="outlined"
+                >
+                  Cancel
+                </Button>
+              </DialogActions>
+            </Dialog>
+
+            {/* Edit Transaction Dialog */}
+            <Dialog open={editOpen} onClose={() => setEditOpen(false)} maxWidth="sm" fullWidth>
+              <DialogTitle>Edit Transaction</DialogTitle>
+
+              <DialogContent>
+
+                {/* Transaction Type */}
+                <FormControl fullWidth margin="dense">
+                  <InputLabel>Transaction Type</InputLabel>
+                  <Select
+                    name="transaction_type"
+                    value={editData?.transaction_type || ""}
+                    onChange={(e) =>
+                      setEditData(prev => prev ? { ...prev, transaction_type: e.target.value as "IN" | "OUT" } : prev)
+                    }
+                  >
                     <MenuItem value="IN">IN</MenuItem>
                     <MenuItem value="OUT">OUT</MenuItem>
                   </Select>
                 </FormControl>
-              </Grid>
 
-              <Grid size={{ xs: 4, sm: 6, md: 1.5 }}>
-                <FormControl fullWidth size="small">
+                {/* Date */}
+                <TextField
+                  label="Date"
+                  type="date"
+                  name="date"
+                  value={editData?.date || ""}
+                  onChange={(e) => setEditData(prev => prev ? { ...prev, date: e.target.value } : prev)}
+                  fullWidth
+                  margin="dense"
+                  InputLabelProps={{ shrink: true }}
+                />
+
+                {/* Time */}
+                <TextField
+                  label="Time"
+                  type="time"
+                  name="time"
+                  value={editData?.time || ""}
+                  onChange={(e) => setEditData(prev => prev ? { ...prev, time: e.target.value } : prev)}
+                  fullWidth
+                  margin="dense"
+                  InputLabelProps={{ shrink: true }}
+                />
+
+                {/* Amount */}
+                <TextField
+                  label="Amount"
+                  name="amount"
+                  type="number"
+                  value={editData?.amount || ""}
+                  onChange={(e) =>
+                    setEditData(prev => prev ? { ...prev, amount: Number(e.target.value) } : prev)
+                  }
+                  fullWidth
+                  margin="dense"
+                />
+
+                {/* Remarks */}
+                <TextField
+                  label="Remarks"
+                  name="remarks"
+                  value={editData?.remarks || ""}
+                  onChange={(e) =>
+                    setEditData(prev => prev ? { ...prev, remarks: e.target.value } : prev)
+                  }
+                  fullWidth
+                  margin="dense"
+                />
+
+                {/* Category */}
+                <FormControl fullWidth margin="dense">
                   <InputLabel>Category</InputLabel>
                   <Select
-                    value={filters.category}
-                    label="Category"
-                    onChange={(e) => handleFilterChange("category", e.target.value)}
+                    name="category"
+                    value={editData?.category || ""}
+                    onChange={(e) =>
+                      setEditData(prev => prev ? { ...prev, category: Number(e.target.value) } : prev)
+                    }
                   >
-                    <MenuItem value="All">All</MenuItem>
                     {categories.map(c => (
                       <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
-              </Grid>
 
-              {/* Second Row: Payment Mode, Cash Book, User */}
-              <Grid size={{ xs: 4, sm: 6, md: 1.5 }}>
-                <FormControl fullWidth size="small">
+                {/* Payment Mode */}
+                <FormControl fullWidth margin="dense">
                   <InputLabel>Payment Mode</InputLabel>
                   <Select
-                    value={filters.paymentMode}
-                    label="Payment Mode"
-                    onChange={(e) => handleFilterChange("paymentMode", e.target.value)}
+                    name="payment_mode"
+                    value={editData?.payment_mode || ""}
+                    onChange={(e) =>
+                      setEditData(prev => prev ? { ...prev, payment_mode: Number(e.target.value) } : prev)
+                    }
                   >
-                    <MenuItem value="All">All</MenuItem>
                     {paymentModes.map(p => (
                       <MenuItem key={p.id} value={p.id}>{p.name}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
-              </Grid>
 
-              <Grid size={{ xs: 4, sm: 6, md: 1.5 }}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Cash Book</InputLabel>
-                  <Select
-                    value={filters.cash_book}
-                    label="Cash Book"
-                    onChange={(e) => handleFilterChange("cash_book", e.target.value)}
-                  >
-                    <MenuItem value="All">All</MenuItem>
-                    {cashBooks.map(c => (
-                      <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
+                {/* Cash Book */}
+                {!cashBookId && (
+                  <FormControl fullWidth margin="dense">
+                    <InputLabel>Cash Book</InputLabel>
+                    <Select
+                      name="cash_book"
+                      value={editData?.cash_book || ""}
+                      onChange={(e) =>
+                        setEditData(prev => prev ? { ...prev, cash_book: Number(e.target.value) } : prev)
+                      }
+                    >
+                      {cashBooks.map(c => (
+                        <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                )}
+              </DialogContent>
 
-              <Grid size={{ xs: 4, sm: 6, md: 1.5 }}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>User</InputLabel>
-                  <Select
-                    value={filters.user}
-                    label="User"
-                    onChange={(e) => handleFilterChange("user", e.target.value)}
-                  >
-                    <MenuItem value="All">All</MenuItem>
-                    {users.map(u => (
-                      <MenuItem key={u.id} value={u.id}>{u.name}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              {/* Third Row: Clear & Include OB */}
-              <Grid size={{ xs: 4, sm: 3, md: 1 }}>
-                <Button
-                  variant="outlined"
-                  color="secondary"
-                  fullWidth
-                  onClick={() => setFilters(prev => ({
-                    ...prev,
-                    dateRange: "All",
-                    type: "All",
-                    category: "All",
-                    paymentMode: "All",
-                    cash_book: "All",
-                    user: "All",
-                    customStartDate: "",
-                    customEndDate: "",
-                  }))}
-                >
-                  Clear
+              <DialogActions>
+                <Button onClick={() => setEditOpen(false)}>Cancel</Button>
+                <Button color="primary" variant="contained" onClick={handleEditSubmit}>
+                  Save
                 </Button>
-              </Grid>
+              </DialogActions>
+            </Dialog>
 
-              <Grid size={{ xs: 8, sm: 3, md: 2 }}>
-                <Box display="flex" alignItems="center" gap={2}>
-                  <Typography variant="body2">Include OB</Typography>
-                  <Button
-                    variant={filters.includeOB ? "outlined" : "contained"}
-                    color={filters.includeOB ? "inherit" : "success"}
-                    size="small"
-                    onClick={() => handleFilterChange("includeOB", !filters.includeOB)}
-                  >
-                    {filters.includeOB ? "No" : "Yes"}
-                  </Button>
-                </Box>
-              </Grid>
-            </Grid>
-          </CardContent>
-        </Card>
-      )}
+            <Dialog open={addCatOpen} onClose={() => setAddCatOpen(false)} maxWidth="xs" fullWidth>
+              <DialogTitle>Add New Category</DialogTitle>
+              <DialogContent>
+                <TextField
+                  label="Category Name"
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  fullWidth
+                  autoFocus
+                  sx={{ mt: 1 }}
+                />
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setAddCatOpen(false)}>Cancel</Button>
+                <Button
+                  variant="contained"
+                  onClick={async () => {
+                    if (!newCategoryName.trim()) return;
 
-      {/* Summary Cards */}
-      {isMobile ? (
-        // --- MOBILE VIEW: Compact single card layout ---
-        <Card sx={{ mb: 3, p: 1, boxShadow: 3 }}>
-          <CardContent>
-            <Box display="flex" flexDirection="column" gap={1}>
-              {/* Include OB Section if enabled */}
-              {filters.includeOB && (
-                <Box display="flex" justifyContent="space-between" alignItems="center">
-                  <Typography variant="body2" color="textSecondary">
-                    Opening Balance
-                  </Typography>
-                  <Typography variant="subtitle1" fontWeight="bold" color="warning.main">
-                    ₹ {displayedOB.toLocaleString()}
-                  </Typography>
-                </Box>
-              )}
+                    try {
+                      // API call to create category
+                      const newCat = await createCategory({ name: newCategoryName.trim() });
 
-              {/* Total In */}
-              <Box display="flex" justifyContent="space-between" alignItems="center">
-                <Typography variant="body2" color="textSecondary">
-                  Total In
-                </Typography>
-                <Typography variant="subtitle1" fontWeight="bold" color="success.main">
-                  ₹ {totalIn.toLocaleString()}
-                </Typography>
-              </Box>
+                      // Update categories list and select new one
+                      setCategories((prev) => [...prev, newCat]);
+                      setFormData((prev) => ({ ...prev, category: newCat.id }));
 
-              {/* Total Out */}
-              <Box display="flex" justifyContent="space-between" alignItems="center">
-                <Typography variant="body2" color="textSecondary">
-                  Total Out
-                </Typography>
-                <Typography variant="subtitle1" fontWeight="bold" color="error.main">
-                  ₹ {totalOut.toLocaleString()}
-                </Typography>
-              </Box>
-
-              {/* Net Balance */}
-              <Box display="flex" justifyContent="space-between" alignItems="center">
-                <Typography variant="body2" color="textSecondary">
-                  Net Balance
-                </Typography>
-                <Typography
-                  variant="subtitle1"
-                  fontWeight="bold"
-                  color={netBalance >= 0 ? "success.main" : "error.main"}
-                >
-                  ₹ {netBalance.toLocaleString()}
-                </Typography>
-              </Box>
-            </Box>
-          </CardContent>
-        </Card>
-      ) : (
-        // --- DESKTOP VIEW: Grid of 4 summary cards ---
-        <Grid container spacing={2} sx={{ mb: 3 }}>
-          {filters.includeOB && (
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <Card sx={{ bgcolor: "#fff8e1", boxShadow: 3, borderLeft: "6px solid #fbc02d" }}>
-                <CardContent>
-                  <Typography variant="subtitle2" color="textSecondary">Opening Balance</Typography>
-                  <Typography variant="h6" fontWeight="bold" color="warning.main">
-                    ₹ {displayedOB.toLocaleString()}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          )}
-
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Card sx={{ bgcolor: "#e8f5e9", boxShadow: 3, borderLeft: "6px solid #2e7d32" }}>
-              <CardContent>
-                <Typography variant="subtitle2" color="textSecondary">Total In</Typography>
-                <Typography variant="h6" fontWeight="bold" color="success.main">
-                  ₹ {totalIn.toLocaleString()}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Card sx={{ bgcolor: "#ffebee", boxShadow: 3, borderLeft: "6px solid #c62828" }}>
-              <CardContent>
-                <Typography variant="subtitle2" color="textSecondary">Total Out</Typography>
-                <Typography variant="h6" fontWeight="bold" color="error.main">
-                  ₹ {totalOut.toLocaleString()}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Card sx={{ bgcolor: "#e3f2fd", boxShadow: 3, borderLeft: "6px solid #1565c0" }}>
-              <CardContent>
-                <Typography variant="subtitle2" color="textSecondary">Net Balance</Typography>
-                <Typography
-                  variant="h6"
-                  fontWeight="bold"
-                  color={netBalance >= 0 ? "success.main" : "error.main"}
-                >
-                  ₹ {netBalance.toLocaleString()}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      )}
-
-      {/* Total Transactions */}
-      <Box sx={{ mb: 2 }}>        
-        <Typography variant="subtitle1" fontWeight={600}>
-          Total Transactions: {computedTxns.length}
-        </Typography>
-      </Box>
-      
-      {/* Transaction List */}
-      {/* Mobile view - Cards */}
-      {isMobile ? (        
-        <Box display="flex" flexDirection="column" gap={2}>
-          {computedTxns.length > 0 ? (
-            computedTxns.map((txn) => {
-              const isExpanded = expandedTxnId === txn.id;
-              const userRole = localStorage.getItem("userRole");
-              const isAdmin = userRole?.toLowerCase() === "admin";
-              const isStaff = userRole?.toLowerCase() === "staff";
-
-              return (
-                <Card
-                  key={txn.id}
-                  onClick={() => handleToggleExpand(txn.id)}
-                  sx={{
-                    mb: 1.5,
-                    p: 1.5,
-                    borderLeft: `5px solid ${
-                      txn.transaction_type === "IN" ? "#2e7d32" : "#c62828"
-                    }`,
-                    boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-                    borderRadius: 2,
-                    transition: "all 0.3s ease",
-                    cursor: "pointer",
-                    "&:hover": { backgroundColor: "#f9f9f9" },
+                      // Reset and close
+                      setNewCategoryName("");
+                      setAddCatOpen(false);
+                    } catch (err) {
+                      enqueueSnackbar("Failed to create category", { variant: "error" });
+                    }
                   }}
                 >
-                  <Box
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="flex-start"
-                    gap={2}
-                  >
-                    {/* LEFT SIDE — Details */}
-                    <Box flex={1}>
-                      <Typography
-                        variant="subtitle1"
-                        fontWeight={600}
-                        sx={{ wordBreak: "break-word" }}
-                      >
-                        {txn.remarks || "-"}
-                      </Typography>
-
-                      <Typography variant="body2" color="text.secondary">
-                        {txn.category_name || "—"}{" "}
-                        {txn.payment_mode_name ? `- ${txn.payment_mode_name}` : ""}
-                      </Typography>
-
-                      {txn.party_name && (
-                        <Typography variant="body2" color="text.secondary">
-                          {txn.party_name}
-                        </Typography>
-                      )}
-
-                      {txn.party_mobile_number && (
-                        <Typography variant="body2" color="text.secondary">
-                          {txn.party_mobile_number}
-                        </Typography>
-                      )}
-                    </Box>
-
-                    {/* RIGHT SIDE — Amount / Balance / Created by / Date */}
-                    <Box textAlign="right">
-                      <Typography
-                        variant="subtitle1"
-                        fontWeight={700}
-                        color={txn.transaction_type === "IN" ? "success.main" : "error.main"}
-                      >
-                        ₹{parseFloat(txn.amount).toLocaleString("en-IN")}
-                      </Typography>
-
-                      {txn.running_balance !== undefined && (
-                        <Typography variant="body2" color="text.secondary">
-                          Bal: ₹{parseFloat(txn.running_balance).toLocaleString("en-IN")}
-                        </Typography>
-                      )}
-
-                      <Typography variant="caption" color="text.secondary">
-                        User: {txn.user_name || "-"}
-                      </Typography>
-
-                      <Typography variant="caption" color="text.secondary" display="block">
-                        {dayjs(txn.date).format("DD MMM YYYY")},{" "}
-                        {dayjs(txn.time, "HH:mm:ss").format("hh:mm A")}
-                      </Typography>
-
-                      {/* Expand Icon */}
-                      <IconButton size="small">
-                        {isExpanded ? <ExpandLess /> : <ExpandMore />}
-                      </IconButton>
-                    </Box>
-                  </Box>
-
-                  {/* EXPANDED SECTION */}
-                  <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                    <Divider sx={{ my: 1 }} />
-                    <TxnActionButtons txn={txn} onEdit={handleEditClick} onDelete={handleDeleteClick} />
-                  </Collapse>
-                </Card>
-              );
-            })
-          ) : (
-            <Typography align="center" sx={{ py: 4, color: "text.secondary" }}>
-              No transactions found.
-            </Typography>
-          )}
-        </Box>
-      ) : (
-        // Desktop view: Table (existing)
-        <TableContainer
-          component={Paper}
-          sx={{
-            borderRadius: 2,
-            boxShadow: 3,
-            maxHeight: 600,
-            border: "1px solid #ddd",
-          }}
-        >
-          <Table stickyHeader sx={{ minWidth: 650, borderCollapse: "collapse" }}>
-            {/* Table Head */}
-            <TableHead>
-              <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                {[
-                  { label: "#", width: "5%" },
-                  { label: "Date & Time", width: "15%" },
-                  { label: "Details", width: "15%" },
-                  { label: "Party Details", width: "15%" },
-                  { label: "Category", width: "10%" },
-                  { label: "Mode", width: "10%" },
-                  { label: "Amount", width: "10%" },
-                  { label: "Balance", width: "10%" },
-                  { label: "Action", width: "10%" },
-                ].map((h) => (
-                  <TableCell
-                    key={h.label}
-                    align={["Amount", "Balance"].includes(h.label) ? "right" : "center"}
-                    sx={{
-                      fontWeight: "bold",
-                      borderBottom: "2px solid #ccc",
-                      width: h.width,
-                    }}
-                  >
-                    {h.label}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-
-            {/* Table Body */}
-            <TableBody>
-              {computedTxns.length > 0 ? (
-                computedTxns.map((txn, idx) => (
-                  <TableRow
-                    key={txn.id}
-                    hover
-                    sx={{
-                      backgroundColor: "#ffffff",
-                      transition: "0.2s",
-                      "&:hover": { backgroundColor: "#e3f2fd" },
-                    }}
-                  >
-                    <TableCell align="center">{idx + 1}</TableCell>
-                    <TableCell align="center">
-                      <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                        {dayjs(txn.date).format("DD-MM-YYYY")}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{ fontWeight: "bold", color: "text.secondary" }}
-                      >
-                        {txn.time ? dayjs(`1970-01-01T${txn.time}`).format("hh:mm A") : "-"}
-                      </Typography>
-                    </TableCell>
-                    <TableCell align="left">{txn.remarks || "-"}</TableCell>
-                    <TableCell align="center">
-                      {txn.party_name ? (
-                        <Box lineHeight={1.2}>
-                          <Typography variant="body2" fontWeight={600}>
-                            {txn.party_name}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {txn.party_mobile_number || "-"}
-                          </Typography>
-                        </Box>
-                      ) : (
-                        "-"
-                      )}
-                    </TableCell>
-                    <TableCell align="center">{txn.category_name}</TableCell>
-                    <TableCell align="center">{txn.payment_mode_name}</TableCell>
-                    <TableCell
-                      align="right"
-                      sx={{
-                        color: txn.transaction_type === "IN" ? "green" : "red",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      ₹ {Number(txn.amount).toLocaleString()}
-                    </TableCell>
-                    <TableCell align="right">₹ {txn.running_balance.toFixed(2)}</TableCell>
-                    <TableCell align="center">
-                      <TxnActionButtons txn={txn} onEdit={handleEditClick} onDelete={handleDeleteClick} />
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
-                    No transactions found.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                  Add
+                </Button>
+              </DialogActions>
+            </Dialog>
+          </Box>
+        </>
       )}
-
-      {/* Transaction Dialog */}
-      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-        <DialogTitle>{transactionType === "IN" ? "Add Cash In" : "Add Cash Out"}</DialogTitle>
-        <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
-          <TextField
-            label="Date"
-            name="date"
-            type="date"
-            value={formData.date}
-            onChange={handleChange}
-            InputLabelProps={{ shrink: true }}
-            inputProps={{
-              min: user?.role?.toLowerCase() === "staff" ? dayjs().format("YYYY-MM-DD") : undefined,
-            }}
-          />
-          <TextField
-            label="Time"
-            name="time"
-            type="time"
-            value={formData.time}
-            onChange={handleChange}
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            label="Amount"
-            name="amount"
-            type="number"
-            value={formData.amount}
-            onChange={handleChange}
-            required
-          />
-          <TextField
-            label="Remarks"
-            name="remarks"
-            multiline
-            rows={2}
-            value={formData.remarks}
-            onChange={handleChange}
-            required
-          />
-          <TextField
-            label="Party Name"
-            name="party_name"
-            value={formData.party_name}
-            onChange={handleChange}
-          />
-          <TextField
-            label="Mobile Number"
-            name="party_mobile_number"
-            value={formData.party_mobile_number}
-            onChange={handleChange}
-          />
-          
-          <TextField
-            select
-            label="Category"
-            name="category"
-            required
-            value={formData.category}
-            onChange={(e) => {
-              const value = e.target.value;
-              if (value === "__new__") {
-                setAddCatOpen(true);
-                return;
-              }
-              setFormData((prev) => ({ ...prev, category: value }));
-            }}
-          >
-            {categories
-              .filter(cat => {
-                // Case 1: No cash books linked → show in all cash books
-                if (!cat.cash_books || cat.cash_books.length === 0) return true;
-
-                // Case 2: Linked → show only if current cash book is linked
-                if (selectedCashBook) {
-                  return cat.cash_books.includes(selectedCashBook.id);
-                }
-
-                // Case 3: No cash book selected (e.g. "All" view)
-                return true;
-              })
-              .map(cat => (
-                <MenuItem key={cat.id} value={cat.id}>
-                  {cat.name}
-                </MenuItem>
-              ))}
-
-            <MenuItem
-              value="__new__"
-              sx={{ fontStyle: "italic", color: "primary.main" }}
-            >
-              + New Category
-            </MenuItem>
-          </TextField>
-
-          <TextField
-            select
-            label="Payment Mode"
-            name="payment_mode"
-            value={formData.payment_mode}
-            onChange={handleChange}
-          >
-            {paymentModes.map((mode) => (
-              <MenuItem key={mode.id} value={mode.id}>{mode.name}</MenuItem>
-            ))}
-          </TextField>
-
-          {!cashBookId && (
-            <TextField
-              select
-              label="Cash Book"
-              name="cash_book"
-              value={formData.cash_book}
-              onChange={handleChange}
-            >
-              {cashBooks.map((book) => (
-                <MenuItem key={book.id} value={book.id}>{book.name}</MenuItem>
-              ))}
-            </TextField>
-          )}
-        </DialogContent>
-
-        <DialogActions>
-          <Button onClick={() => handleSave(false)} variant="contained">Save</Button>
-          <Button onClick={() => handleSave(true)} variant="outlined">Save & Add More</Button>
-          <Button onClick={handleClose}>Cancel</Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Custom Date Dialog */}
-      <Dialog open={openCustomDate} onClose={() => setOpenCustomDate(false)}>
-        <DialogTitle>Select Custom Date</DialogTitle>
-        <DialogContent dividers>
-          <RadioGroup
-            row
-            value={customDateType}
-            onChange={(e) => setCustomDateType(e.target.value)}
-          >
-            <FormControlLabel value="range" control={<Radio />} label="Date Range" />
-            <FormControlLabel value="single" control={<Radio />} label="Single Date" />
-          </RadioGroup>
-
-          {customDateType === "range" ? (
-            <Box display="flex" gap={2} mt={2}>
-              <TextField
-                label="Start Date"
-                type="date"
-                InputLabelProps={{ shrink: true }}
-                value={customStartDate}
-                onChange={(e) => setCustomStartDate(e.target.value)}
-                fullWidth
-              />
-              <TextField
-                label="End Date"
-                type="date"
-                InputLabelProps={{ shrink: true }}
-                value={customEndDate}
-                onChange={(e) => setCustomEndDate(e.target.value)}
-                fullWidth
-              />
-            </Box>
-          ) : (
-            <Box mt={2}>
-              <TextField
-                label="Date"
-                type="date"
-                InputLabelProps={{ shrink: true }}
-                value={customStartDate}
-                onChange={(e) => setCustomStartDate(e.target.value)}
-                fullWidth
-              />
-            </Box>
-          )}
-        </DialogContent>
-
-        <DialogActions>
-          <Button
-            onClick={() => {
-              let label = "";
-              if (customDateType === "range") {
-                label = `${customStartDate} → ${customEndDate}`;
-              } else {
-                label = customStartDate; // single date
-              }
-              
-              setFilters({
-                ...filters,
-                dateRange: "Custom",
-                customDateType: customDateType,
-                customStartDate,
-                customEndDate: customDateType === "range" ? customEndDate : customStartDate,
-                customLabel: label,
-              });
-              setOpenCustomDate(false);
-
-              // Reset the temporary states so next open works
-              setCustomStartDate("");
-              setCustomEndDate("");
-              setCustomDateType("range");
-            }}
-            color="primary"
-            variant="contained"
-          >
-            Apply
-          </Button>
-          <Button
-            onClick={() => {
-              setCustomStartDate("");
-              setCustomEndDate("");
-              setCustomDateType("range");
-              setOpenCustomDate(false);
-            }}
-            color="secondary"
-            variant="outlined"
-          >
-            Cancel
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Edit Transaction Dialog */}
-      <Dialog open={editOpen} onClose={() => setEditOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Edit Transaction</DialogTitle>
-
-        <DialogContent>
-
-          {/* Transaction Type */}
-          <FormControl fullWidth margin="dense">
-            <InputLabel>Transaction Type</InputLabel>
-            <Select
-              name="transaction_type"
-              value={editData?.transaction_type || ""}
-              onChange={(e) =>
-                setEditData(prev => prev ? { ...prev, transaction_type: e.target.value as "IN" | "OUT" } : prev)
-              }
-            >
-              <MenuItem value="IN">IN</MenuItem>
-              <MenuItem value="OUT">OUT</MenuItem>
-            </Select>
-          </FormControl>
-
-          {/* Date */}
-          <TextField
-            label="Date"
-            type="date"
-            name="date"
-            value={editData?.date || ""}
-            onChange={(e) => setEditData(prev => prev ? { ...prev, date: e.target.value } : prev)}
-            fullWidth
-            margin="dense"
-            InputLabelProps={{ shrink: true }}
-          />
-
-          {/* Time */}
-          <TextField
-            label="Time"
-            type="time"
-            name="time"
-            value={editData?.time || ""}
-            onChange={(e) => setEditData(prev => prev ? { ...prev, time: e.target.value } : prev)}
-            fullWidth
-            margin="dense"
-            InputLabelProps={{ shrink: true }}
-          />
-
-          {/* Amount */}
-          <TextField
-            label="Amount"
-            name="amount"
-            type="number"
-            value={editData?.amount || ""}
-            onChange={(e) =>
-              setEditData(prev => prev ? { ...prev, amount: Number(e.target.value) } : prev)
-            }
-            fullWidth
-            margin="dense"
-          />
-
-          {/* Remarks */}
-          <TextField
-            label="Remarks"
-            name="remarks"
-            value={editData?.remarks || ""}
-            onChange={(e) =>
-              setEditData(prev => prev ? { ...prev, remarks: e.target.value } : prev)
-            }
-            fullWidth
-            margin="dense"
-          />
-
-          {/* Category */}
-          <FormControl fullWidth margin="dense">
-            <InputLabel>Category</InputLabel>
-            <Select
-              name="category"
-              value={editData?.category || ""}
-              onChange={(e) =>
-                setEditData(prev => prev ? { ...prev, category: Number(e.target.value) } : prev)
-              }
-            >
-              {categories.map(c => (
-                <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          {/* Payment Mode */}
-          <FormControl fullWidth margin="dense">
-            <InputLabel>Payment Mode</InputLabel>
-            <Select
-              name="payment_mode"
-              value={editData?.payment_mode || ""}
-              onChange={(e) =>
-                setEditData(prev => prev ? { ...prev, payment_mode: Number(e.target.value) } : prev)
-              }
-            >
-              {paymentModes.map(p => (
-                <MenuItem key={p.id} value={p.id}>{p.name}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          {/* Cash Book */}
-          {!cashBookId && (
-            <FormControl fullWidth margin="dense">
-              <InputLabel>Cash Book</InputLabel>
-              <Select
-                name="cash_book"
-                value={editData?.cash_book || ""}
-                onChange={(e) =>
-                  setEditData(prev => prev ? { ...prev, cash_book: Number(e.target.value) } : prev)
-                }
-              >
-                {cashBooks.map(c => (
-                  <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          )}
-        </DialogContent>
-
-        <DialogActions>
-          <Button onClick={() => setEditOpen(false)}>Cancel</Button>
-          <Button color="primary" variant="contained" onClick={handleEditSubmit}>
-            Save
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog open={addCatOpen} onClose={() => setAddCatOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle>Add New Category</DialogTitle>
-        <DialogContent>
-          <TextField
-            label="Category Name"
-            value={newCategoryName}
-            onChange={(e) => setNewCategoryName(e.target.value)}
-            fullWidth
-            autoFocus
-            sx={{ mt: 1 }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setAddCatOpen(false)}>Cancel</Button>
-          <Button
-            variant="contained"
-            onClick={async () => {
-              if (!newCategoryName.trim()) return;
-
-              try {
-                // API call to create category
-                const newCat = await createCategory({ name: newCategoryName.trim() });
-
-                // Update categories list and select new one
-                setCategories((prev) => [...prev, newCat]);
-                setFormData((prev) => ({ ...prev, category: newCat.id }));
-
-                // Reset and close
-                setNewCategoryName("");
-                setAddCatOpen(false);
-              } catch (err) {
-                enqueueSnackbar("Failed to create category", { variant: "error" });
-              }
-            }}
-          >
-            Add
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+    </Box>    
   );
 };
 
