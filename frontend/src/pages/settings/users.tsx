@@ -7,46 +7,26 @@ import SaveIcon from "@mui/icons-material/Save";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CancelIcon from "@mui/icons-material/Cancel";
 import {
-  Breadcrumbs,
-  Link,
-  Typography,
-  Box,
-  Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  TextField,
-  MenuItem,
-  Select,
-  InputLabel,
-  FormControl,
-  FormControlLabel,
-  Checkbox,
-  ListItemText,
-  OutlinedInput,
+  Breadcrumbs, Link, Typography, Box, Button, Table, TableBody, TableCell, TableContainer, 
+  TableHead, TableRow, Paper, TextField, MenuItem, Select, InputLabel, FormControl, 
+  FormControlLabel, Checkbox, ListItemText, OutlinedInput, useMediaQuery, useTheme,
+  Card, CardContent, Grid,
 } from "@mui/material";
 
 import { getRoles } from "src/api/roles";
 import { getOffCampuses } from "src/api/offCampus";
-import {
-  UserProps,
-  getUsers,
-  createUser,
-  updateUser,
-  deleteUser,
-} from "src/api/users";
+import { UserProps, getUsers, createUser, updateUser, deleteUser} from "src/api/users";
 
 export default function UsersPage() {
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [users, setUsers] = useState<UserProps[]>([]);
   const [roles, setRoles] = useState<any[]>([]);
   const [offCampuses, setOffCampuses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // New User states
   const [newUserName, setNewUserName] = useState("");
@@ -70,6 +50,7 @@ export default function UsersPage() {
   // Fetch users, roles, offcampuses
   const fetchAll = async () => {
     try {
+      setLoading(true);
       const [userData, roleData, offCampusData] = await Promise.all([
         getUsers(),
         getRoles(),
@@ -80,6 +61,8 @@ export default function UsersPage() {
       setOffCampuses(offCampusData);
     } catch {
       enqueueSnackbar("Failed to fetch data", { variant: "error" });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -148,133 +131,170 @@ export default function UsersPage() {
   };
 
   return (
-    <>
+    <Box p={isMobile ? 2 : 4}>
       <Breadcrumbs sx={{ mb: 2 }}>
         <Link component="button" onClick={() => navigate("/settings")}>
           Settings
         </Link>
-        <Typography>Users</Typography>
+        <Typography color="text.primary">Users</Typography>
       </Breadcrumbs>
 
-      <Typography variant="h6" gutterBottom>
-        Users
+      <Typography variant="h6" fontWeight={600} gutterBottom>
+        Manage Users
       </Typography>
 
       {/* Add User Form */}
-      <Box
-        sx={{
-          maxWidth: 1400,
-          mb: 3,
-          p: 2,
-          display: "flex",
-          gap: 2,
-          flexWrap: "wrap",
-          alignItems: "center",
-          background: "linear-gradient(135deg, #f6d365 0%, #fda085 100%)",
-          borderRadius: 2,
-          boxShadow: 3,
-        }}
-      >
-        <TextField
-          label="Name"
-          value={newUserName}
-          onChange={(e) => setNewUserName(e.target.value)}
-          size="small"
-          sx={{ backgroundColor: "white" }}
-        />
-        <TextField
-          label="Mobile"
-          value={newUserMobile}
-          onChange={(e) => setNewUserMobile(e.target.value)}
-          size="small"
-          sx={{ backgroundColor: "white" }}
-        />
-        <TextField
-          label="Email"
-          value={newUserEmail}
-          onChange={(e) => setNewUserEmail(e.target.value)}
-          size="small"
-          sx={{ backgroundColor: "white" }}
-        />
-        <FormControl sx={{ minWidth: 180, backgroundColor: "white" }} size="small">
-          <InputLabel>Role</InputLabel>
-          <Select
-            value={newUserRole}
-            onChange={(e) => setNewUserRole(e.target.value as number)}
-            label="Role"
-          >
-            {roles.map((r) => (
-              <MenuItem key={r.id} value={r.id}>{r.name}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <FormControl sx={{ minWidth: 200, backgroundColor: "white" }} size="small">
-          <InputLabel>Off Campuses</InputLabel>
-          <Select
-            multiple
-            value={newUserOffCampuses}
-            onChange={(e) => setNewUserOffCampuses(e.target.value as number[])}
-            input={<OutlinedInput label="Off Campuses" />}
-            renderValue={(selected) =>
-              offCampuses
-                .filter((oc) => selected.includes(oc.id))
-                .map((oc) => oc.name)
-                .join(", ")
-            }
-          >
-            {offCampuses.map((oc) => (
-              <MenuItem key={oc.id} value={oc.id}>
-                <Checkbox checked={newUserOffCampuses.includes(oc.id)} />
-                <ListItemText primary={oc.name} />
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <TextField
-          type="password"
-          label="Password"
-          value={newUserPassword}
-          onChange={(e) => setNewUserPassword(e.target.value)}
-          size="small"
-          sx={{ backgroundColor: "white" }}
-        />
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={newUserIsActive}
-              onChange={(e) => setNewUserIsActive(e.target.checked)}
-              color="primary"
-            />
-          }
-          label="Active"
-        />
-        <Button variant="contained" onClick={handleAdd}>
-          Add User
-        </Button>
-      </Box>
+      <Card sx={{ mb: 3, borderRadius: 3, boxShadow: 3 }}>
+        <CardContent>
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 6, sm: 6, md:3 }}>
+              <TextField
+                label="Name"
+                value={newUserName}
+                onChange={(e) => setNewUserName(e.target.value)}
+                size="small"
+                fullWidth
+              />
+            </Grid>
+            <Grid size={{ xs: 6, sm: 6, md:3 }}>
+              <TextField
+                label="Mobile"
+                value={newUserMobile}
+                onChange={(e) => setNewUserMobile(e.target.value)}
+                size="small"
+                fullWidth
+              />
+            </Grid>
+            <Grid size={{ xs: 6, sm: 6, md:3 }}>
+              <TextField
+                label="Email"
+                value={newUserEmail}
+                onChange={(e) => setNewUserEmail(e.target.value)}
+                size="small"
+                fullWidth
+              />
+            </Grid>
+            <Grid size={{ xs: 6, sm: 6, md:3 }}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Role</InputLabel>
+                <Select
+                  value={newUserRole}
+                  onChange={(e) => setNewUserRole(e.target.value as number)}
+                  label="Role"
+                >
+                  {roles.map((r) => (
+                    <MenuItem key={r.id} value={r.id}>
+                      {r.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid size={{ xs: 6, sm: 6, md:4 }}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Off Campuses</InputLabel>
+                <Select
+                  multiple
+                  value={newUserOffCampuses}
+                  onChange={(e) =>
+                    setNewUserOffCampuses(e.target.value as number[])
+                  }
+                  input={<OutlinedInput label="Off Campuses" />}
+                  renderValue={(selected) =>
+                    offCampuses
+                      .filter((oc) => selected.includes(oc.id))
+                      .map((oc) => oc.name)
+                      .join(", ")
+                  }
+                >
+                  {offCampuses.map((oc) => (
+                    <MenuItem key={oc.id} value={oc.id}>
+                      <Checkbox checked={newUserOffCampuses.includes(oc.id)} />
+                      <ListItemText primary={oc.name} />
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid size={{ xs: 6, sm: 6, md:3 }}>
+              <TextField
+                type="password"
+                label="Password"
+                value={newUserPassword}
+                onChange={(e) => setNewUserPassword(e.target.value)}
+                size="small"
+                fullWidth
+              />
+            </Grid>
+
+            <Grid size={{ xs: 6, sm: 6, md:2 }}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={newUserIsActive}
+                    onChange={(e) => setNewUserIsActive(e.target.checked)}
+                  />
+                }
+                label="Active"
+              />
+            </Grid>
+
+            <Grid size={{ xs: 6, sm: 6, md:2 }}>
+              <Button
+                fullWidth
+                variant="contained"
+                onClick={handleAdd}
+                sx={{ height: "100%" }}
+              >
+                Add User
+              </Button>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
 
       {/* User Table */}
       <TableContainer
         component={Paper}
-        sx={{ maxWidth: 1400, boxShadow: 3, borderRadius: 2 }}
+        sx={{
+          borderRadius: 3,
+          boxShadow: 4,
+          maxWidth: "100%",
+          overflowX: "auto",
+        }}
       >
-        <Table>
+        <Table stickyHeader>
           <TableHead>
             <TableRow>
-              <TableCell>#</TableCell>
-              <TableCell>Name</TableCell>
-              <TableCell>Mobile</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Role</TableCell>
-              <TableCell>Off Campuses</TableCell>
-              <TableCell>Password</TableCell>
-              <TableCell>Active</TableCell>
-              <TableCell>Actions</TableCell>
+              {[
+                "#",
+                "Name",
+                "Mobile",
+                "Email",
+                "Role",
+                "Off Campuses",
+                "Password",
+                "Active",
+                "Actions",
+              ].map((col) => (
+                <TableCell key={col} sx={{ fontWeight: 600 }}>
+                  {col}
+                </TableCell>
+              ))}
             </TableRow>
           </TableHead>
           <TableBody>
             {users.map((user, index) => (
-              <TableRow key={user.id}>
+              <TableRow
+                key={user.id}
+                sx={{
+                  "&:nth-of-type(odd)": {
+                    backgroundColor: theme.palette.action.hover,
+                  },
+                }}
+              >
                 <TableCell>{index + 1}</TableCell>
 
                 {/* Name */}
@@ -322,7 +342,9 @@ export default function UsersPage() {
                     <FormControl size="small" sx={{ minWidth: 150 }}>
                       <Select
                         value={editingUserRole}
-                        onChange={(e) => setEditingUserRole(e.target.value as number)}
+                        onChange={(e) =>
+                          setEditingUserRole(e.target.value as number)
+                        }
                       >
                         {roles.map((r) => (
                           <MenuItem key={r.id} value={r.id}>
@@ -343,15 +365,53 @@ export default function UsersPage() {
                       <Select
                         multiple
                         value={editingUserOffCampuses}
-                        onChange={(e) => setEditingUserOffCampuses(e.target.value as number[])}
+                        onChange={(e) => {
+                          const value = e.target.value as number[];
+
+                          if (value.includes(-1)) {
+                            // If "All" is selected → select all or clear all if already selected
+                            if (editingUserOffCampuses.length === offCampuses.length) {
+                              setEditingUserOffCampuses([]);
+                            } else {
+                              setEditingUserOffCampuses(offCampuses.map((oc) => oc.id));
+                            }
+                          } else {
+                            setEditingUserOffCampuses(value);
+                          }
+                        }}
                         input={<OutlinedInput label="Off Campuses" />}
-                        renderValue={(selected) =>
-                          offCampuses
+                        renderValue={(selected) => {
+                          if (selected.length === offCampuses.length) return "All Campuses";
+                          return offCampuses
                             .filter((oc) => selected.includes(oc.id))
                             .map((oc) => oc.name)
-                            .join(", ")
-                        }
+                            .join(", ");
+                        }}
+                        MenuProps={{
+                          PaperProps: {
+                            style: { maxHeight: 250, width: 250 },
+                          },
+                        }}
+                        sx={{
+                          width: 220, // ✅ Fixed width
+                        }}
                       >
+                        {/* Select All Option */}
+                        <MenuItem value={-1}>
+                          <Checkbox
+                            checked={
+                              editingUserOffCampuses.length === offCampuses.length &&
+                              offCampuses.length > 0
+                            }
+                            indeterminate={
+                              editingUserOffCampuses.length > 0 &&
+                              editingUserOffCampuses.length < offCampuses.length
+                            }
+                          />
+                          <ListItemText primary="All Campuses" />
+                        </MenuItem>
+
+                        {/* Regular Off-Campuses */}
                         {offCampuses.map((oc) => (
                           <MenuItem key={oc.id} value={oc.id}>
                             <Checkbox checked={editingUserOffCampuses.includes(oc.id)} />
@@ -380,15 +440,18 @@ export default function UsersPage() {
                 </TableCell>
 
                 {/* Active */}
-                <TableCell>
+                <TableCell align="center">
                   {editingId === user.id ? (
                     <Checkbox
                       checked={editingUserIsActive}
-                      onChange={(e) => setEditingUserIsActive(e.target.checked)}
-                      color="primary"
+                      onChange={(e) =>
+                        setEditingUserIsActive(e.target.checked)
+                      }
                     />
+                  ) : user.is_active ? (
+                    "✅"
                   ) : (
-                    user.is_active ? "✅" : "❌"
+                    "❌"
                   )}
                 </TableCell>
 
@@ -400,17 +463,15 @@ export default function UsersPage() {
                         color="success"
                         size="small"
                         onClick={() => handleUpdate(user.id)}
-                        sx={{ minWidth: 36 }}
                       >
-                        <SaveIcon />
+                        <SaveIcon fontSize="small" />
                       </Button>
                       <Button
                         color="inherit"
                         size="small"
                         onClick={() => setEditingId(null)}
-                        sx={{ minWidth: 36 }}
                       >
-                        <CancelIcon />
+                        <CancelIcon fontSize="small" />
                       </Button>
                     </>
                   ) : (
@@ -423,23 +484,25 @@ export default function UsersPage() {
                           setEditingUserName(user.name);
                           setEditingUserEmail(user.email || "");
                           setEditingUserMobile(user.mobile);
-                          const matchedRole = roles.find((r) => r.name === user.role);
+                          const matchedRole = roles.find(
+                            (r) => r.name === user.role
+                          );
                           setEditingUserRole(matchedRole ? matchedRole.id : "");
-                          setEditingUserOffCampuses(user.off_campuses.map((oc) => oc.id));
+                          setEditingUserOffCampuses(
+                            user.off_campuses.map((oc) => oc.id)
+                          );
                           setEditingUserIsActive(user.is_active);
                           setEditingUserPassword("");
                         }}
-                        sx={{ minWidth: 36 }}
                       >
-                        <EditIcon />
+                        <EditIcon fontSize="small" />
                       </Button>
                       <Button
                         color="error"
                         size="small"
                         onClick={() => handleDelete(user.id)}
-                        sx={{ minWidth: 36 }}
                       >
-                        <DeleteIcon />
+                        <DeleteIcon fontSize="small" />
                       </Button>
                     </>
                   )}
@@ -449,6 +512,6 @@ export default function UsersPage() {
           </TableBody>
         </Table>
       </TableContainer>
-    </>
+    </Box>
   );
 }
