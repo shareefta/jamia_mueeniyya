@@ -7,19 +7,20 @@ import { useParams, useNavigate } from 'react-router-dom';
 import customParseFormat from "dayjs/plugin/customParseFormat";
 
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { Add, Edit, Delete, ExpandMore, ExpandLess } from "@mui/icons-material";
+import { Add, ExpandMore, ExpandLess } from "@mui/icons-material";
 import { useTheme, useMediaQuery, Accordion, AccordionSummary, AccordionDetails } from "@mui/material";
 import {
   Chip, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Box, Button, Card, CardContent,
   Typography, Grid, FormControl, InputLabel, Select, MenuItem, Table, TableHead, TableBody,
   TableCell, TableRow, TableContainer, Paper, IconButton, FormControlLabel, RadioGroup, Radio,
-  Collapse, Divider
+  Collapse, Divider, Autocomplete
 } from "@mui/material";
 
 dayjs.extend(isBetween);
 dayjs.extend(minMax);
 dayjs.extend(customParseFormat);
 
+import api from "src/utils/api";
 import TxnActionButtons from "src/utils/edit-delete-helper";
 
 import { getUsers } from "src/api/users";
@@ -96,6 +97,10 @@ const TransactionList = () => {
   const [addCatOpen, setAddCatOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
 
+  // Add Party Details
+  const [partyNames, setPartyNames] = useState<string[]>([]);
+  const [partyMobiles, setPartyMobiles] = useState<string[]>([]);
+
   // Responsive Filters
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -147,6 +152,21 @@ const TransactionList = () => {
     };
 
     fetchData();
+  }, []);
+
+  // Fetch Party Names & Mobiles
+  useEffect(() => {
+    const fetchParties = async () => {
+      try {
+        const res = await api.get("/transactions/transactions/parties/");
+        setPartyNames(res.data.names);
+        setPartyMobiles(res.data.mobiles);
+      } catch (err) {
+        console.error("Failed to fetch party list:", err);
+        enqueueSnackbar("Failed to fetch party list", { variant: "error" });
+      }
+    };
+    fetchParties();
   }, []);
 
   // Filters
@@ -1382,23 +1402,31 @@ const TransactionList = () => {
                 />
               </Grid>
 
-              {/* Party Info */}
-              <Grid size={{ xs: 12, sm: 6}}>
-                <TextField
-                  fullWidth
-                  label="Party Name"
-                  name="party_name"
-                  value={formData.party_name}
-                  onChange={handleChange}
+              {/* Party Name */}
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Autocomplete
+                  freeSolo
+                  options={partyNames}
+                  value={formData.party_name || ""}
+                  onInputChange={(_, value) => setFormData({ ...formData, party_name: value })}
+                  renderInput={(params) => (
+                    <TextField {...params} label="Party Name" fullWidth />
+                  )}
                 />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6}}>
-                <TextField
-                  fullWidth
-                  label="Mobile Number"
-                  name="party_mobile_number"
-                  value={formData.party_mobile_number}
-                  onChange={handleChange}
+
+              {/* Party Mobile Number */}
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Autocomplete
+                  freeSolo
+                  options={partyMobiles}
+                  value={formData.party_mobile_number || ""}
+                  onInputChange={(_, value) =>
+                    setFormData({ ...formData, party_mobile_number: value })
+                  }
+                  renderInput={(params) => (
+                    <TextField {...params} label="Mobile Number" fullWidth />
+                  )}
                 />
               </Grid>
 

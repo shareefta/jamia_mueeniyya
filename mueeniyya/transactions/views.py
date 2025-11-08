@@ -8,12 +8,11 @@ from xhtml2pdf import pisa
 from django.template.loader import render_to_string
 from django.db.models import Q
 import datetime
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from django.http import HttpResponse
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
-
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all().order_by('name')
     serializer_class = CategorySerializer
@@ -129,7 +128,32 @@ class TransactionViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         print("Incoming data:", request.data)
         return super().create(request, *args, **kwargs)
+    
+    @action(detail=False, methods=["get"], permission_classes=[permissions.IsAuthenticated])
+    def parties(self, request):
+        """
+        Returns distinct party names and mobile numbers for dropdowns.
+        """
+        user = request.user
+        queryset = self.get_queryset()
 
+        names = (
+            queryset.exclude(party_name__isnull=True)
+            .exclude(party_name__exact="")
+            .values_list("party_name", flat=True)
+            .distinct()
+        )
+        mobiles = (
+            queryset.exclude(party_mobile_number__isnull=True)
+            .exclude(party_mobile_number__exact="")
+            .values_list("party_mobile_number", flat=True)
+            .distinct()
+        )
+
+        return Response({
+            "names": sorted(list(names)),
+            "mobiles": sorted(list(mobiles)),
+        })
 class OpeningBalanceViewSet(viewsets.ModelViewSet):
     queryset = OpeningBalance.objects.all().order_by('-date')
     serializer_class = OpeningBalanceSerializer
