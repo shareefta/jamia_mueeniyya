@@ -162,60 +162,91 @@ const ExportReports: React.FC<Props> = ({ transactions, filters, openingBalances
     doc.save(`${fileTitleBase}.pdf`);
   };
 
-    // Excel generator
-    const generateExcel = () => {
+  // Excel generator
+  const generateExcel = () => {
     if (!transactions || transactions.length === 0) {
-        alert("No transactions to export!");
-        return;
+      alert("No transactions to export!");
+      return;
     }
 
     const sums = calcSummaries();
 
-    // 1️⃣ Build summary/meta rows
+    // --- Meta Information Rows ---
     const metaRows = [
-        ['Campus', campusName || 'All Campuses'],
-        ['Cash Book', getCashBookLabel()],
-        ['Date Range', getDateLabel()],
-        [],
-        ['Opening Balance', sums.ob],
-        ['Total In', sums.totalIn],
-        ['Total Out', sums.totalOut],
-        ['Net Balance', sums.net],
-        [], // empty row before table
-        ['Sl. No.', 'Date & Time', 'Remarks & User', 'Party & Mobile', 'Category', 'Mode', 'Amount', 'Balance']
+      ['Campus', campusName || 'All Campuses'],
+      ['Cash Book', getCashBookLabel()],
+      ['Date Range', getDateLabel()],
+      [],
+      ['Opening Balance', sums.ob],
+      ['Total In', sums.totalIn],
+      ['Total Out', sums.totalOut],
+      ['Net Balance', sums.net],
+      [],
+      [
+        "Date",
+        "Time",
+        "Remarks",
+        "Entered By",
+        "Party Name",
+        "Mobile Number",
+        "Category",
+        "Mode",
+        "Cash In",
+        "Cash Out",
+        "Balance"
+      ]
     ];
 
-    // 2️⃣ Build transactions rows
-    const txnRows = transactions.map((t: any, idx: number) => [
-        idx + 1,
-        `${t.date} ${t.time}`,
-        `${t.remarks || ''} / ${t.user_name || t.user || ''}`,
-        `${t.party_name || ''} / ${t.party_mobile_number || ''}`,
-        t.category_name || t.category || '',
-        t.payment_mode_name || t.payment_mode || '',
-        Number(t.amount || 0),
-        Number(t.running_balance || 0),
-    ]);
+    // --- Transaction Rows ---
+    const txnRows = transactions.map((t: any) => {
+      const amount = Number(t.amount || 0);
 
-    // 3️⃣ Combine meta + transactions
+      const cashIn = t.transaction_type === "IN" ? amount : "";
+      const cashOut = t.transaction_type === "OUT" ? amount : "";
+
+      return [
+        t.date || "",
+        t.time || "",
+        t.remarks || "",
+        t.user_name || t.user || "",
+        t.party_name || "",
+        t.party_mobile_number || "",
+        t.category_name || t.category || "",
+        t.payment_mode_name || t.payment_mode || "",
+        cashIn,
+        cashOut,
+        Number(t.running_balance || 0)
+      ];
+    });
+
     const allRows = [...metaRows, ...txnRows];
 
-    // 4️⃣ Convert to worksheet
+    // Generate worksheet
     const ws = XLSX.utils.aoa_to_sheet(allRows);
 
-    // 5️⃣ Optional: Auto-width columns
-    const colCount = allRows[0]?.length || 1;
-    ws['!cols'] = Array(colCount).fill({ wch: 15 });
+    // Auto column sizing
+    ws["!cols"] = [
+      { wch: 12 }, // Date
+      { wch: 10 }, // Time
+      { wch: 25 }, // Remarks
+      { wch: 15 }, // Entered by
+      { wch: 20 }, // Party Name
+      { wch: 15 }, // Mobile
+      { wch: 15 }, // Category
+      { wch: 12 }, // Mode
+      { wch: 12 }, // Cash In
+      { wch: 12 }, // Cash Out
+      { wch: 12 }  // Balance
+    ];
 
-    // 6️⃣ Create workbook and append sheet
+    // Workbook
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Transactions');
+    XLSX.utils.book_append_sheet(wb, ws, "Transactions");
 
-    // 7️⃣ Write & save
-    const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    const blob = new Blob([buf], { type: 'application/octet-stream' });
+    const buf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const blob = new Blob([buf], { type: "application/octet-stream" });
     saveAs(blob, `${fileTitleBase}.xlsx`);
-    };
+  };
 
   return (
     <Box display="flex" gap={1}>
