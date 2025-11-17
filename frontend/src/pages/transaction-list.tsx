@@ -51,7 +51,7 @@ const TransactionList = () => {
     paymentMode: "All",
     cash_book: cashBookId || 'All',
     user: "All",
-    includeOB: true,
+    includeOB: false,
     customStartDate: "",
     customEndDate: "",
     customLabel: "",
