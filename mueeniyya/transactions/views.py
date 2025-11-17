@@ -241,37 +241,53 @@ def generate_report(request):
         output = BytesIO()
         writer = pd.ExcelWriter(output, engine='openpyxl')
 
-        # Write header info
         wb = writer.book
         ws = wb.active
         ws.title = "Report"
 
-        # First row - Campus & Cash Book
-        ws.append([f"Campus: {cash_book_obj.campus.name if cash_book_obj else ''}",
-                   f"Cash Book: {cash_book_obj.name if cash_book_obj else ''}"])
-        # Second row - Date
+        # Header rows
+        ws.append([
+            f"Campus: {cash_book_obj.campus.name if cash_book_obj else ''}",
+            f"Cash Book: {cash_book_obj.name if cash_book_obj else ''}"
+        ])
         ws.append([f"Date: {date_text}"])
-        # Third row - Totals
         ws.append([f"Total In: {total_in}", f"Total Out: {total_out}", f"Net Balance: {net_balance}"])
-        # Empty row
         ws.append([])
 
-        # Table headers
-        headers = ["Sl. No.", "Date & Time", "Remarks", "Party Name & Mobile", "Category",
-                   "Mode", "User", "Amount", "Balance"]
+        # Desired columns
+        headers = [
+            "Date",
+            "Time",
+            "Remarks",
+            "Entered By",
+            "Party Name",
+            "Mobile Number",
+            "Category",
+            "Mode",
+            "Cash In",
+            "Cash Out",
+            "Balance"
+        ]
         ws.append(headers)
 
-        # Table data
-        for i, row in enumerate(serializer.data, 1):
+        # Fill rows
+        for i, row in enumerate(serializer.data):
+            amount = row.get("amount") or 0
+
+            cash_in = amount if row.get("transaction_type") == "IN" else ""
+            cash_out = amount if row.get("transaction_type") == "OUT" else ""
+
             ws.append([
-                i,
-                f"{row['date']} {row['time']}",
+                row.get("date"),
+                row.get("time"),
                 row.get("remarks") or "",
-                f"{row.get('party_name') or ''} {row.get('party_mobile_number') or ''}",
+                row.get("user_name") or "",            # Entered by
+                row.get("party_name") or "",
+                row.get("party_mobile_number") or "",
                 row.get("category_name") or "",
                 row.get("payment_mode_name") or "",
-                row.get("user_name") or "",
-                row.get("amount") or 0,
+                cash_in,
+                cash_out,
                 row.get("running_balance") or 0
             ])
 
