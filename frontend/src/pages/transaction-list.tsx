@@ -1406,12 +1406,19 @@ const TransactionList = () => {
               <Grid size={{ xs: 12, sm: 6 }}>
                 <Autocomplete
                   freeSolo
-                  options={partyNames}
-                  value={formData.party_name || ""}
-                  onInputChange={(_, value) => setFormData({ ...formData, party_name: value })}
+                  options={partyNames || []}
+                  inputValue={formData.party_name || ""}
+                  onInputChange={(_, value) =>
+                    setFormData({ ...formData, party_name: value })
+                  }
                   renderInput={(params) => (
                     <TextField {...params} label="Party Name" fullWidth />
                   )}
+                  filterOptions={(options, state) =>
+                    options.filter((opt) =>
+                      opt.toLowerCase().includes(state.inputValue.toLowerCase())
+                    )
+                  }
                 />
               </Grid>
 
@@ -1419,14 +1426,19 @@ const TransactionList = () => {
               <Grid size={{ xs: 12, sm: 6 }}>
                 <Autocomplete
                   freeSolo
-                  options={partyMobiles}
-                  value={formData.party_mobile_number || ""}
+                  options={partyMobiles || []}
+                  inputValue={formData.party_mobile_number || ""}
                   onInputChange={(_, value) =>
                     setFormData({ ...formData, party_mobile_number: value })
                   }
                   renderInput={(params) => (
                     <TextField {...params} label="Mobile Number" fullWidth />
                   )}
+                  filterOptions={(options, state) =>
+                    options.filter((opt) =>
+                      opt.toLowerCase().includes(state.inputValue.toLowerCase())
+                    )
+                  }
                 />
               </Grid>
 
@@ -1695,6 +1707,46 @@ const TransactionList = () => {
               }
               fullWidth
               margin="dense"
+            />
+
+            {/* Party Name */}
+            <Autocomplete
+              freeSolo
+              options={partyNames || []}
+              inputValue={editData?.party_name || ""}
+              onInputChange={(_, value) =>
+                setEditData(prev =>
+                  prev ? { ...prev, party_name: value } : prev
+                )
+              }
+              renderInput={(params) => (
+                <TextField {...params} label="Party Name" fullWidth margin="dense" />
+              )}
+              filterOptions={(options, state) =>
+                options.filter((opt) =>
+                  opt.toLowerCase().includes(state.inputValue.toLowerCase())
+                )
+              }
+            />
+
+            {/* Party Mobile Number */}
+            <Autocomplete
+              freeSolo
+              options={partyMobiles || []}
+              inputValue={editData?.party_mobile_number || ""}
+              onInputChange={(_, value) =>
+                setEditData(prev =>
+                  prev ? { ...prev, party_mobile_number: value } : prev
+                )
+              }
+              renderInput={(params) => (
+                <TextField {...params} label="Mobile Number" fullWidth margin="dense" />
+              )}
+              filterOptions={(options, state) =>
+                options.filter((opt) =>
+                  opt.toLowerCase().includes(state.inputValue.toLowerCase())
+                )
+              }
             />
 
             {/* Category */}

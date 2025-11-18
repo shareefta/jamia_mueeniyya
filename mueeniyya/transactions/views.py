@@ -154,6 +154,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
             "names": sorted(list(names)),
             "mobiles": sorted(list(mobiles)),
         })
+        
 class OpeningBalanceViewSet(viewsets.ModelViewSet):
     queryset = OpeningBalance.objects.all().order_by('-date')
     serializer_class = OpeningBalanceSerializer
