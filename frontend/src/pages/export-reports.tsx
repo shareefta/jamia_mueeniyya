@@ -23,6 +23,21 @@ const currency = (n: number) => {
   return Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
+const formatDate = (d: string) => {
+  if (!d) return "";
+
+  // If already in DD:MM:YYYY, just return
+  if (d.includes(":")) return d;
+
+  const date = new Date(d);
+  if (isNaN(date.getTime())) return d;
+
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}:${month}:${year}`;
+};
+
 const ExportReports: React.FC<Props> = ({ transactions, filters, openingBalances, cashBooks, campusName, displayedOB}) => {
   const fileTitleBase = `Transactions_Report_${(new Date()).toISOString().slice(0,10)}`;
 
@@ -42,31 +57,44 @@ const ExportReports: React.FC<Props> = ({ transactions, filters, openingBalances
 
   // Calculate summary cards from the passed transactions (should be running-balance included)
   const calcSummaries = () => {
-  const totalIn = transactions
-    .filter((t: any) => t.transaction_type === 'IN')
-    .reduce((acc: number, t: any) => acc + Number(t.amount || 0), 0);
+    const totalIn = transactions
+      .filter((t: any) => t.transaction_type === 'IN')
+      .reduce((acc: number, t: any) => acc + Number(t.amount || 0), 0);
 
-  const totalOut = transactions
-    .filter((t: any) => t.transaction_type === 'OUT')
-    .reduce((acc: number, t: any) => acc + Number(t.amount || 0), 0);
+    const totalOut = transactions
+      .filter((t: any) => t.transaction_type === 'OUT')
+      .reduce((acc: number, t: any) => acc + Number(t.amount || 0), 0);
 
-  const ob = filters.includeOB ? displayedOB : 0; // ✅ Use dynamic OB
-  const net = ob + totalIn - totalOut;
+    const ob = filters.includeOB ? displayedOB : 0; // ✅ Use dynamic OB
+    const net = ob + totalIn - totalOut;
 
-  return { totalIn, totalOut, ob, net };
-};
+    return { totalIn, totalOut, ob, net };
+  };
 
   // Build table rows for PDF/XLSX
-  const buildRows = () => transactions.map((t: any, idx: number) => ([
-    idx + 1,
-    `${t.date}\n${t.time}`,
-    `${t.remarks || ''}\n Created by: ${t.user_name || t.user || ''}`,
-    `${t.party_name || ''}\n${t.party_mobile_number || ''}`,
-    t.category_name || t.category || '',
-    t.payment_mode_name || t.payment_mode || '',
-    currency(Number(t.amount || 0)),
-    currency(Number(t.running_balance || 0)),
-  ]));
+  const buildRows = () => {
+    const sorted = [...transactions].sort((a: any, b: any) => {
+      const parseDateTime = (d: string, t: string) => {
+        const [day, month, year] = d.split(':');
+        return new Date(`${year}-${month}-${day}T${t}`);
+      };
+
+      const dateA = parseDateTime(a.date, a.time);
+      const dateB = parseDateTime(b.date, b.time);
+      return dateA.getTime() - dateB.getTime(); // Oldest first
+    });
+
+    return sorted.map((t: any, idx: number) => ([
+      idx + 1,
+      `${formatDate(t.date)}\n${t.time}`,
+      `${t.remarks || ''}\n Created by: ${t.user_name || t.user || ''}`,
+      `${t.party_name || ''}\n${t.party_mobile_number || ''}`,
+      t.category_name || t.category || '',
+      t.payment_mode_name || t.payment_mode || '',
+      currency(Number(t.amount || 0)),
+      currency(Number(t.running_balance || 0)),
+    ]));
+  };
 
   // PDF generator
   const generatePDF = () => {
@@ -198,14 +226,25 @@ const ExportReports: React.FC<Props> = ({ transactions, filters, openingBalances
     ];
 
     // --- Transaction Rows ---
-    const txnRows = transactions.map((t: any) => {
+    const parseDateTime = (d: string, t: string) => {
+      const [day, month, year] = d.split(':');
+      return new Date(`${year}-${month}-${day}T${t}`);
+    };
+
+    const sorted = [...transactions].sort((a: any, b: any) => {
+      const dateA = parseDateTime(a.date, a.time);
+      const dateB = parseDateTime(b.date, b.time);
+      return dateA.getTime() - dateB.getTime();
+    });
+
+    const txnRows = sorted.map((t: any) => {
       const amount = Number(t.amount || 0);
 
       const cashIn = t.transaction_type === "IN" ? amount : "";
       const cashOut = t.transaction_type === "OUT" ? amount : "";
 
       return [
-        t.date || "",
+        formatDate(t.date) || "",
         t.time || "",
         t.remarks || "",
         t.user_name || t.user || "",

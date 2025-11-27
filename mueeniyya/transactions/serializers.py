@@ -51,6 +51,8 @@ class TransactionSerializer(serializers.ModelSerializer):
     cash_book = serializers.PrimaryKeyRelatedField(
         queryset=CashBook.objects.all()
     )
+    
+    date = serializers.DateField(format="%d:%m:%Y")
 
     transaction_label = serializers.SerializerMethodField()
 
