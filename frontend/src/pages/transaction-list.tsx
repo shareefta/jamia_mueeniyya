@@ -1186,8 +1186,12 @@ const TransactionList = () => {
                         </Typography>
 
                         <Typography variant="caption" color="text.secondary" display="block">
-                          {dayjs(txn.date).format("DD MMM YYYY")},{" "}
-                          {dayjs(txn.time, "HH:mm:ss").format("hh:mm A")}
+                          {txn.date
+                            ? dayjs(txn.date, "DD:MM:YYYY").format("DD MMM YYYY")
+                            : "-"},{" "}
+                          {txn.time
+                            ? dayjs(txn.time, "HH:mm:ss").format("hh:mm A")
+                            : "-"}
                         </Typography>
 
                         {/* Expand Icon */}
@@ -1268,13 +1272,17 @@ const TransactionList = () => {
                       <TableCell align="center">{idx + 1}</TableCell>
                       <TableCell align="center">
                         <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                          {dayjs(txn.date).format("DD-MM-YYYY")}
+                          {txn.date
+                            ? dayjs(txn.date, "DD:MM:YYYY").format("DD:MM:YYYY")
+                            : "-"}
                         </Typography>
                         <Typography
                           variant="body2"
                           sx={{ fontWeight: "bold", color: "text.secondary" }}
                         >
-                          {txn.time ? dayjs(`1970-01-01T${txn.time}`).format("hh:mm A") : "-"}
+                          {txn.time
+                            ? dayjs(`1970-01-01T${txn.time}`).format("hh:mm A")
+                            : "-"}
                         </Typography>
                       </TableCell>
                       <TableCell align="left">{txn.remarks || "-"}</TableCell>
