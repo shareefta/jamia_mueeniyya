@@ -169,6 +169,8 @@ const TransactionList = () => {
     fetchParties();
   }, []);
 
+  const parseTxnDate = (d: string) => dayjs(d, "DD:MM:YYYY");
+
   // Filters
   useEffect(() => {
     let temp = [...transactions];
@@ -179,28 +181,38 @@ const TransactionList = () => {
     const lastMonthEnd = dayjs().subtract(1, "month").endOf("month");
 
     // --- Date filtering ---
-    if (filters.dateRange === "Today") temp = temp.filter(t => t.date === today);
-    else if (filters.dateRange === "Yesterday") temp = temp.filter(t => t.date === yesterday);
-    else if (filters.dateRange === "This Month")
-    // ✅ Include the first day of this month
-    temp = temp.filter(t => 
-      dayjs(t.date).isSame(firstOfMonth, "day") || 
-      dayjs(t.date).isAfter(firstOfMonth, "day")
-    );    
-    else if (filters.dateRange === "Last Month")
-      // ✅ Inclusive of both start and end
-      temp = temp.filter(t => 
-        dayjs(t.date).isBetween(lastMonthStart, lastMonthEnd, "day", "[]")
+    if (filters.dateRange === "Today") {
+      const today = dayjs();
+      temp = temp.filter(t => parseTxnDate(t.date).isSame(today, "day"));
+    }
+    else if (filters.dateRange === "Yesterday") {
+      const yesterday = dayjs().subtract(1, "day");
+      temp = temp.filter(t => parseTxnDate(t.date).isSame(yesterday, "day"));
+    }
+    else if (filters.dateRange === "This Month") {
+      const firstOfMonth = dayjs().startOf("month");
+      temp = temp.filter(t => parseTxnDate(t.date).isSame(firstOfMonth, "month"));
+    }
+    else if (filters.dateRange === "Last Month") {
+      const lastMonthStart = dayjs().subtract(1, "month").startOf("month");
+      const lastMonthEnd = dayjs().subtract(1, "month").endOf("month");
+      temp = temp.filter(t =>
+        parseTxnDate(t.date).isBetween(lastMonthStart, lastMonthEnd, "day", "[]")
       );
+    }
     else if (filters.dateRange === "Custom") {
       if (filters.customStartDate && filters.customEndDate) {
         const start = dayjs(filters.customStartDate).startOf("day");
         const end = dayjs(filters.customEndDate).endOf("day");
-        temp = temp.filter(t => dayjs(`${t.date} ${t.time}`).isBetween(start, end, null, "[]"));
-      } else if (filters.customStartDate) {
-        // Single date
-        const single = dayjs(filters.customStartDate).format("YYYY-MM-DD");
-        temp = temp.filter(t => t.date === single);
+        temp = temp.filter(t =>
+          parseTxnDate(t.date).isBetween(start, end, "day", "[]")
+        );
+      } 
+      else if (filters.customStartDate) {
+        const single = dayjs(filters.customStartDate);
+        temp = temp.filter(t =>
+          parseTxnDate(t.date).isSame(single, "day")
+        );
       }
     }
 
@@ -278,12 +290,12 @@ const TransactionList = () => {
     if (!startDate) {
       const filteredTxns = filteredList.length ? filteredList : allTxns;
       if (!filteredTxns.length) return 0;
-      startDate = dayjs(filteredTxns[filteredTxns.length - 1].date);
+      startDate = parseTxnDate(filteredTxns[filteredTxns.length - 1].date);
     }
 
     // --- All transactions before startDate are previous ---
     const prevTxns = allTxns.filter(txn =>
-      dayjs(`${txn.date} ${txn.time}`).isBefore(startDate)
+      parseTxnDate(txn.date).isBefore(startDate)
     );
 
     let balance = 0;
@@ -329,8 +341,13 @@ const TransactionList = () => {
 
     // Sort transactions ascending
     const sorted = [...txnList].sort((a, b) => {
-      const aTime = dayjs(`${a.date} ${a.time}`);
-      const bTime = dayjs(`${b.date} ${b.time}`);
+      const aTime = dayjs(
+        parseTxnDate(a.date).format("YYYY-MM-DD") + " " + a.time
+      );
+      const bTime = dayjs(
+        parseTxnDate(b.date).format("YYYY-MM-DD") + " " + b.time
+      );
+
       return aTime.isAfter(bTime) ? 1 : -1;
     });
 
