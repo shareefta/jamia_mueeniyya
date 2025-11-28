@@ -174,28 +174,23 @@ const TransactionList = () => {
   // Filters
   useEffect(() => {
     let temp = [...transactions];
-    const today = dayjs().format("YYYY-MM-DD");
-    const yesterday = dayjs().subtract(1, "day").format("YYYY-MM-DD");
+    const today = dayjs();
+    const yesterday = dayjs().subtract(1, "day");
     const firstOfMonth = dayjs().startOf("month");
     const lastMonthStart = dayjs().subtract(1, "month").startOf("month");
     const lastMonthEnd = dayjs().subtract(1, "month").endOf("month");
 
     // --- Date filtering ---
-    if (filters.dateRange === "Today") {
-      const today = dayjs();
+    if (filters.dateRange === "Today") {      
       temp = temp.filter(t => parseTxnDate(t.date).isSame(today, "day"));
     }
-    else if (filters.dateRange === "Yesterday") {
-      const yesterday = dayjs().subtract(1, "day");
+    else if (filters.dateRange === "Yesterday") {      
       temp = temp.filter(t => parseTxnDate(t.date).isSame(yesterday, "day"));
     }
     else if (filters.dateRange === "This Month") {
-      const firstOfMonth = dayjs().startOf("month");
       temp = temp.filter(t => parseTxnDate(t.date).isSame(firstOfMonth, "month"));
     }
     else if (filters.dateRange === "Last Month") {
-      const lastMonthStart = dayjs().subtract(1, "month").startOf("month");
-      const lastMonthEnd = dayjs().subtract(1, "month").endOf("month");
       temp = temp.filter(t =>
         parseTxnDate(t.date).isBetween(lastMonthStart, lastMonthEnd, "day", "[]")
       );
