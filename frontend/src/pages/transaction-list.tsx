@@ -1323,7 +1323,13 @@ const TransactionList = () => {
                       >
                         ₹ {Number(txn.amount).toLocaleString()}
                       </TableCell>
-                      <TableCell align="right">₹ {txn.running_balance.toFixed(2)}</TableCell>
+                      <TableCell align="right" sx={{ whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums"}}
+                      >
+                        ₹ {Number(txn.running_balance).toLocaleString("en-IN", { 
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2
+                        })}
+                      </TableCell>
                       <TableCell align="center">
                         <TxnActionButtons txn={txn} onEdit={handleEditClick} onDelete={handleDeleteClick} />
                       </TableCell>
