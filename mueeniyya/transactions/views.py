@@ -119,14 +119,13 @@ class TransactionViewSet(viewsets.ModelViewSet):
                 raise PermissionDenied("You are not allowed to add transactions for this campus.")
 
             # Prevent staff from adding past transactions
-            if date < datetime.date.today():
-                raise PermissionDenied("Staff members cannot add transactions for previous dates.")
+            # if date < datetime.date.today():
+            #     raise PermissionDenied("Staff members cannot add transactions for previous dates.")
 
         # Save with current user
         serializer.save(user=user)
     
     def create(self, request, *args, **kwargs):
-        print("Incoming data:", request.data)
         return super().create(request, *args, **kwargs)
     
     @action(detail=False, methods=["get"], permission_classes=[permissions.IsAuthenticated])

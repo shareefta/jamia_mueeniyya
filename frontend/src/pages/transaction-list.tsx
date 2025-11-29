@@ -1381,12 +1381,12 @@ const TransactionList = () => {
                   value={formData.date}
                   onChange={handleChange}
                   InputLabelProps={{ shrink: true }}
-                  inputProps={{
-                    min:
-                      user?.role?.toLowerCase() === "staff"
-                        ? dayjs().format("YYYY-MM-DD")
-                        : undefined,
-                  }}
+                  // inputProps={{
+                  //   min:
+                  //     user?.role?.toLowerCase() === "staff"
+                  //       ? dayjs().format("YYYY-MM-DD")
+                  //       : undefined,
+                  // }}
                 />
               </Grid>
               <Grid size={{ xs: 6, sm: 6}}>
