@@ -15,7 +15,7 @@ SECRET_KEY = 'django-insecure-ans3+6^i#1l@s#j$#mjy%9t+dn42olztjlzwey963$b_ea1&5%
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['.onrender.com', 'mueeniyya.in', 'www.mueeniyya.in', 'acc.mueeniyya.in',]
+ALLOWED_HOSTS = ['.onrender.com', 'acc.mueeniyya.in',]
 
 
 # Application definition
@@ -139,14 +139,9 @@ SIMPLE_JWT = {
 # CORS settings (if your frontend calls API)
 CORS_ALLOWED_ORIGINS = [
     "https://mueeniyya-frontend.onrender.com",
-    "https://mueeniyya.in",
-    "https://www.mueeniyya.in",
     "https://acc.mueeniyya.in",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://mueeniyya.in",
-    "https://www.mueeniyya.in",
-    "https://acc.mueeniyya.in",
     "https://acc.mueeniyya.in",
 ]
